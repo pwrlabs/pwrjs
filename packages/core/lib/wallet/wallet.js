@@ -8,18 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
-    if (kind === "m") throw new TypeError("Private method is not writable");
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
-};
-var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _PwrWallet__address, _PwrWallet__privateKey;
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = require("axios");
 const wallet_utils_1 = require("../wallet.utils");
@@ -28,10 +16,26 @@ const utils_1 = require("../utils");
 const js_sha3_1 = require("js-sha3");
 const secp256k1 = require("secp256k1");
 const url = 'https://pwrexplorerbackend.pwrlabs.io';
+function generateDataTxnBytes(id, nonce, vmId, data) {
+    const idDec = id;
+    const nonceDec = nonce;
+    const vmIdBN = (0, bignumber_js_1.default)(vmId);
+    const idByte = (0, utils_1.decToBytes)(idDec, 1);
+    const nonceByte = (0, utils_1.decToBytes)(nonceDec, 4);
+    const vmIdByte = (0, utils_1.BnToBytes)(vmIdBN);
+    const dataByte = new Uint8Array(Buffer.from(data, 'hex'));
+    const txnBytes = new Uint8Array([
+        ...idByte,
+        ...nonceByte,
+        ...vmIdByte,
+        ...dataByte,
+    ]);
+    return txnBytes;
+}
 function generateTxnBytes(id, nonce, amount, recipientSr) {
     const idDec = id;
-    const nonceDec = Math.floor(Math.random() * Math.pow(2, 32));
-    const amountBN = (0, bignumber_js_1.default)(amount).shiftedBy(9);
+    const nonceDec = nonce;
+    const amountBN = (0, bignumber_js_1.default)(amount);
     const recipient = recipientSr.replace('0x', '');
     const idByte = (0, utils_1.decToBytes)(idDec, 1);
     const nonceByte = (0, utils_1.decToBytes)(nonceDec, 4);
@@ -61,20 +65,20 @@ function signTxn(txnBytes, privateKey) {
 }
 class PwrWallet {
     constructor(privateKey) {
-        _PwrWallet__address.set(this, void 0);
-        _PwrWallet__privateKey.set(this, void 0);
         const wallet = wallet_utils_1.default.fromPrivateKey(privateKey);
-        __classPrivateFieldSet(this, _PwrWallet__address, wallet.getAddressString(), "f");
-        __classPrivateFieldSet(this, _PwrWallet__privateKey, wallet.getPrivateKeyString(), "f");
+        this.privateKey = wallet.getPrivateKeyString();
+        this.address = wallet.getAddressString();
     }
-    get address() {
-        return __classPrivateFieldGet(this, _PwrWallet__address, "f");
+    getAddress() {
+        const wallet = wallet_utils_1.default.fromPrivateKey(this.privateKey);
+        const address = wallet.getAddressString();
+        return address;
     }
     getBalance() {
         return __awaiter(this, void 0, void 0, function* () {
             const res = yield (0, axios_1.default)({
                 method: 'get',
-                url: `${url}/balanceOf/?userAddress=${__classPrivateFieldGet(this, _PwrWallet__address, "f")}`,
+                url: `${url}/balanceOf/?userAddress=${this.address}`,
             });
             if (res.data.status !== 'success') {
                 throw new Error('Error getting balance');
@@ -82,32 +86,63 @@ class PwrWallet {
             return res.data.data.balance;
         });
     }
-    getTransactions() {
+    getNonce() {
         return __awaiter(this, void 0, void 0, function* () {
             const res = yield (0, axios_1.default)({
                 method: 'get',
-                url: `${url}/transactionHistory/?address=${__classPrivateFieldGet(this, _PwrWallet__address, "f")}`,
+                url: `${url}/nonceOfUser/?userAddress=${this.address}`,
             });
             if (res.data.status !== 'success') {
-                throw new Error('Error getting transactions');
+                throw new Error('Error getting nonce');
             }
-            return res.data.data.txns;
+            return res.data.data.nonce;
         });
     }
-    sendTransaction(recipient, amount) {
+    getPrivateKey() {
+        return this.privateKey;
+    }
+    transferPWR(to, amount, nonce) {
         return __awaiter(this, void 0, void 0, function* () {
             const id = 0;
-            const randomNonce = Math.floor(Math.random() * Math.pow(2, 32));
-            const txnDataBytes = generateTxnBytes(id, randomNonce, amount, recipient);
-            const signedTxnBytes = signTxn(txnDataBytes, __classPrivateFieldGet(this, _PwrWallet__privateKey, "f"));
+            const _nonce = nonce || (yield this.getNonce());
+            const txnDataBytes = generateTxnBytes(id, _nonce, amount, to);
+            const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
             const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-            const hashedTxnFinal = hashTxn(txnBytes);
-            const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+            const txnHex = Buffer.from(txnBytes).toString('hex');
             const res = yield (0, axios_1.default)({
                 method: 'post',
                 url: `${url}/broadcast/`,
                 data: {
-                    txn: hashedTxnStr,
+                    txn: txnHex,
+                },
+            });
+            if (res.data.status !== 'success') {
+                throw new Error('Error sending transaction');
+            }
+            return res.data.data;
+        });
+    }
+    sendVMDataTxn(vmId, dataBytes, nonce) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const id = 5;
+            const _nonce = nonce || (yield this.getNonce());
+            const _vmId = vmId;
+            const data = (0, utils_1.bytesToHex)(dataBytes);
+            console.log({
+                id,
+                nonce: _nonce,
+                vmId: _vmId,
+                data,
+            });
+            const txnDataBytes = generateDataTxnBytes(id, _nonce, _vmId, data);
+            const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+            const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+            const txnHex = Buffer.from(txnBytes).toString('hex');
+            const res = yield (0, axios_1.default)({
+                method: 'post',
+                url: `${url}/broadcast/`,
+                data: {
+                    txn: txnHex,
                 },
             });
             if (res.data.status !== 'success') {
@@ -118,4 +153,3 @@ class PwrWallet {
     }
 }
 exports.default = PwrWallet;
-_PwrWallet__address = new WeakMap(), _PwrWallet__privateKey = new WeakMap();
