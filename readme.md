@@ -30,7 +30,7 @@ PWRJ is available on NPM. Add it as a dependency
 **Import the library:**
 
 ```ts
-import { PWRJ, PWRWallet } from '@pwrjs/core';
+import { PWRJS, PWRWallet } from '@pwrjs/core';
 ```
 
 **Set your RPC node:**
@@ -42,7 +42,7 @@ PWRJ.setRpcNodeUrl('https://pwrrpc.pwrlabs.io/');
 **Generate a new wallet:**
 
 ```ts
-const wallet = new PwrWallet(privateKey);
+const wallet = new PWRWallet(privateKey);
 ```
 
 **Get wallet address:**
@@ -65,34 +65,38 @@ const privateKey = wallet.getPrivateKey();
 
 **Transfer PWR tokens:**
 
-```java
-wallet.transferPWR("recipientAddress", '1000');
+```ts
+wallet.transferPWR('recipientAddress', '1000');
 ```
 
 Sending a transcation to the PWR Chain returns a Response object, which specified if the transaction was a success, and returns relevant data.
 If the transaction was a success, you can retrieive the transaction hash, if it failed, you can fetch the error.
 
-```java
-Response r = wallet.transferPWR("recipientAddress", 1000);
+```ts
+try {
+    const r = wallet.transferPWR('recipientAddress', 1000);
 
-if(r.isSuccess()) {
-   System.out.println("Transcation Hash: " + r.getMessage());
-} else {
-   System.out.println("Error: " + r.getError());
+    if (r.status === 'success') {
+        console.log('Transcation Hash: ' + r.data);
+    }
+} catch (e) {
+    console.log(e);
 }
 ```
 
 **Send data to a VM:**
 
-```java
-int vmId = 123;
-byte[] data = ...;
-Response r = wallet.sendVmDataTxn(vmId, data);
+```ts
+const vmId = 123;
+const dataBytes = Buffer.from('Hello World!');
 
-if(r.isSuccess()) {
-   System.out.println("Transcation Hash: " + r.getMessage());
-} else {
-   System.out.println("Error: " + r.getError());
+try {
+    const r = wallet.sendVMDataTxn(vmId, dataBytes);
+    if (r.status === 'success') {
+        console.log('Transcation Hash: ' + r.data);
+    }
+} catch (e) {
+    console.log(e);
 }
 ```
 
@@ -102,49 +106,49 @@ if(r.isSuccess()) {
 
 Fetches latest fee-per-byte rate from the RPC node and updates the local fee rate.
 
-```java
-PWRJ.updateFeePerByte();
+```ts
+PWRJS.updateFeePerByte();
 ```
 
 **Get RPC Node Url:**
 
 Returns currently set RPC node URL.
 
-```java
-String url = PWRJ.getRpcNodeUrl();
+```ts
+const url = PWRJS.getRpcNodeUrl();
 ```
 
 **Get Fee Per Byte: **
 
 Gets the latest fee-per-byte rate.
 
-```java
-long fee = PWRJ.getFeePerByte();
+```ts
+const fee = PWRJS.getFeePerByte();
 ```
 
 **Get Balance Of Address:**
 
 Gets the balance of a specific address.
 
-```java
-long balance = PWRJ.getBalanceOfAddress("0x...");
+```ts
+const balance = PWRJS.getBalanceOfAddress('0x...');
 ```
 
 **Get Nonce Of Address:**
 
 Gets the nonce/transaction count of a specific address.
 
-```java
-int nonce = PWRJ.getNonceOfAddress("0x...");
+```ts
+const nonce = PWRJS.getNonceOfAddress('0x...');
 ```
 
 **Broadcast Txn:**
 
 Broadcasts a signed transaction to the network.
 
-```java
-byte[] signedTransaction = ...;
-PWRJ.broadcastTxn(signedTransaction);
+```ts
+const signedTransaction = ...;
+PWRJS.broadcastTxn(signedTransaction);
 ```
 
 ## Contributing
