@@ -1,5 +1,5 @@
-import PwrWallet from './wallet/wallet';
-import PWR from './pwr/pwr';
+import PWRWallet from './wallet/wallet';
+import PWRJS from './pwr/pwr';
 
 // todo: split into separate files
-export { PwrWallet, PWR };
+export { PWRWallet, PWRJS };

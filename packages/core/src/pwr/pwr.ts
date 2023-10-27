@@ -1,17 +1,17 @@
 import axios from 'axios';
 
-export default class PWR {
+export default class PWRJS {
     static #rpcNodeUrl: string = 'https://pwrexplorerbackend.pwrlabs.io';
     static #feePerByte: number = 100;
 
     static getRpcNodeUrl(): string {
-        return PWR.#rpcNodeUrl;
+        return PWRJS.#rpcNodeUrl;
     }
 
     static async getNonceOfAddress(address: string): Promise<string> {
         const res = await axios({
             method: 'get',
-            url: `${PWR.getRpcNodeUrl()}/nonceOfUser/?userAddress=${address}`,
+            url: `${PWRJS.getRpcNodeUrl()}/nonceOfUser/?userAddress=${address}`,
         });
 
         if (res.data.status !== 'success') {
@@ -22,7 +22,7 @@ export default class PWR {
     }
 
     static async getBalanceOfAddress(address: string): Promise<string> {
-        const url = `${PWR.getRpcNodeUrl()}/balanceOf/?userAddress=${address}`;
+        const url = `${PWRJS.getRpcNodeUrl()}/balanceOf/?userAddress=${address}`;
 
         const res = await axios({
             method: 'get',
@@ -37,15 +37,15 @@ export default class PWR {
     }
 
     static getFeePerByte() {
-        return PWR.#feePerByte;
+        return PWRJS.#feePerByte;
     }
 
     static updateFeePerByte(feePerByte: number) {
-        PWR.#feePerByte = feePerByte;
+        PWRJS.#feePerByte = feePerByte;
     }
 
     static setRpcNodeUrl(rpcNodeUrl: string) {
-        PWR.#rpcNodeUrl = rpcNodeUrl;
+        PWRJS.#rpcNodeUrl = rpcNodeUrl;
     }
 
     static async broadcastTxn(txnBytes: Uint8Array): Promise<any[]> {
@@ -53,7 +53,7 @@ export default class PWR {
 
         const res = await axios({
             method: 'post',
-            url: `${PWR.getRpcNodeUrl()}/broadcast/`,
+            url: `${PWRJS.getRpcNodeUrl()}/broadcast/`,
             data: {
                 txn: txnHex,
             },

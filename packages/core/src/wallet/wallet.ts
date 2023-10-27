@@ -89,7 +89,7 @@ function signTxn(txnBytes: Uint8Array, privateKey: string) {
     return signature;
 }
 
-export default class PwrWallet {
+export default class PWRWallet {
     private address: string;
     private privateKey: string;
 
@@ -181,13 +181,6 @@ export default class PwrWallet {
         const _vmId = vmId;
 
         const data = bytesToHex(dataBytes);
-
-        console.log({
-            id,
-            nonce: _nonce,
-            vmId: _vmId,
-            data,
-        });
 
         const txnDataBytes = generateDataTxnBytes(id, _nonce, _vmId, data);
 
