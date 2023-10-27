@@ -1,5 +1,5 @@
 {
-    "name": "pwrjs",
+    "name": "@pwrjs/core",
     "version": "0.1.0",
     "description": "> TODO: description",
     "author": "pwrlabs <devservices@pwrlabs.io>",
