@@ -1,6 +1,6 @@
 {
     "name": "pwrlabs",
-    "private": true,
+    "private": false,
     "workspaces": [
         "packages/*"
     ],
