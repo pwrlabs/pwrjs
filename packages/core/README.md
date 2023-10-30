@@ -19,7 +19,7 @@ PWRJS is a javasrcipt library for interacting with the PWR network. It provides 
 
 ### Installation
 
-PWRJ is available on NPM. Add it as a dependency
+PWRJS is available on NPM. Add it as a dependency
 
 ```bash
     npm install @pwrjs/core
