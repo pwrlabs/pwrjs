@@ -1,4 +1,4 @@
-export default class PwrWallet {
+export default class PWRWallet {
     private address;
     private privateKey;
     constructor(privateKey: string);

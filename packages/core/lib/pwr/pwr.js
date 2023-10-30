@@ -19,18 +19,18 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _a, _PWR_rpcNodeUrl, _PWR_feePerByte;
+var _a, _PWRJS_rpcNodeUrl, _PWRJS_feePerByte;
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = require("axios");
-class PWR {
+class PWRJS {
     static getRpcNodeUrl() {
-        return __classPrivateFieldGet(PWR, _a, "f", _PWR_rpcNodeUrl);
+        return __classPrivateFieldGet(PWRJS, _a, "f", _PWRJS_rpcNodeUrl);
     }
     static getNonceOfAddress(address) {
         return __awaiter(this, void 0, void 0, function* () {
             const res = yield (0, axios_1.default)({
                 method: 'get',
-                url: `${PWR.getRpcNodeUrl()}/nonceOfUser/?userAddress=${address}`,
+                url: `${PWRJS.getRpcNodeUrl()}/nonceOfUser/?userAddress=${address}`,
             });
             if (res.data.status !== 'success') {
                 throw new Error('Error getting nonce');
@@ -40,7 +40,7 @@ class PWR {
     }
     static getBalanceOfAddress(address) {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = `${PWR.getRpcNodeUrl()}/balanceOf/?userAddress=${address}`;
+            const url = `${PWRJS.getRpcNodeUrl()}/balanceOf/?userAddress=${address}`;
             const res = yield (0, axios_1.default)({
                 method: 'get',
                 url,
@@ -52,20 +52,20 @@ class PWR {
         });
     }
     static getFeePerByte() {
-        return __classPrivateFieldGet(PWR, _a, "f", _PWR_feePerByte);
+        return __classPrivateFieldGet(PWRJS, _a, "f", _PWRJS_feePerByte);
     }
     static updateFeePerByte(feePerByte) {
-        __classPrivateFieldSet(PWR, _a, feePerByte, "f", _PWR_feePerByte);
+        __classPrivateFieldSet(PWRJS, _a, feePerByte, "f", _PWRJS_feePerByte);
     }
     static setRpcNodeUrl(rpcNodeUrl) {
-        __classPrivateFieldSet(PWR, _a, rpcNodeUrl, "f", _PWR_rpcNodeUrl);
+        __classPrivateFieldSet(PWRJS, _a, rpcNodeUrl, "f", _PWRJS_rpcNodeUrl);
     }
     static broadcastTxn(txnBytes) {
         return __awaiter(this, void 0, void 0, function* () {
             const txnHex = Buffer.from(txnBytes).toString('hex');
             const res = yield (0, axios_1.default)({
                 method: 'post',
-                url: `${PWR.getRpcNodeUrl()}/broadcast/`,
+                url: `${PWRJS.getRpcNodeUrl()}/broadcast/`,
                 data: {
                     txn: txnHex,
                 },
@@ -77,7 +77,7 @@ class PWR {
         });
     }
 }
-exports.default = PWR;
-_a = PWR;
-_PWR_rpcNodeUrl = { value: 'https://pwrexplorerbackend.pwrlabs.io' };
-_PWR_feePerByte = { value: 100 };
+exports.default = PWRJS;
+_a = PWRJS;
+_PWRJS_rpcNodeUrl = { value: 'https://pwrexplorerbackend.pwrlabs.io' };
+_PWRJS_feePerByte = { value: 100 };

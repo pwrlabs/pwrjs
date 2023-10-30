@@ -63,7 +63,7 @@ function signTxn(txnBytes, privateKey) {
     ]);
     return signature;
 }
-class PwrWallet {
+class PWRWallet {
     constructor(privateKey) {
         const wallet = wallet_utils_1.default.fromPrivateKey(privateKey);
         this.privateKey = wallet.getPrivateKeyString();
@@ -128,12 +128,6 @@ class PwrWallet {
             const _nonce = nonce || (yield this.getNonce());
             const _vmId = vmId;
             const data = (0, utils_1.bytesToHex)(dataBytes);
-            console.log({
-                id,
-                nonce: _nonce,
-                vmId: _vmId,
-                data,
-            });
             const txnDataBytes = generateDataTxnBytes(id, _nonce, _vmId, data);
             const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
             const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
@@ -152,4 +146,4 @@ class PwrWallet {
         });
     }
 }
-exports.default = PwrWallet;
+exports.default = PWRWallet;

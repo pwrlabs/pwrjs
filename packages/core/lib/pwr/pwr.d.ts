@@ -1,4 +1,4 @@
-export default class PWR {
+export default class PWRJS {
     #private;
     static getRpcNodeUrl(): string;
     static getNonceOfAddress(address: string): Promise<string>;
