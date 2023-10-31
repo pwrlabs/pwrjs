@@ -7,7 +7,7 @@ import { keccak256 } from 'js-sha3';
 // @ts-ignore
 import * as secp256k1 from 'secp256k1';
 
-const url = 'https://pwrexplorerbackend.pwrlabs.io';
+const url = 'https://pwrrpc.pwrlabs.io';
 
 function generateDataTxnBytes(
     id: number,
