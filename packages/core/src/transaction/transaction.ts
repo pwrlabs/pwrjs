@@ -1,12 +1,12 @@
 type Transaction = {
-    positionInTheBlock: number;
-    nonceOrValidationHash: string;
     size: number;
+    positionInTheBlock: number;
     fee: string;
+    type: string;
     from: string;
     to: string;
+    nonceOrValidationHash: string;
     txnFee: string;
-    type: string;
     hash: string;
 };
 

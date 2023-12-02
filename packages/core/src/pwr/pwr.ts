@@ -23,9 +23,17 @@ export default class PWRJS {
     static #rpcNodeUrl: string;
     static #feePerByte: number = 100;
 
+    // *~~*~~*~~ ~ *~~*~~*~~ //
+
     static getRpcNodeUrl(): string {
         return PWRJS.#rpcNodeUrl;
     }
+
+    static getFeePerByte() {
+        return PWRJS.#feePerByte;
+    }
+
+    // *~~*~~*~~ ~ *~~*~~*~~ //
 
     @EnsureRpcNodeUrl()
     static async getNonceOfAddress(address: string): Promise<string> {
@@ -34,11 +42,7 @@ export default class PWRJS {
             url: `${PWRJS.getRpcNodeUrl()}/nonceOfUser/?userAddress=${address}`,
         });
 
-        if (res.data.status !== 'success') {
-            throw new Error('Error getting nonce');
-        }
-
-        return res.data.data.nonce;
+        return res.data.nonce;
     }
 
     @EnsureRpcNodeUrl()
@@ -50,16 +54,10 @@ export default class PWRJS {
             url,
         });
 
-        if (res.data.status !== 'success') {
-            throw new Error('Error getting balance');
-        }
-
-        return res.data.data.balance;
+        return res.data.balance;
     }
 
-    static getFeePerByte() {
-        return PWRJS.#feePerByte;
-    }
+    // *~~*~~*~~ ~ *~~*~~*~~ //
 
     @EnsureRpcNodeUrl()
     static async getBlocksCount(): Promise<number> {
@@ -70,11 +68,7 @@ export default class PWRJS {
             url,
         });
 
-        if (res.data.status !== 'success') {
-            throw new Error('Error getting balance');
-        }
-
-        return res.data.data.blocksCount;
+        return res.data.blocksCount;
     }
 
     @EnsureRpcNodeUrl()
@@ -89,22 +83,6 @@ export default class PWRJS {
     }
 
     @EnsureRpcNodeUrl()
-    static async getValidatorsCount(): Promise<number> {
-        const url = `${PWRJS.getRpcNodeUrl()}/validatorsCount/`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        if (res.data.status !== 'success') {
-            throw new Error('Error getting balance');
-        }
-
-        return res.data.data.validatorsCount;
-    }
-
-    @EnsureRpcNodeUrl()
     static async getBlockByNumber(blockNumber: number): Promise<Block> {
         const url = `${PWRJS.getRpcNodeUrl()}/block/?blockNumber=${blockNumber}`;
 
@@ -113,12 +91,84 @@ export default class PWRJS {
             url,
         });
 
-        if (res.data.status !== 'success') {
-            throw new Error('Error getting balance');
-        }
-
-        return res.data.data.block;
+        return res.data.block;
     }
+
+    // *~~*~~*~~ ~ *~~*~~*~~ //
+
+    @EnsureRpcNodeUrl()
+    static async getTotalValidatorsCount(): Promise<number> {
+        const url = `${PWRJS.getRpcNodeUrl()}/totalValidatorsCount/`;
+
+        const res = await axios({
+            method: 'get',
+            url,
+        });
+
+        return res.data.validatorsCount;
+    }
+
+    @EnsureRpcNodeUrl()
+    static async getSandbyValidatorsCount(): Promise<number> {
+        const url = `${PWRJS.getRpcNodeUrl()}/standbyValidatorsCount/`;
+
+        const res = await axios({
+            method: 'get',
+            url,
+        });
+
+        return res.data.validatorsCount;
+    }
+
+    @EnsureRpcNodeUrl()
+    static async getActiveValidatorsCount(): Promise<number> {
+        const url = `${PWRJS.getRpcNodeUrl()}/activeValidatorsCount/`;
+
+        const res = await axios({
+            method: 'get',
+            url,
+        });
+
+        return res.data.validatorsCount;
+    }
+
+    @EnsureRpcNodeUrl()
+    static async getAllValidators(): Promise<[]> {
+        const url = `${PWRJS.getRpcNodeUrl()}/allValidators/`;
+
+        const res = await axios({
+            method: 'get',
+            url,
+        });
+
+        return res.data.validators;
+    }
+
+    @EnsureRpcNodeUrl()
+    static async getStandbyValidators(): Promise<[]> {
+        const url = `${PWRJS.getRpcNodeUrl()}/standbyValidators/`;
+
+        const res = await axios({
+            method: 'get',
+            url,
+        });
+
+        return res.data.validators;
+    }
+
+    @EnsureRpcNodeUrl()
+    static async getActiveValidators(): Promise<[]> {
+        const url = `${PWRJS.getRpcNodeUrl()}/activeValidators/`;
+
+        const res = await axios({
+            method: 'get',
+            url,
+        });
+
+        return res.data.validators;
+    }
+
+    // *~~*~~*~~ ~ *~~*~~*~~ //
 
     static updateFeePerByte(feePerByte: number) {
         PWRJS.#feePerByte = feePerByte;
@@ -140,10 +190,6 @@ export default class PWRJS {
             },
         });
 
-        if (res.data.status !== 'success') {
-            throw new Error('Error sending transaction');
-        }
-
-        return res.data.data;
+        return res.data;
     }
 }
