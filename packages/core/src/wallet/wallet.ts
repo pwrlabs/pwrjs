@@ -286,6 +286,7 @@ export default class PWRWallet {
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
         const txnHex = Buffer.from(txnBytes).toString('hex');
 
+        //
         const res = await axios({
             method: 'post',
             url: `${url}/broadcast/`,
