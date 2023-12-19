@@ -1,5 +1,3 @@
-'use strict';
-
 import PWRWallet from '../src/wallet/wallet';
 
 import axios from 'axios';
@@ -7,11 +5,12 @@ import BigNumber from 'bignumber.js';
 
 describe('wallet_core', () => {
     const pvk =
-        '0xb0f594c8cd413dd80dd324e58ed2d2d39ea2dd523c48b3d013247ebe7b724f4f';
+        '0x9c8c7c43592e21ccd54202bf089dc9c2ed25a528af1417ebf96734c7031adb62';
     const pwrWallet = new PWRWallet();
     console.log('wallet', pwrWallet.getAddress());
+    console.log('wallet', pwrWallet.getPrivateKey());
 
-    const validatorAddress = '0x61bd8fc1e30526aaf1c4706ada595d6d236d9883';
+    const validatorAddress = '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0';
 
     beforeAll(async () => {
         // faucet it
@@ -38,11 +37,11 @@ describe('wallet_core', () => {
         expect(testPvk.test(publicKey)).toBe(true);
     });
 
-    // it('Wallet balance', async () => {
-    //     const balance = await pwrWallet.getBalance();
+    it('Wallet balance', async () => {
+        const balance = await pwrWallet.getBalance();
 
-    //     expect(balance).toBeGreaterThan(BigNumber(50).shiftedBy(9).toNumber());
-    // });
+        expect(balance).toBeGreaterThan(BigNumber(50).shiftedBy(9).toNumber());
+    });
 
     it('Wallet nonce', async () => {
         const nonce = await pwrWallet.getNonce();
@@ -50,24 +49,33 @@ describe('wallet_core', () => {
         expect(nonce).toBe(0);
     });
 
-    // it('Wallet transfer', async () => {
-    //     const nonce = await pwrWallet.getNonce();
+    it('Wallet transfer', async () => {
+        const nonce = await pwrWallet.getNonce();
 
-    //     const tx = await pwrWallet.transferPWR(
-    //         '0x2712d702a02e5ff5472225d026bfba841349b72e',
-    //         '100000000',
-    //         nonce
-    //     );
-    // });
+        const tx = await pwrWallet.transferPWR(
+            '0x2712d702a02e5ff5472225d026bfba841349b72e',
+            '100000000',
+            nonce
+        );
+    });
 
-    // it('delegate 1 pwr to validators', async () => {
-    //     // const nonce = await pwrWallet.getNonce();
-    //     const tx = await pwrWallet.delegate(validatorAddress, '1000000000', 1);
-    //     await new Promise((r) => setTimeout(r, 3 * 1000));
-    // });
+    it('delegate 1 pwr to validators', async () => {
+        // const nonce = await pwrWallet.getNonce();
+        const tx = await pwrWallet.delegate(validatorAddress, '1000000000', 1);
+        await new Promise((r) => setTimeout(r, 3 * 1000));
+    });
 
-    // it('withdraw 1 pwr from validators', async () => {
-    //     // const nonce = await pwrWallet.getNonce();
-    //     const tx = await pwrWallet.withdraw(validatorAddress, '1', 2);
-    // });
+    it('withdraw 1 share from validators', async () => {
+        // const nonce = await pwrWallet.getNonce();
+        try {
+            const tx = await pwrWallet.withdraw(validatorAddress, '100', 2);
+        } catch (e) {
+            console.log(e);
+        }
+    });
+
+    it('claims rewards from validators', async () => {
+        // const nonce = await pwrWallet.getNonce();
+        const tx = await pwrWallet.claimVmId('64686', 3);
+    });
 });

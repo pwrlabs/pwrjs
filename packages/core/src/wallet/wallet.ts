@@ -16,6 +16,21 @@ enum Transaction {
     CLAIM = 6,
 }
 
+function generateClaimTxnBytes(id: number, nonce: number, vmId: string) {
+    const idDec = id;
+    const nonceDec = nonce;
+    const vmIdBN = BigNumber(vmId);
+    // const dataHex = data.replace('0x', '');
+
+    const idByte = decToBytes(idDec, 1);
+    const nonceByte = decToBytes(nonceDec, 4);
+    const vmIdByte = BnToBytes(vmIdBN);
+
+    const txnBytes = new Uint8Array([...idByte, ...nonceByte, ...vmIdByte]);
+
+    return txnBytes;
+}
+
 function generateDataTxnBytes(
     id: number,
     nonce: number,
@@ -262,19 +277,14 @@ export default class PWRWallet {
 
     async claimVmId(vmId: string, nonce?: number) {
         const id = Transaction.CLAIM;
-
         const _nonce = nonce || (await this.getNonce());
 
-        const txnDataBytes = generateDataTxnBytes(id, _nonce, vmId, '');
+        const txnDataBytes = generateClaimTxnBytes(id, _nonce, vmId);
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
         const txnHex = Buffer.from(txnBytes).toString('hex');
-
-        // const hashedTxnFinal = hashTxn(txnBytes);
-
-        // const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
         const res = await axios({
             method: 'post',

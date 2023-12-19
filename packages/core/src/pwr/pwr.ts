@@ -170,6 +170,17 @@ export default class PWRJS {
 
     // *~~*~~*~~ ~ *~~*~~*~~ //
 
+    static async getOwnerOfVm(vmId: string): Promise<any> {
+        const res = await axios({
+            method: 'get',
+            url: `${PWRJS.getRpcNodeUrl()}/ownerOfVmId/?vmId=${vmId}`,
+        });
+
+        return res.data.owner;
+    }
+
+    // *~~*~~*~~ ~ *~~*~~*~~ //
+
     static updateFeePerByte(feePerByte: number) {
         PWRJS.#feePerByte = feePerByte;
     }
