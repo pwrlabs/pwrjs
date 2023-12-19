@@ -62,20 +62,30 @@ describe('wallet_core', () => {
     it('delegate 1 pwr to validators', async () => {
         // const nonce = await pwrWallet.getNonce();
         const tx = await pwrWallet.delegate(validatorAddress, '1000000000', 1);
-        await new Promise((r) => setTimeout(r, 3 * 1000));
-    });
+        await new Promise((r) => setTimeout(r, 12 * 1000));
+    }, 20 * 1000);
 
     it('withdraw 1 share from validators', async () => {
         // const nonce = await pwrWallet.getNonce();
+
         try {
             const tx = await pwrWallet.withdraw(validatorAddress, '100', 2);
         } catch (e) {
             console.log(e);
+            console.log(e.message);
+            console.log(e.data);
         }
     });
 
-    it('claims rewards from validators', async () => {
-        // const nonce = await pwrWallet.getNonce();
-        const tx = await pwrWallet.claimVmId('64686', 3);
-    });
+    // vm id can be claimed only once, that's why this test is commented
+    // it('claims rewards from validators', async () => {
+    //     // const nonce = await pwrWallet.getNonce();
+    //     try {
+    //         const tx = await pwrWallet.claimVmId('68681', 3);
+    //     } catch (e) {
+    //         console.log(e);
+    //         console.log(e.message);
+    //         console.log(e.data);
+    //     }
+    // });
 });
