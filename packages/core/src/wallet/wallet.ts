@@ -229,27 +229,41 @@ export default class PWRWallet {
         return res.data;
     }
 
-    async delegate(to: string, amount: string, nonce?: number) {
-        const id = Transaction.DELEGATE;
+    async delegate(
+        to: string,
+        amount: string,
+        nonce?: number
+    ): Promise<{ success: boolean; txnHash?: string; error?: string }> {
+        try {
+            const id = Transaction.DELEGATE;
+            const _nonce = nonce || (await this.getNonce());
 
-        const _nonce = nonce || (await this.getNonce());
+            const txnDataBytes = generateTxnBytes(id, _nonce, amount, to);
 
-        const txnDataBytes = generateTxnBytes(id, _nonce, amount, to);
+            const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+            const txnBytes = new Uint8Array([
+                ...txnDataBytes,
+                ...signedTxnBytes,
+            ]);
+            const txnHex = Buffer.from(txnBytes).toString('hex');
 
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-        const txnHex = Buffer.from(txnBytes).toString('hex');
+            const res = await axios.post(`${url}/broadcast/`, { txn: txnHex });
 
-        const res = await axios({
-            method: 'post',
-            url: `${url}/broadcast/`,
-            data: {
-                txn: txnHex,
-            },
-        });
-
-        return res.data;
+            if (res.data && res.data.txnHash) {
+                return { success: true, txnHash: res.data.txnHash };
+            } else {
+                return {
+                    success: false,
+                    error: 'Transaction hash not received.',
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                error: error.message || 'Unknown error occurred.',
+            };
+        }
     }
 
     async withdraw(from: string, sharesAmount: string, nonce?: number) {
@@ -286,7 +300,6 @@ export default class PWRWallet {
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
         const txnHex = Buffer.from(txnBytes).toString('hex');
 
-        //
         const res = await axios({
             method: 'post',
             url: `${url}/broadcast/`,
