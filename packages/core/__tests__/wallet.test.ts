@@ -58,12 +58,54 @@ describe('wallet_core', () => {
             nonce
         );
     });
+    it('successfully joins with an IP and nonce', async () => {
+        try {
+            const tx = await pwrWallet.join('127.0.0.1 ', 1);
+            console.log('Join transaction successful:', tx);
+        } catch (e) {
+            console.error('Error during join operation:', e.message);
+            if (e.response) {
+                console.log('Error response data:', e.response.data);
+            }
+        }
+    });
 
-    it('delegate 1 pwr to validators', async () => {
-        // const nonce = await pwrWallet.getNonce();
-        const tx = await pwrWallet.delegate(validatorAddress, '1000000000', 1);
-        await new Promise((r) => setTimeout(r, 12 * 1000));
-    }, 20 * 1000);
+    it('claim active node spot', async () => {
+        try {
+            const tx = await pwrWallet.claimActiveNodeSpot(1);
+            console.log('Transaction successful:', tx);
+        } catch (e) {
+            console.error('Error claiming active node spot:', e.message);
+            if (e.response) {
+                console.log('Error response data:', e.response.data);
+            }
+            it('successfully joins with an IP and nonce', async () => {
+                try {
+                    const tx = await pwrWallet.join('127.0.0.1 ', 1);
+                    console.log('Join transaction successful:', tx);
+                } catch (e) {
+                    console.error('Error during join operation:', e.message);
+                    if (e.response) {
+                        console.log('Error response data:', e.response.data);
+                    }
+                }
+            });
+        }
+    });
+
+    it(
+        'delegate 1 pwr to validators',
+        async () => {
+            // const nonce = await pwrWallet.getNonce();
+            const tx = await pwrWallet.delegate(
+                validatorAddress,
+                '1000000000',
+                1
+            );
+            await new Promise((r) => setTimeout(r, 12 * 1000));
+        },
+        20 * 1000
+    );
 
     it('withdraw 1 share from validators', async () => {
         // const nonce = await pwrWallet.getNonce();
@@ -88,4 +130,16 @@ describe('wallet_core', () => {
     //         console.log(e.data);
     //     }
     // });
+
+    it('withdrawPWR share from validators', async () => {
+        // const nonce = await pwrWallet.getNonce();
+
+        try {
+            const tx = await pwrWallet.withdrawPWR(validatorAddress, '100', 2);
+        } catch (e) {
+            console.log(e);
+            console.log(e.message);
+            console.log(e.data);
+        }
+    });
 });
