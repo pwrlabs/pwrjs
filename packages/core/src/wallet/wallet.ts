@@ -15,6 +15,10 @@ enum Transaction {
     VM_DATA_TXN = 5,
     CLAIM = 6,
     JOIN = 7,
+    SET_GUARDIAN = 8,
+    REMOVE_GUARDIAN = 9,
+    SEND_GUARDIAN = 10,
+    REMOVE_VALIDATOR = 11,
 }
 
 function generateClaimTxnBytes(id: number, nonce: number, vmId: string) {
@@ -230,34 +234,44 @@ export default class PWRWallet {
         return res.data;
     }
 
-    async join(ip: string, nonce: number): Promise<{ success: boolean; txnHash: string; error: string }> {
-        const id = Transaction.JOIN; 
-    
+    async join(
+        ip: string,
+        nonce: number
+    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+        const id = Transaction.JOIN;
+
         const ipHex = Buffer.from(ip).toString('hex');
-        
-    
-        const vmIdPlaceholder = ""; 
-    
-        const txnDataBytes = generateDataTxnBytes(id, nonce, vmIdPlaceholder, ipHex);
-    
+
+        const vmIdPlaceholder = '';
+
+        const txnDataBytes = generateDataTxnBytes(
+            id,
+            nonce,
+            vmIdPlaceholder,
+            ipHex
+        );
+
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-    
+
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
         const txnHex = Buffer.from(txnBytes).toString('hex');
-    
+
         try {
             const res = await axios.post(`${url}/broadcast/`, { txn: txnHex });
-    
+
             return {
                 success: res.data.success,
                 txnHash: res.data.txnHash,
-                error: res.data.error || ""
+                error: res.data.error || '',
             };
         } catch (error) {
-            return { success: false, txnHash: "", error: error.message || "An unknown error occurred" };
+            return {
+                success: false,
+                txnHash: '',
+                error: error.message || 'An unknown error occurred',
+            };
         }
     }
-    
 
     async claimActiveNodeSpot(
         nonce: number
@@ -353,29 +367,6 @@ export default class PWRWallet {
 
         return res.data;
     }
-
-    async claimVmId(vmId: string, nonce?: number) {
-        const id = Transaction.CLAIM;
-        const _nonce = nonce || (await this.getNonce());
-
-        const txnDataBytes = generateClaimTxnBytes(id, _nonce, vmId);
-
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-
-        const res = await axios({
-            method: 'post',
-            url: `${url}/broadcast/`,
-            data: {
-                txn: txnHex,
-            },
-        });
-
-        return res.data;
-    }
-
     async withdrawPWR(
         from: string,
         pwrAmount: string,
@@ -401,5 +392,219 @@ export default class PWRWallet {
         });
 
         return res.data;
+    }
+    async claimVmId(vmId: string, nonce?: number) {
+        const id = Transaction.CLAIM;
+        const _nonce = nonce || (await this.getNonce());
+
+        const txnDataBytes = generateClaimTxnBytes(id, _nonce, vmId);
+
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        const txnHex = Buffer.from(txnBytes).toString('hex');
+
+        const res = await axios({
+            method: 'post',
+            url: `${url}/broadcast/`,
+            data: {
+                txn: txnHex,
+            },
+        });
+
+        return res.data;
+    }
+
+    async sendConduitTransaction(
+        vmId: number,
+        txn: Uint8Array,
+        nonce: number
+    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+        const id = Transaction.VM_DATA_TXN;
+
+        const vmIdHex = vmId.toString(16);
+        const txnHex = Buffer.from(txn).toString('hex');
+
+        const txnDataBytes = generateDataTxnBytes(id, nonce, vmIdHex, txnHex);
+
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        const txnHexFinal = Buffer.from(txnBytes).toString('hex');
+
+        try {
+            const res = await axios.post(`${url}/broadcast/`, {
+                txn: txnHexFinal,
+            });
+
+            if (res.data && res.data.txnHash) {
+                return { success: true, txnHash: res.data.txnHash, error: '' };
+            } else {
+                return {
+                    success: false,
+                    txnHash: '',
+                    error: 'Transaction failed without a hash.',
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                txnHash: '',
+                error: error.message || 'An unknown error occurred',
+            };
+        }
+    }
+    async setGuardian(
+        guardianAddress: Uint8Array,
+        expiryDate: number,
+        nonce: number
+    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+        const id = Transaction.SET_GUARDIAN;
+
+        const guardianAddressHex = Buffer.from(guardianAddress).toString('hex');
+        const txnDataBytes = generateDataTxnBytes(
+            id,
+            nonce,
+            '',
+            guardianAddressHex + expiryDate.toString(16)
+        );
+
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        const txnHex = Buffer.from(txnBytes).toString('hex');
+
+        try {
+            const res = await axios.post(`${url}/broadcast/`, {
+                txn: txnHex,
+            });
+
+            if (res.data && res.data.txnHash) {
+                return { success: true, txnHash: res.data.txnHash, error: '' };
+            } else {
+                return {
+                    success: false,
+                    txnHash: '',
+                    error: 'Transaction failed without a hash.',
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                txnHash: '',
+                error: error.message || 'An unknown error occurred',
+            };
+        }
+    }
+    async removeGuardian(
+        nonce: number
+    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+        const id = Transaction.REMOVE_GUARDIAN;
+
+        const txnDataBytes = generateTxnBytes(id, nonce, '', '');
+
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        const txnHex = Buffer.from(txnBytes).toString('hex');
+
+        try {
+            const res = await axios.post(`${url}/broadcast/`, {
+                txn: txnHex,
+            });
+
+            if (res.data && res.data.txnHash) {
+                return { success: true, txnHash: res.data.txnHash, error: '' };
+            } else {
+                return {
+                    success: false,
+                    txnHash: '',
+                    error: 'Transaction failed without a hash.',
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                txnHash: '',
+                error: error.message || 'An unknown error occurred',
+            };
+        }
+    }
+    async sendGuardianWrappedTransaction(
+        txn: Uint8Array,
+        nonce: number
+    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+        const id = Transaction.SEND_GUARDIAN; 
+
+        const txnHex = Buffer.from(txn).toString('hex');
+
+       
+        const txnDataBytes = generateDataTxnBytes(id, nonce, '', txnHex);
+
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        const finalTxnHex = Buffer.from(txnBytes).toString('hex');
+
+        try {
+            const res = await axios.post(`${url}/broadcast/`, {
+                txn: finalTxnHex,
+            });
+
+            if (res.data && res.data.txnHash) {
+                return { success: true, txnHash: res.data.txnHash, error: '' };
+            } else {
+                return {
+                    success: false,
+                    txnHash: '',
+                    error: 'Transaction failed without a hash.',
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                txnHash: '',
+                error: error.message || 'An unknown error occurred',
+            };
+        }
+    }
+    async sendValidatorRemoveTxn(
+        validator: string,
+        nonce: number
+    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+        const id = Transaction.REMOVE_VALIDATOR;
+
+        const validatorHex = validator.startsWith('0x')
+            ? validator
+            : `0x${validator}`;
+
+        const txnDataBytes = generateDataTxnBytes(id, nonce, validatorHex, '');
+
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        const finalTxnHex = Buffer.from(txnBytes).toString('hex');
+
+        try {
+            const res = await axios.post(`${url}/broadcast/`, {
+                txn: finalTxnHex,
+            });
+
+            if (res.data && res.data.txnHash) {
+                return { success: true, txnHash: res.data.txnHash, error: '' };
+            } else {
+                return {
+                    success: false,
+                    txnHash: '',
+                    error: 'Transaction failed without a hash.',
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                txnHash: '',
+                error: error.message || 'An unknown error occurred',
+            };
+        }
     }
 }

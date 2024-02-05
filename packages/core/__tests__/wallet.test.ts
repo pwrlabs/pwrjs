@@ -120,16 +120,16 @@ describe('wallet_core', () => {
     });
 
     // vm id can be claimed only once, that's why this test is commented
-    // it('claims rewards from validators', async () => {
-    //     // const nonce = await pwrWallet.getNonce();
-    //     try {
-    //         const tx = await pwrWallet.claimVmId('68681', 3);
-    //     } catch (e) {
-    //         console.log(e);
-    //         console.log(e.message);
-    //         console.log(e.data);
-    //     }
-    // });
+    it('claims rewards from validators', async () => {
+        // const nonce = await pwrWallet.getNonce();
+        try {
+            const tx = await pwrWallet.claimVmId('68681', 3);
+        } catch (e) {
+            console.log(e);
+            console.log(e.message);
+            console.log(e.data);
+        }
+    });
 
     it('withdrawPWR share from validators', async () => {
         // const nonce = await pwrWallet.getNonce();
@@ -140,6 +140,94 @@ describe('wallet_core', () => {
             console.log(e);
             console.log(e.message);
             console.log(e.data);
+        }
+    });
+
+    it('sends a conduit transaction', async () => {
+        const vmId = 100;
+        const txnBytes = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
+        const nonce = 2;
+        try {
+            const tx = await pwrWallet.sendConduitTransaction(
+                vmId,
+                txnBytes,
+                nonce
+            );
+            console.log('Conduit transaction successful:', tx);
+        } catch (e) {
+            console.error('Error sending conduit transaction:', e.message);
+
+            if (e.response) {
+                console.log('Error response data:', e.response.data);
+            }
+        }
+    });
+    it('sets a guardian address with an expiry date', async () => {
+        const guardianAddress = new Uint8Array([
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
+            0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13,
+        ]);
+        const expiryDate = Date.now();
+        const nonce = 2;
+
+        try {
+            const tx = await pwrWallet.setGuardian(
+                guardianAddress,
+                expiryDate,
+                nonce
+            );
+            console.log('Set guardian transaction successful:', tx);
+        } catch (e) {
+            console.error('Error setting guardian:', e.message);
+            if (e.response) {
+                console.log('Error response data:', e.response.data);
+            }
+        }
+    });
+    it('removes a guardian', async () => {
+        const nonce = 2;
+
+        try {
+            const tx = await pwrWallet.removeGuardian(nonce);
+            console.log('Remove guardian transaction successful:', tx);
+        } catch (e) {
+            console.error('Error removing guardian:', e.message);
+            if (e.response) {
+                console.log('Error response data:', e.response.data);
+            }
+        }
+    });
+    it('sends a guardian-wrapped transaction', async () => {
+        const exampleTxn = new Uint8Array([0x01, 0x02, 0x03, 0x04]);
+        const nonce = 2;
+        try {
+            const tx = await pwrWallet.sendGuardianWrappedTransaction(
+                exampleTxn,
+                nonce
+            );
+            console.log('Guardian-wrapped transaction successful:', tx);
+        } catch (e) {
+            console.error(
+                'Error sending guardian-wrapped transaction:',
+                e.message
+            );
+            if (e.response) {
+                console.log('Error response data:', e.response.data);
+            }
+        }
+    });
+    it('removes a validator', async () => {
+        const validator = '0x1234abcd';
+        const nonce = 2;
+
+        try {
+            const tx = await pwrWallet.sendValidatorRemoveTxn(validator, nonce);
+            console.log('Validator remove transaction successful:', tx);
+        } catch (e) {
+            console.error('Error removing validator:', e.message);
+            if (e.response) {
+                console.log('Error response data:', e.response.data);
+            }
         }
     });
 });
