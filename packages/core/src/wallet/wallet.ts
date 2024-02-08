@@ -10,50 +10,63 @@ const url = 'https://pwrrpc.pwrlabs.io';
 
 enum Transaction {
     TRANSFER = 0,
+    JOIN = 1,
+    CLAIM_SPOT = 2,
     DELEGATE = 3,
     WITHDRAW = 4,
     VM_DATA_TXN = 5,
-    CLAIM = 6,
-    JOIN = 7,
+    CLAIM_VM_ID = 6,
+    REMOVE_VALIDATOR = 7,
     SET_GUARDIAN = 8,
     REMOVE_GUARDIAN = 9,
     SEND_GUARDIAN = 10,
-    REMOVE_VALIDATOR = 11,
 }
 
-function generateClaimTxnBytes(id: number, nonce: number, vmId: string) {
+function generateClaimTxnBytes(
+    id: number,
+    chainId: number,
+    nonce: number,
+    vmId: string
+) {
+    const chainIdByte = decToBytes(chainId, 1);
     const idDec = id;
     const nonceDec = nonce;
     const vmIdBN = BigNumber(vmId);
-    // const dataHex = data.replace('0x', '');
 
     const idByte = decToBytes(idDec, 1);
     const nonceByte = decToBytes(nonceDec, 4);
     const vmIdByte = BnToBytes(vmIdBN);
 
-    const txnBytes = new Uint8Array([...idByte, ...nonceByte, ...vmIdByte]);
+    const txnBytes = new Uint8Array([
+        ...idByte,
+        ...chainIdByte,
+        ...nonceByte,
+        ...vmIdByte,
+    ]);
 
     return txnBytes;
 }
 
 function generateDataTxnBytes(
     id: number,
+    chainId: number,
     nonce: number,
     vmId: string,
     data: string
 ) {
+    const chainIdByte = decToBytes(chainId, 1);
     const idDec = id;
     const nonceDec = nonce;
     const vmIdBN = BigNumber(vmId);
-    // const dataHex = data.replace('0x', '');
+    const dataByte = new Uint8Array(Buffer.from(data, 'hex'));
 
     const idByte = decToBytes(idDec, 1);
     const nonceByte = decToBytes(nonceDec, 4);
     const vmIdByte = BnToBytes(vmIdBN);
-    const dataByte = new Uint8Array(Buffer.from(data, 'hex'));
 
     const txnBytes = new Uint8Array([
         ...idByte,
+        ...chainIdByte,
         ...nonceByte,
         ...vmIdByte,
         ...dataByte,
@@ -64,6 +77,7 @@ function generateDataTxnBytes(
 
 function generateTxnBytes(
     id: number,
+    chainId: number,
     nonce: number,
     amount: string,
     recipientSr: string
@@ -77,12 +91,14 @@ function generateTxnBytes(
     // const recipient = values.recipientAddress.replace('0x', '');
 
     const idByte = decToBytes(idDec, 1);
+    const chainIdByte = decToBytes(chainId, 1);
     const nonceByte = decToBytes(nonceDec, 4);
     const amountByte = BnToBytes(amountBN);
     const recipientByte = new Uint8Array(Buffer.from(recipient, 'hex'));
 
     const txnBytes = new Uint8Array([
         ...idByte,
+        ...chainIdByte,
         ...nonceByte,
         ...amountByte,
         ...recipientByte,
@@ -119,7 +135,7 @@ function signTxn(txnBytes: Uint8Array, privateKey: string) {
 export default class PWRWallet {
     private address: string;
     private privateKey: string;
-
+    private chainId: number = 0;
     constructor(privateKey?: string) {
         let wallet;
 
@@ -173,15 +189,19 @@ export default class PWRWallet {
     getPrivateKey(): string {
         return this.privateKey;
     }
-
     // *~~*~~*~~ TRANSACTIONS *~~*~~*~~ //
-
+    getChainId() {
+        return this.chainId;
+    }
+    setChainId(chainId: number) {
+        this.chainId = chainId;
+    }
     async transferPWR(to: string, amount: string, nonce?: number) {
         const id = Transaction.TRANSFER;
 
         const _nonce = nonce || (await this.getNonce());
-
-        const txnDataBytes = generateTxnBytes(id, _nonce, amount, to);
+        const _chainId = this.chainId;
+        const txnDataBytes = generateTxnBytes(id, _nonce, _chainId, amount, to);
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -211,8 +231,15 @@ export default class PWRWallet {
         const _vmId = vmId;
 
         const data = bytesToHex(dataBytes);
+        const _chainId = this.chainId;
 
-        const txnDataBytes = generateDataTxnBytes(id, _nonce, _vmId, data);
+        const txnDataBytes = generateDataTxnBytes(
+            id,
+            _nonce,
+            _chainId,
+            _vmId,
+            data
+        );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -239,6 +266,7 @@ export default class PWRWallet {
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
         const id = Transaction.JOIN;
+        const _chainId = this.chainId;
 
         const ipHex = Buffer.from(ip).toString('hex');
 
@@ -246,6 +274,7 @@ export default class PWRWallet {
 
         const txnDataBytes = generateDataTxnBytes(
             id,
+            _chainId,
             nonce,
             vmIdPlaceholder,
             ipHex
@@ -276,9 +305,10 @@ export default class PWRWallet {
     async claimActiveNodeSpot(
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
-        const id = Transaction.CLAIM;
+        const id = Transaction.CLAIM_SPOT;
+        const _chainId = this.chainId;
 
-        const txnDataBytes = generateTxnBytes(id, nonce, '', '');
+        const txnDataBytes = generateTxnBytes(id, nonce, _chainId, '', '');
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -316,8 +346,15 @@ export default class PWRWallet {
         try {
             const id = Transaction.DELEGATE;
             const _nonce = nonce || (await this.getNonce());
+            const _chainId = this.chainId;
 
-            const txnDataBytes = generateTxnBytes(id, _nonce, amount, to);
+            const txnDataBytes = generateTxnBytes(
+                id,
+                _nonce,
+                _chainId,
+                amount,
+                to
+            );
 
             const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -349,8 +386,15 @@ export default class PWRWallet {
         const id = Transaction.WITHDRAW;
 
         const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.chainId;
 
-        const txnDataBytes = generateTxnBytes(id, _nonce, sharesAmount, from);
+        const txnDataBytes = generateTxnBytes(
+            id,
+            _nonce,
+            _chainId,
+            sharesAmount,
+            from
+        );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -375,8 +419,15 @@ export default class PWRWallet {
         const id = Transaction.WITHDRAW;
 
         const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.chainId;
 
-        const txnDataBytes = generateTxnBytes(id, _nonce, pwrAmount, from);
+        const txnDataBytes = generateTxnBytes(
+            id,
+            _nonce,
+            _chainId,
+            pwrAmount,
+            from
+        );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -394,10 +445,11 @@ export default class PWRWallet {
         return res.data;
     }
     async claimVmId(vmId: string, nonce?: number) {
-        const id = Transaction.CLAIM;
+        const id = Transaction.CLAIM_VM_ID;
         const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.chainId;
 
-        const txnDataBytes = generateClaimTxnBytes(id, _nonce, vmId);
+        const txnDataBytes = generateClaimTxnBytes(id, _nonce, _chainId, vmId);
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -424,8 +476,15 @@ export default class PWRWallet {
 
         const vmIdHex = vmId.toString(16);
         const txnHex = Buffer.from(txn).toString('hex');
+        const _chainId = this.chainId;
 
-        const txnDataBytes = generateDataTxnBytes(id, nonce, vmIdHex, txnHex);
+        const txnDataBytes = generateDataTxnBytes(
+            id,
+            nonce,
+            this.chainId,
+            vmIdHex,
+            txnHex
+        );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -460,11 +519,13 @@ export default class PWRWallet {
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
         const id = Transaction.SET_GUARDIAN;
+        const _chainId = this.chainId;
 
         const guardianAddressHex = Buffer.from(guardianAddress).toString('hex');
         const txnDataBytes = generateDataTxnBytes(
             id,
             nonce,
+            _chainId,
             '',
             guardianAddressHex + expiryDate.toString(16)
         );
@@ -500,8 +561,9 @@ export default class PWRWallet {
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
         const id = Transaction.REMOVE_GUARDIAN;
+        const _chainId = this.chainId;
 
-        const txnDataBytes = generateTxnBytes(id, nonce, '', '');
+        const txnDataBytes = generateTxnBytes(id, nonce, _chainId, '', '');
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -534,12 +596,18 @@ export default class PWRWallet {
         txn: Uint8Array,
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
-        const id = Transaction.SEND_GUARDIAN; 
+        const id = Transaction.SEND_GUARDIAN;
 
         const txnHex = Buffer.from(txn).toString('hex');
+        const _chainId = this.chainId;
 
-       
-        const txnDataBytes = generateDataTxnBytes(id, nonce, '', txnHex);
+        const txnDataBytes = generateDataTxnBytes(
+            id,
+            nonce,
+            _chainId,
+            '',
+            txnHex
+        );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -573,12 +641,19 @@ export default class PWRWallet {
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
         const id = Transaction.REMOVE_VALIDATOR;
+        const _chainId = this.chainId;
 
         const validatorHex = validator.startsWith('0x')
             ? validator
             : `0x${validator}`;
 
-        const txnDataBytes = generateDataTxnBytes(id, nonce, validatorHex, '');
+        const txnDataBytes = generateDataTxnBytes(
+            id,
+            nonce,
+            _chainId,
+            validatorHex,
+            ''
+        );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 

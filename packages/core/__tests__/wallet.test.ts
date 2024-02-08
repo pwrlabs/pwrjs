@@ -7,9 +7,9 @@ describe('wallet_core', () => {
     const pvk =
         '0x9c8c7c43592e21ccd54202bf089dc9c2ed25a528af1417ebf96734c7031adb62';
     const pwrWallet = new PWRWallet();
-    console.log('wallet', pwrWallet.getAddress());
-    console.log('wallet', pwrWallet.getPrivateKey());
 
+    const chainId = 1;
+    pwrWallet.setChainId(chainId);
     const validatorAddress = '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0';
 
     beforeAll(async () => {
@@ -58,6 +58,25 @@ describe('wallet_core', () => {
             nonce
         );
     });
+    it('sends VM data transaction', async () => {
+
+        const vmId = "100";
+
+        const dataBytes = new TextEncoder().encode(
+            JSON.stringify({ name: 'Test VM Data' })
+        );
+        const nonce = await pwrWallet.getNonce();
+
+        try {
+            const tx = await pwrWallet.sendVMDataTxn(vmId, dataBytes, nonce);
+            console.log('VM data transaction successful:', tx);
+
+            expect(tx).toHaveProperty('success', true);
+        } catch (e) {
+            console.error('Error sending VM data transaction:', e.message);
+        }
+    });
+
     it('successfully joins with an IP and nonce', async () => {
         try {
             const tx = await pwrWallet.join('127.0.0.1 ', 1);
