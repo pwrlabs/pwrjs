@@ -235,8 +235,8 @@ export default class PWRWallet {
 
         const txnDataBytes = generateDataTxnBytes(
             id,
-            _nonce,
             _chainId,
+            _nonce,
             _vmId,
             data
         );
