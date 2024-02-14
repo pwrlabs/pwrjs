@@ -201,7 +201,7 @@ export default class PWRWallet {
 
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.chainId;
-        const txnDataBytes = generateTxnBytes(id, _nonce, _chainId, amount, to);
+        const txnDataBytes = generateTxnBytes(id, _chainId, _nonce, amount, to);
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -308,7 +308,7 @@ export default class PWRWallet {
         const id = Transaction.CLAIM_SPOT;
         const _chainId = this.chainId;
 
-        const txnDataBytes = generateTxnBytes(id, nonce, _chainId, '', '');
+        const txnDataBytes = generateTxnBytes(id, _chainId, nonce, '', '');
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
@@ -350,8 +350,8 @@ export default class PWRWallet {
 
             const txnDataBytes = generateTxnBytes(
                 id,
-                _nonce,
                 _chainId,
+                _nonce,
                 amount,
                 to
             );
@@ -390,8 +390,8 @@ export default class PWRWallet {
 
         const txnDataBytes = generateTxnBytes(
             id,
-            _nonce,
             _chainId,
+            _nonce,
             sharesAmount,
             from
         );
@@ -423,8 +423,8 @@ export default class PWRWallet {
 
         const txnDataBytes = generateTxnBytes(
             id,
-            _nonce,
             _chainId,
+            _nonce,
             pwrAmount,
             from
         );
@@ -563,7 +563,7 @@ export default class PWRWallet {
         const id = Transaction.REMOVE_GUARDIAN;
         const _chainId = this.chainId;
 
-        const txnDataBytes = generateTxnBytes(id, nonce, _chainId, '', '');
+        const txnDataBytes = generateTxnBytes(id, _chainId, nonce, '', '');
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
