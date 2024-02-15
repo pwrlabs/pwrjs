@@ -189,6 +189,19 @@ export default class PWRWallet {
     getPrivateKey(): string {
         return this.privateKey;
     }
+
+    calculateTransactionFee(txnBytes: Uint8Array): BigNumber {
+        const txnSize = txnBytes.length;
+        const feePerByte = new BigNumber(100);
+        const txnFeeInUnits = new BigNumber(txnSize).multipliedBy(feePerByte);
+
+        const txnFeeInPWR = txnFeeInUnits.dividedBy(
+            new BigNumber(1_000_000_000)
+        );
+
+        return txnFeeInPWR;
+    }
+
     // *~~*~~*~~ TRANSACTIONS *~~*~~*~~ //
     getChainId() {
         return this.chainId;
@@ -196,11 +209,12 @@ export default class PWRWallet {
     setChainId(chainId: number) {
         this.chainId = chainId;
     }
+
     async transferPWR(to: string, amount: string, nonce?: number) {
         const id = Transaction.TRANSFER;
 
         const _nonce = nonce || (await this.getNonce());
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
         const txnDataBytes = generateTxnBytes(id, _chainId, _nonce, amount, to);
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
@@ -208,9 +222,17 @@ export default class PWRWallet {
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
         const txnHex = Buffer.from(txnBytes).toString('hex');
 
-        // const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnFinal = hashTxn(txnBytes);
 
-        // const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+
+        const txn = {
+            id,
+            nonce,
+            value: BigNumber(amount).shiftedBy(9).toString(),
+            to: to,
+            hash: `0x${hashedTxnStr}`,
+        };
 
         const res = await axios({
             method: 'post',
@@ -220,7 +242,10 @@ export default class PWRWallet {
             },
         });
 
-        return res.data;
+        return {
+            res: res.data,
+            txn,
+        };
     }
 
     async sendVMDataTxn(vmId: string, dataBytes: Uint8Array, nonce?: number) {
@@ -231,7 +256,7 @@ export default class PWRWallet {
         const _vmId = vmId;
 
         const data = bytesToHex(dataBytes);
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const txnDataBytes = generateDataTxnBytes(
             id,
@@ -266,7 +291,7 @@ export default class PWRWallet {
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
         const id = Transaction.JOIN;
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const ipHex = Buffer.from(ip).toString('hex');
 
@@ -306,7 +331,7 @@ export default class PWRWallet {
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
         const id = Transaction.CLAIM_SPOT;
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const txnDataBytes = generateTxnBytes(id, _chainId, nonce, '', '');
 
@@ -346,7 +371,7 @@ export default class PWRWallet {
         try {
             const id = Transaction.DELEGATE;
             const _nonce = nonce || (await this.getNonce());
-            const _chainId = this.chainId;
+            const _chainId = this.getChainId();
 
             const txnDataBytes = generateTxnBytes(
                 id,
@@ -386,7 +411,7 @@ export default class PWRWallet {
         const id = Transaction.WITHDRAW;
 
         const _nonce = nonce || (await this.getNonce());
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const txnDataBytes = generateTxnBytes(
             id,
@@ -419,7 +444,7 @@ export default class PWRWallet {
         const id = Transaction.WITHDRAW;
 
         const _nonce = nonce || (await this.getNonce());
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const txnDataBytes = generateTxnBytes(
             id,
@@ -447,7 +472,7 @@ export default class PWRWallet {
     async claimVmId(vmId: string, nonce?: number) {
         const id = Transaction.CLAIM_VM_ID;
         const _nonce = nonce || (await this.getNonce());
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const txnDataBytes = generateClaimTxnBytes(id, _nonce, _chainId, vmId);
 
@@ -476,7 +501,7 @@ export default class PWRWallet {
 
         const vmIdHex = vmId.toString(16);
         const txnHex = Buffer.from(txn).toString('hex');
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const txnDataBytes = generateDataTxnBytes(
             id,
@@ -519,7 +544,7 @@ export default class PWRWallet {
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
         const id = Transaction.SET_GUARDIAN;
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const guardianAddressHex = Buffer.from(guardianAddress).toString('hex');
         const txnDataBytes = generateDataTxnBytes(
@@ -561,7 +586,7 @@ export default class PWRWallet {
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
         const id = Transaction.REMOVE_GUARDIAN;
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const txnDataBytes = generateTxnBytes(id, _chainId, nonce, '', '');
 
@@ -599,7 +624,7 @@ export default class PWRWallet {
         const id = Transaction.SEND_GUARDIAN;
 
         const txnHex = Buffer.from(txn).toString('hex');
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const txnDataBytes = generateDataTxnBytes(
             id,
@@ -641,7 +666,7 @@ export default class PWRWallet {
         nonce: number
     ): Promise<{ success: boolean; txnHash: string; error: string }> {
         const id = Transaction.REMOVE_VALIDATOR;
-        const _chainId = this.chainId;
+        const _chainId = this.getChainId();
 
         const validatorHex = validator.startsWith('0x')
             ? validator

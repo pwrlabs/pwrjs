@@ -1,0 +1,87 @@
+{
+  "version": "6.0",
+  "nxVersion": "18.0.4",
+  "deps": {
+    "axios": "^1.6.7",
+    "bignumber.js": "^9.1.2",
+    "bip39": "^3.1.0",
+    "ethereumjs-wallet": "^1.0.2",
+    "js-sha3": "^0.9.3",
+    "secp256k1": "^5.0.0",
+    "@types/jest": "^29.5.7",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  },
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {},
+    "nonProjectFiles": [
+      {
+        "file": "README.md",
+        "hash": "3083432672096554536"
+      },
+      {
+        "file": "__tests__/pwrjs.test.ts",
+        "hash": "3449241791228004635"
+      },
+      {
+        "file": "__tests__/validator.test.ts",
+        "hash": "4730632551525174636"
+      },
+      {
+        "file": "__tests__/wallet.test.ts",
+        "hash": "17556142376123518289"
+      },
+      {
+        "file": "jest.config.js",
+        "hash": "9625460574794279287"
+      },
+      {
+        "file": "package.json",
+        "hash": "15107193136842137596"
+      },
+      {
+        "file": "src/block/block.ts",
+        "hash": "7951701915029410153"
+      },
+      {
+        "file": "src/index.ts",
+        "hash": "2699687666601646729"
+      },
+      {
+        "file": "src/pwr/pwr.ts",
+        "hash": "17319076872885790155"
+      },
+      {
+        "file": "src/reward/reward.ts",
+        "hash": "3674794975119214681"
+      },
+      {
+        "file": "src/transaction/transaction.ts",
+        "hash": "10396058683008912774"
+      },
+      {
+        "file": "src/utils.ts",
+        "hash": "6933903795740324175"
+      },
+      {
+        "file": "src/validator/validator.ts",
+        "hash": "17872457193995002949"
+      },
+      {
+        "file": "src/wallet.utils.ts",
+        "hash": "8403507128989787901"
+      },
+      {
+        "file": "src/wallet/wallet.ts",
+        "hash": "17165872090239506528"
+      },
+      {
+        "file": "tsconfig.json",
+        "hash": "16579974225161609212"
+      }
+    ]
+  }
+}
