@@ -245,6 +245,9 @@ export default class PWRWallet {
         return {
             res: res.data,
             txn,
+            txnBytes,
+            txnDataBytes,
+            txnHex,
         };
     }
 
@@ -292,13 +295,13 @@ export default class PWRWallet {
         return {
             res: res.data,
             txn,
+            txnBytes,
+            txnDataBytes,
+            txnHex,
         };
     }
 
-    async join(
-        ip: string,
-        nonce: number
-    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+    async join(ip: string, nonce: number) {
         const id = Transaction.JOIN;
         const _chainId = this.getChainId();
 
@@ -323,9 +326,10 @@ export default class PWRWallet {
             const res = await axios.post(`${url}/broadcast/`, { txn: txnHex });
 
             return {
-                success: res.data.success,
-                txnHash: res.data.txnHash,
-                error: res.data.error || '',
+                txnDataBytes,
+                res: res.data,
+                txnHex,
+                txnBytes,
             };
         } catch (error) {
             return {
@@ -336,9 +340,7 @@ export default class PWRWallet {
         }
     }
 
-    async claimActiveNodeSpot(
-        nonce: number
-    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+    async claimActiveNodeSpot(nonce: number) {
         const id = Transaction.CLAIM_SPOT;
         const _chainId = this.getChainId();
 
@@ -358,9 +360,10 @@ export default class PWRWallet {
                 return { success: true, txnHash: res.data.txnHash, error: '' };
             } else {
                 return {
-                    success: false,
-                    txnHash: '',
-                    error: 'Claim failed without a hash.',
+                    txnDataBytes,
+                    res: res.data,
+                    txnHex,
+                    txnBytes,
                 };
             }
         } catch (error) {
@@ -372,11 +375,7 @@ export default class PWRWallet {
         }
     }
 
-    async delegate(
-        to: string,
-        amount: string,
-        nonce?: number
-    ): Promise<{ success: boolean; txnHash?: string; error?: string }> {
+    async delegate(to: string, amount: string, nonce?: number) {
         try {
             const id = Transaction.DELEGATE;
             const _nonce = nonce || (await this.getNonce());
@@ -404,8 +403,10 @@ export default class PWRWallet {
                 return { success: true, txnHash: res.data.txnHash };
             } else {
                 return {
-                    success: false,
-                    error: 'Transaction hash not received.',
+                    txnDataBytes,
+                    res: res.data,
+                    txnHex,
+                    txnBytes,
                 };
             }
         } catch (error) {
@@ -443,13 +444,14 @@ export default class PWRWallet {
             },
         });
 
-        return res.data;
+        return {
+            txnDataBytes,
+            res: res.data,
+            txnHex,
+            txnBytes,
+        };
     }
-    async withdrawPWR(
-        from: string,
-        pwrAmount: string,
-        nonce?: number
-    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+    async withdrawPWR(from: string, pwrAmount: string, nonce?: number) {
         const id = Transaction.WITHDRAW;
 
         const _nonce = nonce || (await this.getNonce());
@@ -476,7 +478,12 @@ export default class PWRWallet {
             },
         });
 
-        return res.data;
+        return {
+            txnDataBytes,
+            res: res.data,
+            txnHex,
+            txnBytes,
+        };
     }
     async claimVmId(vmId: string, nonce?: number) {
         const id = Transaction.CLAIM_VM_ID;
@@ -498,14 +505,15 @@ export default class PWRWallet {
             },
         });
 
-        return res.data;
+        return {
+            txnDataBytes,
+            res: res.data,
+            txnHex,
+            txnBytes,
+        };
     }
 
-    async sendConduitTransaction(
-        vmId: number,
-        txn: Uint8Array,
-        nonce: number
-    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+    async sendConduitTransaction(vmId: number, txn: Uint8Array, nonce: number) {
         const id = Transaction.VM_DATA_TXN;
 
         const vmIdHex = vmId.toString(16);
@@ -514,7 +522,7 @@ export default class PWRWallet {
 
         const txnDataBytes = generateDataTxnBytes(
             id,
-            this.chainId,
+            _chainId,
             nonce,
             vmIdHex,
             txnHex
@@ -534,9 +542,10 @@ export default class PWRWallet {
                 return { success: true, txnHash: res.data.txnHash, error: '' };
             } else {
                 return {
-                    success: false,
-                    txnHash: '',
-                    error: 'Transaction failed without a hash.',
+                    txnDataBytes,
+                    res: res.data,
+                    txnHex,
+                    txnBytes,
                 };
             }
         } catch (error) {
@@ -551,7 +560,7 @@ export default class PWRWallet {
         guardianAddress: Uint8Array,
         expiryDate: number,
         nonce: number
-    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+    ) {
         const id = Transaction.SET_GUARDIAN;
         const _chainId = this.getChainId();
 
@@ -578,9 +587,10 @@ export default class PWRWallet {
                 return { success: true, txnHash: res.data.txnHash, error: '' };
             } else {
                 return {
-                    success: false,
-                    txnHash: '',
-                    error: 'Transaction failed without a hash.',
+                    txnDataBytes,
+                    res: res.data,
+                    txnHex,
+                    txnBytes,
                 };
             }
         } catch (error) {
@@ -591,9 +601,7 @@ export default class PWRWallet {
             };
         }
     }
-    async removeGuardian(
-        nonce: number
-    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+    async removeGuardian(nonce: number) {
         const id = Transaction.REMOVE_GUARDIAN;
         const _chainId = this.getChainId();
 
@@ -613,9 +621,10 @@ export default class PWRWallet {
                 return { success: true, txnHash: res.data.txnHash, error: '' };
             } else {
                 return {
-                    success: false,
-                    txnHash: '',
-                    error: 'Transaction failed without a hash.',
+                    txnDataBytes,
+                    res: res.data,
+                    txnHex,
+                    txnBytes,
                 };
             }
         } catch (error) {
@@ -626,10 +635,7 @@ export default class PWRWallet {
             };
         }
     }
-    async sendGuardianWrappedTransaction(
-        txn: Uint8Array,
-        nonce: number
-    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+    async sendGuardianWrappedTransaction(txn: Uint8Array, nonce: number) {
         const id = Transaction.SEND_GUARDIAN;
 
         const txnHex = Buffer.from(txn).toString('hex');
@@ -657,9 +663,11 @@ export default class PWRWallet {
                 return { success: true, txnHash: res.data.txnHash, error: '' };
             } else {
                 return {
-                    success: false,
-                    txnHash: '',
-                    error: 'Transaction failed without a hash.',
+                    txnDataBytes,
+                    res: res.data,
+                    txnHex,
+                    txn: finalTxnHex,
+                    txnBytes,
                 };
             }
         } catch (error) {
@@ -670,10 +678,7 @@ export default class PWRWallet {
             };
         }
     }
-    async sendValidatorRemoveTxn(
-        validator: string,
-        nonce: number
-    ): Promise<{ success: boolean; txnHash: string; error: string }> {
+    async sendValidatorRemoveTxn(validator: string, nonce: number) {
         const id = Transaction.REMOVE_VALIDATOR;
         const _chainId = this.getChainId();
 
@@ -703,9 +708,10 @@ export default class PWRWallet {
                 return { success: true, txnHash: res.data.txnHash, error: '' };
             } else {
                 return {
-                    success: false,
-                    txnHash: '',
-                    error: 'Transaction failed without a hash.',
+                    txnDataBytes,
+                    res: res.data,
+                    finalTxnHex,
+                    txnBytes,
                 };
             }
         } catch (error) {
