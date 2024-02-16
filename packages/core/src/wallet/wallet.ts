@@ -201,6 +201,39 @@ export default class PWRWallet {
 
         return txnFeeInPWR;
     }
+    calculateFee(transactionType, params) {
+        let txnDataBytes;
+        const { amount, to, nonce, vmId, data } = params;
+
+        switch (transactionType) {
+            case Transaction.TRANSFER:
+                txnDataBytes = generateTxnBytes(
+                    transactionType,
+                    this.chainId,
+                    nonce,
+                    amount,
+                    to
+                );
+                break;
+            case Transaction.VM_DATA_TXN:
+                txnDataBytes = generateDataTxnBytes(
+                    transactionType,
+                    this.chainId,
+                    nonce,
+                    vmId,
+                    data
+                );
+                break;
+            // Add other cases as needed
+            default:
+                console.error(
+                    'Unsupported transaction type for fee calculation'
+                );
+                return new BigNumber(0); // or throw an error
+        }
+
+        return this.calculateTransactionFee(txnDataBytes);
+    }
 
     // *~~*~~*~~ TRANSACTIONS *~~*~~*~~ //
     getChainId() {
@@ -277,6 +310,7 @@ export default class PWRWallet {
         const hashedTxnFinal = hashTxn(txnBytes);
 
         const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+
         const txn = {
             id,
             nonce,
