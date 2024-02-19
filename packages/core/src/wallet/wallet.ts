@@ -7,6 +7,7 @@ import { keccak256,keccak224 } from 'js-sha3';
 import * as secp256k1 from 'secp256k1';
 
 const url = 'https://pwrrpc.pwrlabs.io';
+const _baseUrl = 'https://pwrexplorerbackend.pwrlabs.io';
 
 enum Transaction {
     TRANSFER = 0,
@@ -113,7 +114,7 @@ function hashTxn(txnBytes: Uint8Array): ArrayBuffer {
 }
 
 function signTxn(txnBytes: Uint8Array, privateKey: string) {
-    const hashedBytes = keccak224.arrayBuffer(txnBytes);
+    const hashedBytes = keccak256.arrayBuffer(txnBytes);
 
     const privateKeyBytes = new Uint8Array(
         Buffer.from(privateKey.slice(2), 'hex')

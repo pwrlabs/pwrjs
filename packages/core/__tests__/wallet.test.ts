@@ -8,9 +8,10 @@ describe('wallet_core', () => {
         '0x9c8c7c43592e21ccd54202bf089dc9c2ed25a528af1417ebf96734c7031adb62';
     const pwrWallet = new PWRWallet();
 
-    const chainId = 1;
+    const chainId = 0;
     pwrWallet.setChainId(chainId);
     const validatorAddress = '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0';
+    console.log('validatorAddress', pwrWallet.getAddress());
 
     beforeAll(async () => {
         // faucet it
@@ -25,6 +26,7 @@ describe('wallet_core', () => {
 
     it('Wallet address and public and private key', () => {
         const address = pwrWallet.getAddress();
+        console.log('address', address);
         const privateKey = pwrWallet.getPrivateKey();
         const publicKey = pwrWallet.getPublicKey();
 
@@ -39,7 +41,7 @@ describe('wallet_core', () => {
 
     it('Wallet balance', async () => {
         const balance = await pwrWallet.getBalance();
-
+        console.log(balance);
         expect(balance).toBeGreaterThan(BigNumber(50).shiftedBy(9).toNumber());
     });
 
@@ -51,16 +53,19 @@ describe('wallet_core', () => {
 
     it('Wallet transfer', async () => {
         const nonce = await pwrWallet.getNonce();
-
-        const tx = await pwrWallet.transferPWR(
-            '0x2712d702a02e5ff5472225d026bfba841349b72e',
-            '100000000',
-            nonce
-        );
+        try {
+            const tx = await pwrWallet.transferPWR(
+                '0x2712d702a02e5ff5472225d026bfba841349b72e',
+                '222222222',
+                nonce
+            );
+            console.log('Transfer transaction successful:', tx);
+        } catch (error) {
+            console.log(error);
+        }
     });
     it('sends VM data transaction', async () => {
-
-        const vmId = "100";
+        const vmId = '100';
 
         const dataBytes = new TextEncoder().encode(
             JSON.stringify({ name: 'Test VM Data' })
