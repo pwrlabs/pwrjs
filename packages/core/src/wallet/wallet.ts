@@ -202,46 +202,40 @@ export default class PWRWallet {
         return txnFeeInPWR;
     }
     async calculateFee(transactionType, params) {
-        let txnDataBytes; // Ensure this is available in the function scope
-        let txnBytes; // Declare it at the function level if you plan to use it outside the switch
+        let txnDataBytes;
+        let txnBytes;
         const { amount, to, nonce, vmId, dataBytes } = params;
 
         switch (transactionType) {
             case Transaction.TRANSFER: {
-                const id = Transaction.TRANSFER;
                 const _nonce = nonce || (await this.getNonce());
                 const _chainId = this.getChainId();
                 txnDataBytes = generateTxnBytes(
-                    id,
+                    Transaction.TRANSFER,
                     _chainId,
                     _nonce,
                     amount,
                     to
                 );
-
-                const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-                txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
                 break;
             }
             case Transaction.VM_DATA_TXN: {
-                const id = Transaction.VM_DATA_TXN;
                 const _nonce = nonce || (await this.getNonce());
-                const _vmId = vmId;
-                const data = bytesToHex(dataBytes);
+                if (!(dataBytes instanceof Uint8Array)) {
+                    console.error('dataBytes must be a Uint8Array');
+                    return new BigNumber(0);
+                }
+                const dataHex = bytesToHex(dataBytes);
                 const _chainId = this.getChainId();
                 txnDataBytes = generateDataTxnBytes(
-                    id,
+                    Transaction.VM_DATA_TXN,
                     _chainId,
                     _nonce,
-                    _vmId,
-                    data
+                    vmId,
+                    dataHex
                 );
-
-                const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-                txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
                 break;
             }
-            // Add other cases as needed
             default:
                 console.error(
                     'Unsupported transaction type for fee calculation'
@@ -249,6 +243,8 @@ export default class PWRWallet {
                 return new BigNumber(0);
         }
 
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
         return this.calculateTransactionFee(txnBytes);
     }
 
