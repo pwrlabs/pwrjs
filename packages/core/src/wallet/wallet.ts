@@ -2,7 +2,7 @@ import axios from 'axios';
 import WalletUtils from '../wallet.utils';
 import BigNumber from 'bignumber.js';
 import { BnToBytes, bytesToHex, decToBytes } from '../utils';
-import { keccak256 } from 'js-sha3';
+import { keccak256,keccak224 } from 'js-sha3';
 
 import * as secp256k1 from 'secp256k1';
 
@@ -108,12 +108,12 @@ function generateTxnBytes(
 }
 
 function hashTxn(txnBytes: Uint8Array): ArrayBuffer {
-    const hashedTxn = keccak256.arrayBuffer(txnBytes);
+    const hashedTxn = keccak224.arrayBuffer(txnBytes);
     return hashedTxn;
 }
 
 function signTxn(txnBytes: Uint8Array, privateKey: string) {
-    const hashedBytes = keccak256.arrayBuffer(txnBytes);
+    const hashedBytes = keccak224.arrayBuffer(txnBytes);
 
     const privateKeyBytes = new Uint8Array(
         Buffer.from(privateKey.slice(2), 'hex')
