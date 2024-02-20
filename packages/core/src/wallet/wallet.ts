@@ -2,7 +2,7 @@ import axios from 'axios';
 import WalletUtils from '../wallet.utils';
 import BigNumber from 'bignumber.js';
 import { BnToBytes, bytesToHex, decToBytes } from '../utils';
-import { keccak256,keccak224 } from 'js-sha3';
+import { keccak256, keccak224 } from 'js-sha3';
 
 import * as secp256k1 from 'secp256k1';
 
@@ -43,6 +43,27 @@ function generateClaimTxnBytes(
         ...chainIdByte,
         ...nonceByte,
         ...vmIdByte,
+    ]);
+
+    return txnBytes;
+}
+function generateJoinTxnBytes(
+    id: number,
+    chainId: number,
+    nonce: number,
+    ip: string
+) {
+    const chainIdByte = decToBytes(chainId, 1);
+    const idByte = decToBytes(id, 1);
+    const nonceByte = decToBytes(nonce, 4);
+
+    const ipByte = new Uint8Array(Buffer.from(ip, 'utf8'));
+
+    const txnBytes = new Uint8Array([
+        ...idByte,
+        ...chainIdByte,
+        ...nonceByte,
+        ...ipByte,
     ]);
 
     return txnBytes;
@@ -349,46 +370,33 @@ export default class PWRWallet {
         };
     }
 
-    async join(ip: string, nonce: number) {
+    async join(ip: string, nonce?: number) {
         const id = Transaction.JOIN;
         const _chainId = this.getChainId();
 
-        const ipHex = Buffer.from(ip).toString('hex');
-
-        const vmIdPlaceholder = '';
-
-        const txnDataBytes = generateDataTxnBytes(
-            id,
-            _chainId,
-            nonce,
-            vmIdPlaceholder,
-            ipHex
-        );
+        const ipUtf8Bytes = Buffer.from(ip, 'utf8');
+        const txnDataBytes = generateJoinTxnBytes(id, _chainId, nonce, ip);
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
         const txnHex = Buffer.from(txnBytes).toString('hex');
 
         try {
             const res = await axios.post(`${url}/broadcast/`, { txn: txnHex });
+            console.log('res', res);
 
             return {
-                txnDataBytes,
                 res: res.data,
-                txnHex,
                 txnBytes,
+                txnDataBytes,
+                txnHex,
             };
         } catch (error) {
-            return {
-                success: false,
-                txnHash: '',
-                error: error.message || 'An unknown error occurred',
-            };
+            console.log(error);
         }
     }
 
-    async claimActiveNodeSpot(nonce: number) {
+    async claimActiveNodeSpot(nonce?: number) {
         const id = Transaction.CLAIM_SPOT;
         const _chainId = this.getChainId();
 
@@ -446,22 +454,16 @@ export default class PWRWallet {
             const txnHex = Buffer.from(txnBytes).toString('hex');
 
             const res = await axios.post(`${url}/broadcast/`, { txn: txnHex });
+            console.log('res', res);
 
-            if (res.data && res.data.txnHash) {
-                return { success: true, txnHash: res.data.txnHash };
-            } else {
-                return {
-                    txnDataBytes,
-                    res: res.data,
-                    txnHex,
-                    txnBytes,
-                };
-            }
-        } catch (error) {
             return {
-                success: false,
-                error: error.message || 'Unknown error occurred.',
+                txnDataBytes,
+                res: res.data,
+                txnHex,
+                txnBytes,
             };
+        } catch (error) {
+            console.error(error);
         }
     }
 
@@ -561,7 +563,11 @@ export default class PWRWallet {
         };
     }
 
-    async sendConduitTransaction(vmId: number, txn: Uint8Array, nonce: number) {
+    async sendConduitTransaction(
+        vmId: number,
+        txn: Uint8Array,
+        nonce?: number
+    ) {
         const id = Transaction.VM_DATA_TXN;
 
         const vmIdHex = vmId.toString(16);
@@ -607,7 +613,7 @@ export default class PWRWallet {
     async setGuardian(
         guardianAddress: Uint8Array,
         expiryDate: number,
-        nonce: number
+        nonce?: number
     ) {
         const id = Transaction.SET_GUARDIAN;
         const _chainId = this.getChainId();
@@ -649,7 +655,7 @@ export default class PWRWallet {
             };
         }
     }
-    async removeGuardian(nonce: number) {
+    async removeGuardian(nonce?: number) {
         const id = Transaction.REMOVE_GUARDIAN;
         const _chainId = this.getChainId();
 
@@ -683,7 +689,7 @@ export default class PWRWallet {
             };
         }
     }
-    async sendGuardianWrappedTransaction(txn: Uint8Array, nonce: number) {
+    async sendGuardianWrappedTransaction(txn: Uint8Array, nonce?: number) {
         const id = Transaction.SEND_GUARDIAN;
 
         const txnHex = Buffer.from(txn).toString('hex');
@@ -726,7 +732,7 @@ export default class PWRWallet {
             };
         }
     }
-    async sendValidatorRemoveTxn(validator: string, nonce: number) {
+    async sendValidatorRemoveTxn(validator: string, nonce?: number) {
         const id = Transaction.REMOVE_VALIDATOR;
         const _chainId = this.getChainId();
 
