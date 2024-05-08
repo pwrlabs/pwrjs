@@ -1,5 +1,14 @@
 import BigNumber from 'bignumber.js';
 
+export function HexToBytes(hex: string): Uint8Array {
+    const hexString = hex.startsWith('0x') ? hex.slice(2) : hex;
+    const byteArray = new Uint8Array(hexString.length / 2);
+    for (let i = 0, j = 0; i < hexString.length; j++, i += 2) {
+        byteArray[j] = parseInt(hexString.substring(i, i + 2), 16);
+    }
+    return byteArray;
+}
+
 export function bytesToHex(val: Uint8Array) {
     return val.reduce(
         (acc, curr) => acc + curr.toString(16).padStart(2, '0'),
