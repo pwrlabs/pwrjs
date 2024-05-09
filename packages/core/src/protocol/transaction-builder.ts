@@ -205,7 +205,7 @@ export default class TransactionBuilder {
         if (expiryDate < 0) {
             throw new Error('Expiry date cannot be negative');
         }
-        if (expiryDate < Date.now()) {
+        if (expiryDate < Date.now() / 1000) {
             throw new Error('Expiry date cannot be in the past');
         }
 
@@ -260,23 +260,33 @@ export default class TransactionBuilder {
         return base;
     }
 
-    //  static  getGuardianApprovalTransaction(List<byte[]> transactions, nonce: number,  chainId: number): Uint8Array {
-    //     int totalLength = 0;
-    //     for (byte[] Transaction : transactions) {
-    //         totalLength += Transaction.length;
-    //     }
+    static getGuardianApprovalTransaction(
+        transactions: Uint8Array[],
+        nonce: number,
+        chainId: number
+    ): Uint8Array {
+        // let totalLength = 0;
+        // for (let t in transactions) {
+        //     totalLength += t.length;
+        // }
 
-    //     byte[] TransactionBase = getTransactionBase((byte) 10, nonce, chainId);
-    //     ByteBuffer buffer = ByteBuffer.allocate(TransactionBase.length + (transactions.size() * 4) + totalLength);
-    //     buffer.put(TransactionBase);
+        const base = this.getTransactionBase(
+            Transaction_ID.GUARDIAN_TXN,
+            chainId,
+            nonce
+        );
 
-    //     for (byte[] Transaction : transactions) {
-    //         buffer.putInt(Transaction.length);
-    //         buffer.put(Transaction);
-    //     }
+        let arr = [...base];
 
-    //     return buffer.array();
-    // }
+        for (let transaction of transactions) {
+            const txnLength = decToBytes(transaction.length, 4);
+            arr.push(...txnLength, ...transaction);
+        }
+
+        const txnBytes = new Uint8Array(arr);
+
+        return txnBytes;
+    }
 
     // static getPayableVmDataTransaction(vmId: string, value: string,  data: string,  nonce: string, byte chainId) {
     //     if (nonce < 0) {
@@ -293,28 +303,28 @@ export default class TransactionBuilder {
     //     return buffer.array();
     // }
 
-    public static getValidatorRemoveTransaction(
-        validator: string,
-        nonce: number,
-        chainId: number
-    ): Uint8Array {
-        // assetAddressValidity(validator);
+    // public static getValidatorRemoveTransaction(
+    //     validator: string,
+    //     nonce: number,
+    //     chainId: number
+    // ): Uint8Array {
+    //     // assetAddressValidity(validator);
 
-        if (nonce < 0) {
-            throw new Error('Nonce cannot be negative');
-        }
+    //     if (nonce < 0) {
+    //         throw new Error('Nonce cannot be negative');
+    //     }
 
-        const base = this.getTransactionBase(
-            Transaction_ID.REMOVE_VALIDATOR,
-            chainId,
-            nonce
-        );
-        const b_validator = HexToBytes(validator);
+    //     const base = this.getTransactionBase(
+    //         Transaction_ID.REMOVE_VALIDATOR,
+    //         chainId,
+    //         nonce
+    //     );
+    //     const b_validator = HexToBytes(validator);
 
-        const bytes = new Uint8Array([...base, ...b_validator]);
+    //     const bytes = new Uint8Array([...base, ...b_validator]);
 
-        return bytes;
-    }
+    //     return bytes;
+    // }
 
     // public static getConduitApprovalTransaction(vmId: string,  transactions: strn, int nonce, byte chainId) {
     //     if (nonce < 0) {

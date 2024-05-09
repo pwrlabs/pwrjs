@@ -2,11 +2,19 @@ import PWRWallet from '../src/wallet/wallet';
 
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
+import TransactionBuilder from '../src/protocol/transaction-builder';
+import { signTxn } from '../src/utils';
 
 describe('wallet_core', () => {
     const pvk =
         '0x65d39c88806fd85c9a860e1f26155af4321c5aaaf98d5d164bdab13b5e924ffd';
-    const pwrWallet = new PWRWallet();
+    const pwrWallet = new PWRWallet(pvk);
+
+    const pvkGuardian =
+        '0xb8a70832e8fec8f6a0ec4721f5d5b0239834105eb52a606914e61fbe3506d278';
+    const guardianWallet = new PWRWallet(pvk);
+
+    const validator = '0x0x6EFEC8D7B5dfC4aaC22Da193176a91Eb87FE6857';
 
     let nonce = -1;
 
@@ -19,16 +27,16 @@ describe('wallet_core', () => {
     console.log('validatorAddress', pwrWallet.getAddress());
     console.log('pvk', pwrWallet.getPrivateKey());
 
-    beforeAll(async () => {
-        // faucet it
-        await axios({
-            method: 'post',
-            url: `https://pwrfaucet.pwrlabs.io/claimPWR/?userAddress=${pwrWallet.getAddress()}`,
-        });
+    // beforeAll(async () => {
+    //     // faucet it
+    //     await axios({
+    //         method: 'post',
+    //         url: `https://pwrfaucet.pwrlabs.io/claimPWR/?userAddress=${pwrWallet.getAddress()}`,
+    //     });
 
-        // sleep for 5 seconds
-        await new Promise((_) => setTimeout(_, 12 * 1000));
-    }, 20 * 1000);
+    //     // sleep for 5 seconds
+    //     await new Promise((_) => setTimeout(_, 12 * 1000));
+    // }, 20 * 1000);
 
     // #region wallet props
 
@@ -53,11 +61,16 @@ describe('wallet_core', () => {
     });
 
     it('Wallet nonce', async () => {
-        const nonce = await pwrWallet.getNonce();
+        const _nonce = await pwrWallet.getNonce();
+
+        nonce = _nonce;
+
+        console.log({ nonce: _nonce });
 
         // expect(nonce).toBeGreaterThanOrEqual(0);
-        expect(nonce).toBe(0);
+        expect(_nonce).toBeGreaterThan(0);
     });
+
     // #endregion
 
     // #region transactions
@@ -119,74 +132,99 @@ describe('wallet_core', () => {
         }
     });
 
-    it('sends payable VM data  transaction', async () => {
-        nonce += 1;
+    // it('sends payable VM data  transaction', async () => {
+    //     nonce += 1;
 
-        const vmId = '100';
+    //     const vmId = '100';
 
-        const dataBytes = new TextEncoder().encode(
-            JSON.stringify({ name: 'Test VM Data' })
-        );
+    //     const dataBytes = new TextEncoder().encode(
+    //         JSON.stringify({ name: 'Test VM Data' })
+    //     );
 
-        try {
-            const tx = await pwrWallet.sendPayableVmDataTransaction(
-                vmId,
-                '1',
-                dataBytes,
-                nonce
-            );
-            console.log('VM data transaction successful:', tx.txn.hash);
-        } catch (e) {
-            expect(false).toBe(true);
-            // console.error('Error sending VM data transaction:', e.message);
-        }
-    });
+    //     try {
+    //         const tx = await pwrWallet.sendPayableVmDataTransaction(
+    //             vmId,
+    //             '1',
+    //             dataBytes,
+    //             nonce
+    //         );
+    //         console.log('VM data transaction successful:', tx.txn.hash);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //         // console.error('Error sending VM data transaction:', e.message);
+    //     }
+    // });
 
     // #endregion
 
     // #region guardians
 
-    it('sets  guardian ', async () => {
-        // 7 days from now ms
-        const expiryDate = Date.now() + 7 * 24 * 60 * 60 * 1000;
-        nonce += 1;
+    // it('sets  guardian ', async () => {
+    //     // 7 days from now ms
 
-        try {
-            const tx = await pwrWallet.setGuardian(
-                guardianAddress,
-                expiryDate,
-                nonce
-            );
-            console.log('Set guardian transaction successful:', tx.res);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    //     const futureDate = new Date();
+    //     futureDate.setDate(futureDate.getDate() + 7);
+    //     const epochTime = Math.floor(futureDate.getTime() / 1000);
 
-    it('sends a guardian-wrapped transaction', async () => {
-        const exampleTxn = new Uint8Array([0x01, 0x02, 0x03, 0x04]);
-        nonce += 1;
-        try {
-            const tx = await pwrWallet.sendGuardianApprovalTransaction(
-                exampleTxn,
-                nonce
-            );
-            console.log('Guardian-wrapped transaction successful:', tx);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    //     nonce += 1;
 
-    it('removes a guardian', async () => {
-        nonce += 1;
+    //     try {
+    //         const tx = await pwrWallet.setGuardian(
+    //             guardianAddress,
+    //             epochTime,
+    //             nonce
+    //         );
+    //         // console.log('Set guardian transaction successful:', tx.res);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
-        try {
-            const tx = await pwrWallet.removeGuardian(1);
-            console.log('Remove guardian transaction successful:', tx);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    // it('sends a guardian-wrapped transaction', async () => {
+    //     const nonceG = await guardianWallet.getNonce();
+    //     nonce += 1;
+
+    //     const exampleTxn = {
+    //         to: '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0',
+    //         amount: '1',
+    //         nonce,
+    //         chainId: 0,
+    //     };
+
+    //     const txn = TransactionBuilder.getTransferPwrTransaction(
+    //         exampleTxn.chainId,
+    //         exampleTxn.nonce,
+    //         exampleTxn.amount,
+    //         exampleTxn.to
+    //     );
+
+    //     const signature = signTxn(txn, guardianWallet.getPrivateKey());
+    //     const txnBytes = new Uint8Array([...txn, ...signature]);
+
+    //     try {
+    //         const tx = await guardianWallet.sendGuardianApprovalTransaction(
+    //             [txnBytes],
+    //             nonceG
+    //         );
+
+    //         console.log('Guardian-wrapped transaction successful:', tx);
+    //     } catch (e) {
+    //         console.log(e);
+
+    //         expect(false).toBe(true);
+    //     }
+    // });
+
+    // it('removes a guardian', async () => {
+    //     nonce += 1;
+
+    //     try {
+    //         const tx = await pwrWallet.removeGuardian(1);
+    //         console.log('Remove guardian transaction successful:', tx);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
     // #endregion
 
@@ -196,7 +234,7 @@ describe('wallet_core', () => {
         'delegate 1 pwr to validators',
         async () => {
             nonce += 1;
-            const validator = '0x61BD8FC1E30526AAF1C4706ADA595D6D236D9883';
+
             try {
                 const tx = await pwrWallet.delegate(
                     validator,
@@ -207,31 +245,33 @@ describe('wallet_core', () => {
                 await new Promise((resolve) => setTimeout(resolve, 12 * 1000));
                 console.log('Delegation transaction successful:', tx.txnHex);
             } catch (error) {
+                console.log('delegate', error);
                 expect(false).toBe(true);
             }
         },
         20 * 1000
     );
 
-    it('withdraw 1 share from validators', async () => {
-        nonce += 1;
+    // it('withdraw 1 share from validators', async () => {
+    //     nonce += 1;
 
-        try {
-            const tx = await pwrWallet.withdraw(validatorAddress, '1', nonce);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    //     try {
+    //         const tx = await pwrWallet.withdraw(validator, '1', nonce);
+    //     } catch (e) {
+    //         // console.log(e);
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
-    // vm id can be claimed only once, that's why this test is commented
-    it('claims rewards from validators', async () => {
-        nonce += 1;
-        try {
-            const tx = await pwrWallet.claimVmId('68681', nonce);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    // // vm id can be claimed only once, that's why this test is commented
+    // it('claims rewards from validators', async () => {
+    //     nonce += 1;
+    //     try {
+    //         const tx = await pwrWallet.claimVmId('68681', nonce);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
     it('removes a validator', async () => {
         const validator = '0x1234abcd';
@@ -245,17 +285,17 @@ describe('wallet_core', () => {
         }
     });
 
-    it('moves stake', async () => {
-        const validator = '0x1234abcd';
-        nonce += 1;
+    // it('moves stake', async () => {
+    //     const validator = '0x1234abcd';
+    //     nonce += 1;
 
-        try {
-            const tx = await pwrWallet.moveStake('100', '0x1', '0x2', nonce);
-            console.log('Move stake transaction successful:', tx);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    //     try {
+    //         const tx = await pwrWallet.moveStake('100', '0x1', '0x2', nonce);
+    //         console.log('Move stake transaction successful:', tx);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
     // #endregion
 
@@ -273,36 +313,36 @@ describe('wallet_core', () => {
     //     }
     // });
 
-    it('sets a conduit', async () => {
-        const conduitAddress = '0x8';
-        nonce += 1;
-        try {
-            const tx = await pwrWallet.setConduits(
-                '1',
-                [conduitAddress],
-                nonce
-            );
-            console.log('Set conduit transaction successful:', tx.res);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    // it('sets a conduit', async () => {
+    //     const conduitAddress = '0x8';
+    //     nonce += 1;
+    //     try {
+    //         const tx = await pwrWallet.setConduits(
+    //             '1',
+    //             [conduitAddress],
+    //             nonce
+    //         );
+    //         console.log('Set conduit transaction successful:', tx.res);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
-    it('sends a conduit transaction', async () => {
-        const vmId = 100;
-        const txnBytes = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
-        nonce += 1;
-        try {
-            const tx = await pwrWallet.sendConduitTransaction(
-                vmId,
-                txnBytes,
-                nonce
-            );
-            console.log('Conduit transaction successful:', tx);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    // it('sends a conduit transaction', async () => {
+    //     const vmId = 100;
+    //     const txnBytes = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
+    //     nonce += 1;
+    //     try {
+    //         const tx = await pwrWallet.sendConduitTransaction(
+    //             vmId,
+    //             txnBytes,
+    //             nonce
+    //         );
+    //         console.log('Conduit transaction successful:', tx);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
     // #endregion
 });

@@ -307,30 +307,30 @@ describe('decoder', () => {
         });
     });
 
-    it('decode remove guardian txn', () => {
-        const { id, chainId, nonce, guardian } = removeGuardianTxn;
+    // it('decode remove guardian txn', () => {
+    //     const { id, chainId, nonce, guardian } = removeGuardianTxn;
 
-        const txn = TransactionBuilder.getRemoveGuardianTransaction(
-            nonce,
-            chainId
-        );
+    //     const txn = TransactionBuilder.getRemoveGuardianTransaction(
+    //         nonce,
+    //         chainId
+    //     );
 
-        const signature = signTxn(txn, pvk);
+    //     const signature = signTxn(txn, pvk);
 
-        const txnBytes = new Uint8Array([...txn, ...signature]);
+    //     const txnBytes = new Uint8Array([...txn, ...signature]);
 
-        const result = decoder.decodeRemoveGuardianTxn(
-            txnBytes,
-            senderBytes,
-            nonce
-        );
+    //     const result = decoder.decodeRemoveGuardianTxn(
+    //         txnBytes,
+    //         senderBytes,
+    //         nonce
+    //     );
 
-        expect(result).toEqual({
-            sender: senderHex,
-            nonce,
-            size: txnBytes.length,
-            rawTransaction: txnBytes,
-            chainId,
-        });
-    });
+    //     expect(result).toEqual({
+    //         sender: senderHex,
+    //         nonce,
+    //         size: txnBytes.length,
+    //         rawTransaction: txnBytes,
+    //         chainId,
+    //     });
+    // });
 });

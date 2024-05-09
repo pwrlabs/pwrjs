@@ -383,29 +383,29 @@ export default class TransactionDecoder {
         };
     }
 
-    public decodeRemoveGuardianTxn(
-        txn: Uint8Array,
-        sender: Uint8Array,
-        nonce: number
-    ) {
-        if (txn.length != 71)
-            throw new Error('Invalid length for remove guardian txn');
+    // public decodeRemoveGuardianTxn(
+    //     txn: Uint8Array,
+    //     sender: Uint8Array,
+    //     nonce: number
+    // ) {
+    //     if (txn.length != 71)
+    //         throw new Error('Invalid length for remove guardian txn');
 
-        /*
-         * Identifier - 1
-         * chain id - 1
-         * Nonce - 4
-         * signature - 65
-         * */
+    //     /*
+    //      * Identifier - 1
+    //      * chain id - 1
+    //      * Nonce - 4
+    //      * signature - 65
+    //      * */
 
-        return {
-            sender: `0x${bytesToHex(sender)}`,
-            nonce: nonce,
-            size: txn.length,
-            rawTransaction: txn,
-            chainId: txn[1],
-        };
-    }
+    //     return {
+    //         sender: `0x${bytesToHex(sender)}`,
+    //         nonce: nonce,
+    //         size: txn.length,
+    //         rawTransaction: txn,
+    //         chainId: txn[1],
+    //     };
+    // }
 
     // private static decodeWithdraw(
     //     txn: Uint8Array,
