@@ -5,6 +5,7 @@ import { BnToBytes, bytesToHex, decToBytes } from '../utils';
 import { keccak256, keccak224 } from 'js-sha3';
 
 import * as secp256k1 from 'secp256k1';
+import TransactionBuilder from '../protocol/transaction-builder';
 
 const url = 'https://pwrrpc.pwrlabs.io';
 const _baseUrl = 'https://pwrexplorerbackend.pwrlabs.io';
@@ -47,28 +48,8 @@ function generateClaimTxnBytes(
 
     return txnBytes;
 }
-export function generateJoinTxnBytes(
-    id: number,
-    chainId: number,
-    nonce: number,
-    ip: string
-) {
-    const chainIdByte = decToBytes(chainId, 1);
-    const idByte = decToBytes(id, 1);
-    const nonceByte = decToBytes(nonce, 4);
-    const ipByte = new Uint8Array(Buffer.from(ip, 'utf8'));
 
-    const txnBytes = new Uint8Array([
-        ...idByte,
-        ...chainIdByte,
-        ...nonceByte,
-        ...ipByte,
-    ]);
-
-    return txnBytes;
-}
-
-export function generateDataTxnBytes(
+function generateDataTxnBytes(
     id: number,
     chainId: number,
     nonce: number,
@@ -96,7 +77,7 @@ export function generateDataTxnBytes(
     return txnBytes;
 }
 
-export function generateTxnBytes(
+function generateTxnBytes(
     id: number,
     chainId: number,
     nonce: number,
@@ -157,6 +138,7 @@ export default class PWRWallet {
     private address: string;
     private privateKey: string;
     private chainId: number = 0;
+
     constructor(privateKey?: string) {
         let wallet;
 
@@ -283,18 +265,22 @@ export default class PWRWallet {
 
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
-        const txnDataBytes = generateTxnBytes(id, _chainId, _nonce, amount, to);
+        const txn = TransactionBuilder.getTransferPwrTransaction(
+            _chainId,
+            _nonce,
+            amount,
+            to
+        );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const signature = signTxn(txn, this.privateKey);
 
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
         const txnHex = Buffer.from(txnBytes).toString('hex');
-
         const hashedTxnFinal = hashTxn(txnBytes);
-
         const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const txn = {
+        const txnData = {
             id,
             nonce,
             value: BigNumber(amount).shiftedBy(9).toString(),
@@ -312,9 +298,9 @@ export default class PWRWallet {
 
         return {
             res: res.data,
-            txn,
+            txn: txnData,
             txnBytes,
-            txnDataBytes,
+            txnDataBytes: txn,
             txnHex,
         };
     }
@@ -324,7 +310,12 @@ export default class PWRWallet {
         const _chainId = this.getChainId();
 
         // const ipUtf8Bytes = Buffer.from(ip, 'utf8');
-        const txnDataBytes = generateJoinTxnBytes(id, _chainId, nonce, ip);
+
+        const txnDataBytes = TransactionBuilder.getJoinTransaction(
+            ip,
+            nonce,
+            _chainId
+        );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
@@ -666,26 +657,20 @@ export default class PWRWallet {
 
     // #region guardians
 
-    async setGuardian(
-        guardianAddress: Uint8Array,
-        expiryDate: number,
-        nonce?: number
-    ) {
-        const id = Transaction.SET_GUARDIAN;
+    async setGuardian(guardian: string, expiryDate: number, nonce?: number) {
         const _chainId = this.getChainId();
 
-        const guardianAddressHex = Buffer.from(guardianAddress).toString('hex');
-        const txnDataBytes = generateDataTxnBytes(
-            id,
-            _chainId,
+        const guardianAddressHex = Buffer.from(guardian).toString('hex');
+        const txn = TransactionBuilder.getSetGuardianTransaction(
+            guardianAddressHex,
+            expiryDate,
             nonce,
-            '',
-            guardianAddressHex + expiryDate.toString(16)
+            _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const signature = signTxn(txn, this.privateKey);
 
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
         const txnHex = Buffer.from(txnBytes).toString('hex');
 
         const res = await axios.post(`${url}/broadcast/`, {
@@ -693,7 +678,7 @@ export default class PWRWallet {
         });
 
         return {
-            txnDataBytes,
+            txnDataBytes: txn,
             res: res.data,
             txnHex,
             txnBytes,

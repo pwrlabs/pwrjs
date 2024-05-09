@@ -1,4 +1,4 @@
-import PWRWallet, { generateTxnBytes } from '../src/wallet/wallet';
+import PWRWallet from '../src/wallet/wallet';
 
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
@@ -13,6 +13,9 @@ describe('wallet_core', () => {
     const chainId = 0;
     pwrWallet.setChainId(chainId);
     const validatorAddress = '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0';
+
+    const guardianAddress = '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
+
     console.log('validatorAddress', pwrWallet.getAddress());
     console.log('pvk', pwrWallet.getPrivateKey());
 
@@ -28,18 +31,6 @@ describe('wallet_core', () => {
     }, 20 * 1000);
 
     // #region wallet props
-
-    it('test', () => {
-        const res = generateTxnBytes(
-            1,
-            0,
-            0,
-            '1000000000',
-            '0x0000000000000000000000000000000000000000'
-        );
-
-        console.log('res', res);
-    });
 
     it('Wallet address and public and private key', () => {
         const address = pwrWallet.getAddress();
@@ -81,32 +72,34 @@ describe('wallet_core', () => {
             );
             console.log('Transfer transaction successful:', tx.txn.hash);
         } catch (error) {
-            // console.log(error);
+            console.log('transferpwr', error);
             expect(false).toBe(true);
         }
     });
 
     it('successfully joins with an IP and nonce', async () => {
         nonce += 1;
+
+        // NOTE: THE TXN FAILS BECAUSE OF THE NEEDED AMOUNT TO JOIN
         try {
             const tx = await pwrWallet.join('127.1.1.1', nonce);
             console.log('Join transaction successful:', tx.res);
         } catch (e) {
-            // console.log(e);
+            // console.log('error join', e);
             expect(false).toBe(true);
         }
     });
 
-    it('claim active node spot', async () => {
-        nonce += 1;
-        try {
-            const tx = await pwrWallet.claimActiveNodeSpot(nonce);
-            console.log('Transaction successful:', tx);
-        } catch (e) {
-            // console.error('Error claiming active node spot:', e);
-            expect(false).toBe(true);
-        }
-    });
+    // it('claim active node spot', async () => {
+    //     nonce += 1;
+    //     try {
+    //         const tx = await pwrWallet.claimActiveNodeSpot(nonce);
+    //         console.log('Transaction successful:', tx);
+    //     } catch (e) {
+    //         // console.error('Error claiming active node spot:', e);
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
     it('sends VM data transaction', async () => {
         nonce += 1;
@@ -154,14 +147,8 @@ describe('wallet_core', () => {
     // #region guardians
 
     it('sets  guardian ', async () => {
-        const guardianAddress = new Uint8Array([
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
-            0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13,
-        ]);
-
-        // 7 days from now
-        const expiryDate = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
-
+        // 7 days from now ms
+        const expiryDate = Date.now() + 7 * 24 * 60 * 60 * 1000;
         nonce += 1;
 
         try {

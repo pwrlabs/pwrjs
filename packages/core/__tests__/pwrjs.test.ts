@@ -1,4 +1,4 @@
-import PWRJS from '../src/pwr/pwr';
+import PWRJS from '../src/protocol/pwrjs';
 
 import WalletUtils from '../src/wallet.utils';
 
