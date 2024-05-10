@@ -8,7 +8,7 @@ export enum Transaction_ID {
     CLAIM_VM_ID = 6,
     REMOVE_VALIDATOR = 7,
     SET_GUARDIAN = 8,
-    // REMOVE_GUARDIAN = 9,
+    REMOVE_GUARDIAN = 9,
     GUARDIAN_TXN = 10,
     PAYABLE_VM_DATA_TXN = 11,
     CONDUIT_TXN = 12,

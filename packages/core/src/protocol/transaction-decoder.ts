@@ -280,7 +280,10 @@ export default class TransactionDecoder {
         const externalVmId = dataView.getBigUint64(6, false); // Assuming little-endian-
 
         let dataLength;
-        const senderHex = bytesToHex(sender); // Assuming `bytesToHex` is a function to convert Uint8Array to hex string
+        const senderHex = bytesToHex(sender);
+
+        console.log('senderHex', senderHex);
+
         if (PWRJS.isVmAddress(senderHex)) {
             // Assuming `isVmAddress` checks if the address is a VM
             dataLength = txn.length - 14;
@@ -288,14 +291,18 @@ export default class TransactionDecoder {
             dataLength = txn.length - 79; // Adjusted for the presence of a signature
         }
 
+        console.log('dataLength', dataLength);
+
         const data = new Uint8Array(
             txn.buffer,
             txn.byteOffset + 14,
             dataLength
         ); // Data starts after the VM ID
 
+        console.log('data', data);
+
         return {
-            sender: senderHex,
+            sender: `0x${bytesToHex(sender)}`,
             nonce: nonce,
             size: txn.length,
             vmId: externalVmId.toString(), // Converting BigInt to string for safety in JS environments
@@ -383,29 +390,29 @@ export default class TransactionDecoder {
         };
     }
 
-    // public decodeRemoveGuardianTxn(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array,
-    //     nonce: number
-    // ) {
-    //     if (txn.length != 71)
-    //         throw new Error('Invalid length for remove guardian txn');
+    public decodeRemoveGuardianTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length != 71)
+            throw new Error('Invalid length for remove guardian txn');
 
-    //     /*
-    //      * Identifier - 1
-    //      * chain id - 1
-    //      * Nonce - 4
-    //      * signature - 65
-    //      * */
+        /*
+         * Identifier - 1
+         * chain id - 1
+         * Nonce - 4
+         * signature - 65
+         * */
 
-    //     return {
-    //         sender: `0x${bytesToHex(sender)}`,
-    //         nonce: nonce,
-    //         size: txn.length,
-    //         rawTransaction: txn,
-    //         chainId: txn[1],
-    //     };
-    // }
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            rawTransaction: txn,
+            chainId: txn[1],
+        };
+    }
 
     // private static decodeWithdraw(
     //     txn: Uint8Array,

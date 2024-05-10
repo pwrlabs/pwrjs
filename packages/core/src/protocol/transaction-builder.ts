@@ -238,28 +238,28 @@ export default class TransactionBuilder {
         return txnBytes;
     }
 
-    // static getRemoveGuardianTransaction(
-    //     nonce: number,
-    //     chainId: number
-    // ): Uint8Array {
-    //     if (nonce < 0) {
-    //         throw new Error('Nonce cannot be negative');
-    //     }
+    static getRemoveGuardianTransaction(
+        nonce: number,
+        chainId: number
+    ): Uint8Array {
+        if (nonce < 0) {
+            throw new Error('Nonce cannot be negative');
+        }
 
-    //     /*
-    //      * Identifier - 1
-    //      * chain id - 1
-    //      * Nonce - 4
-    //      * */
+        /*
+         * Identifier - 1
+         * chain id - 1
+         * Nonce - 4
+         * */
 
-    //     const base = this.getTransactionBase(
-    //         Transaction_ID.REMOVE_GUARDIAN,
-    //         chainId,
-    //         nonce
-    //     );
+        const base = this.getTransactionBase(
+            Transaction_ID.REMOVE_GUARDIAN,
+            chainId,
+            nonce
+        );
 
-    //     return base;
-    // }
+        return base;
+    }
 
     static getGuardianApprovalTransaction(
         transactions: Uint8Array[],

@@ -69,10 +69,9 @@ describe('decoder', () => {
     const vmDataTxn = {
         id: Transaction_ID.VM_DATA_TXN,
         chainId: 0,
-        nonce: 0,
-        dataBytes: new TextEncoder().encode('text vm'),
-        dataHex: bytesToHex(new TextEncoder().encode('text vm')),
+        data: 'hola mundo',
         vmId: '100',
+        nonce: 4,
     };
 
     const setGuardianTxn = {
@@ -83,12 +82,12 @@ describe('decoder', () => {
         expiryDate: 1746772236 * 1000, //seconds
     };
 
-    // const removeGuardianTxn = {
-    //     id: Transaction_ID.REMOVE_GUARDIAN,
-    //     chainId: 0,
-    //     nonce: 0,
-    //     guardian: '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767',
-    // };
+    const removeGuardianTxn = {
+        id: Transaction_ID.REMOVE_GUARDIAN,
+        chainId: 0,
+        nonce: 0,
+        guardian: '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767',
+    };
 
     it('decode', () => {
         const { chainId, id, nonce, recipient, amount } = txnDet;
@@ -230,11 +229,31 @@ describe('decoder', () => {
     });
 
     it('decode vm data txn', () => {
-        const { id, chainId, nonce, vmId, dataBytes, dataHex } = vmDataTxn;
+        // encode and decode
+        // const data = 'Hello World!';
+        // const dataBytes = new TextEncoder().encode(data);
+        // const hex = bytesToHex(dataBytes);
+
+        // const bytesAgain = new Uint8Array(hexToUint8Array(hex));
+        // const dataAgain = new TextDecoder().decode(bytesAgain);
+
+        // console.log({
+        //     data,
+        //     dataBytes,
+        //     hex,
+        //     bytesAgain,
+        //     dataAgain,
+        // });
+
+        console.log({
+            data: vmDataTxn.data,
+        });
+
+        const { id, chainId, vmId, data, nonce } = vmDataTxn;
 
         const txn = TransactionBuilder.getVmDataTransaction(
             vmId,
-            dataHex,
+            data,
             nonce,
             chainId
         );
@@ -249,7 +268,8 @@ describe('decoder', () => {
             nonce,
             size: txnBytes.length,
             vmId,
-            data: dataHex,
+            // data to hex
+            data: `0x${bytesToHex(new TextEncoder().encode(data))}`,
             rawTransaction: txnBytes,
             chainId,
         });
@@ -307,30 +327,30 @@ describe('decoder', () => {
         });
     });
 
-    // it('decode remove guardian txn', () => {
-    //     const { id, chainId, nonce, guardian } = removeGuardianTxn;
+    it('decode remove guardian txn', () => {
+        const { id, chainId, nonce, guardian } = removeGuardianTxn;
 
-    //     const txn = TransactionBuilder.getRemoveGuardianTransaction(
-    //         nonce,
-    //         chainId
-    //     );
+        const txn = TransactionBuilder.getRemoveGuardianTransaction(
+            nonce,
+            chainId
+        );
 
-    //     const signature = signTxn(txn, pvk);
+        const signature = signTxn(txn, pvk);
 
-    //     const txnBytes = new Uint8Array([...txn, ...signature]);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
 
-    //     const result = decoder.decodeRemoveGuardianTxn(
-    //         txnBytes,
-    //         senderBytes,
-    //         nonce
-    //     );
+        const result = decoder.decodeRemoveGuardianTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
 
-    //     expect(result).toEqual({
-    //         sender: senderHex,
-    //         nonce,
-    //         size: txnBytes.length,
-    //         rawTransaction: txnBytes,
-    //         chainId,
-    //     });
-    // });
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            rawTransaction: txnBytes,
+            chainId,
+        });
+    });
 });
