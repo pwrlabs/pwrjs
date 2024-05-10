@@ -83,12 +83,12 @@ describe('decoder', () => {
         expiryDate: 1746772236 * 1000, //seconds
     };
 
-    const removeGuardianTxn = {
-        id: Transaction_ID.REMOVE_GUARDIAN,
-        chainId: 0,
-        nonce: 0,
-        guardian: '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767',
-    };
+    // const removeGuardianTxn = {
+    //     id: Transaction_ID.REMOVE_GUARDIAN,
+    //     chainId: 0,
+    //     nonce: 0,
+    //     guardian: '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767',
+    // };
 
     it('decode', () => {
         const { chainId, id, nonce, recipient, amount } = txnDet;

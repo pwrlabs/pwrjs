@@ -14,7 +14,7 @@ describe('wallet_core', () => {
         '0xb8a70832e8fec8f6a0ec4721f5d5b0239834105eb52a606914e61fbe3506d278';
     const guardianWallet = new PWRWallet(pvk);
 
-    const validator = '0x0x6EFEC8D7B5dfC4aaC22Da193176a91Eb87FE6857';
+    const validator = '0x8f8f8732dFA29d55D2c5115D80915df508536F76';
 
     let nonce = -1;
 
@@ -42,7 +42,6 @@ describe('wallet_core', () => {
 
     it('Wallet address and public and private key', () => {
         const address = pwrWallet.getAddress();
-        console.log('address', address);
         const privateKey = pwrWallet.getPrivateKey();
         const publicKey = pwrWallet.getPublicKey();
 
@@ -98,7 +97,6 @@ describe('wallet_core', () => {
             const tx = await pwrWallet.join('127.1.1.1', nonce);
             console.log('Join transaction successful:', tx.res);
         } catch (e) {
-            // console.log('error join', e);
             expect(false).toBe(true);
         }
     });
@@ -132,88 +130,86 @@ describe('wallet_core', () => {
         }
     });
 
-    // it('sends payable VM data  transaction', async () => {
-    //     nonce += 1;
+    it('sends payable VM data  transaction', async () => {
+        nonce += 1;
 
-    //     const vmId = '100';
+        const vmId = '100';
 
-    //     const dataBytes = new TextEncoder().encode(
-    //         JSON.stringify({ name: 'Test VM Data' })
-    //     );
+        const dataBytes = new TextEncoder().encode('test data');
 
-    //     try {
-    //         const tx = await pwrWallet.sendPayableVmDataTransaction(
-    //             vmId,
-    //             '1',
-    //             dataBytes,
-    //             nonce
-    //         );
-    //         console.log('VM data transaction successful:', tx.txn.hash);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //         // console.error('Error sending VM data transaction:', e.message);
-    //     }
-    // });
+        try {
+            const tx = await pwrWallet.sendPayableVmDataTransaction(
+                vmId,
+                '1',
+                dataBytes,
+                nonce
+            );
+            console.log('VM data transaction successful:', tx.txn.hash);
+        } catch (e) {
+            console.log(e);
+
+            expect(false).toBe(true);
+            // console.error('Error sending VM data transaction:', e.message);
+        }
+    });
 
     // #endregion
 
     // #region guardians
 
-    // it('sets  guardian ', async () => {
-    //     // 7 days from now ms
+    it('sets  guardian ', async () => {
+        // 7 days from now ms
 
-    //     const futureDate = new Date();
-    //     futureDate.setDate(futureDate.getDate() + 7);
-    //     const epochTime = Math.floor(futureDate.getTime() / 1000);
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 7);
+        const epochTime = Math.floor(futureDate.getTime() / 1000);
 
-    //     nonce += 1;
+        nonce += 1;
 
-    //     try {
-    //         const tx = await pwrWallet.setGuardian(
-    //             guardianAddress,
-    //             epochTime,
-    //             nonce
-    //         );
-    //         // console.log('Set guardian transaction successful:', tx.res);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //     }
-    // });
+        try {
+            const tx = await pwrWallet.setGuardian(
+                guardianAddress,
+                epochTime,
+                nonce
+            );
+            // console.log('Set guardian transaction successful:', tx.res);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
 
-    // it('sends a guardian-wrapped transaction', async () => {
-    //     const nonceG = await guardianWallet.getNonce();
-    //     nonce += 1;
+    it('sends a guardian-wrapped transaction', async () => {
+        const nonceG = await guardianWallet.getNonce();
+        nonce += 1;
 
-    //     const exampleTxn = {
-    //         to: '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0',
-    //         amount: '1',
-    //         nonce,
-    //         chainId: 0,
-    //     };
+        const exampleTxn = {
+            to: '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0',
+            amount: '1',
+            nonce,
+            chainId: 0,
+        };
 
-    //     const txn = TransactionBuilder.getTransferPwrTransaction(
-    //         exampleTxn.chainId,
-    //         exampleTxn.nonce,
-    //         exampleTxn.amount,
-    //         exampleTxn.to
-    //     );
+        const txn = TransactionBuilder.getTransferPwrTransaction(
+            exampleTxn.chainId,
+            exampleTxn.nonce,
+            exampleTxn.amount,
+            exampleTxn.to
+        );
 
-    //     const signature = signTxn(txn, guardianWallet.getPrivateKey());
-    //     const txnBytes = new Uint8Array([...txn, ...signature]);
+        const signature = signTxn(txn, guardianWallet.getPrivateKey());
+        const txnBytes = new Uint8Array([...txn, ...signature]);
 
-    //     try {
-    //         const tx = await guardianWallet.sendGuardianApprovalTransaction(
-    //             [txnBytes],
-    //             nonceG
-    //         );
+        try {
+            const tx = await guardianWallet.sendGuardianApprovalTransaction(
+                [txnBytes],
+                nonceG
+            );
 
-    //         console.log('Guardian-wrapped transaction successful:', tx);
-    //     } catch (e) {
-    //         console.log(e);
-
-    //         expect(false).toBe(true);
-    //     }
-    // });
+            // console.log('Guardian-wrapped transaction successful:', tx);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
 
     // it('removes a guardian', async () => {
     //     nonce += 1;
@@ -243,38 +239,37 @@ describe('wallet_core', () => {
                 );
 
                 await new Promise((resolve) => setTimeout(resolve, 12 * 1000));
-                console.log('Delegation transaction successful:', tx.txnHex);
+                // console.log('Delegation transaction successful:', tx.txnHex);
             } catch (error) {
-                console.log('delegate', error);
                 expect(false).toBe(true);
             }
         },
         20 * 1000
     );
 
-    // it('withdraw 1 share from validators', async () => {
-    //     nonce += 1;
+    it('withdraw 1 share from validators', async () => {
+        nonce += 1;
 
-    //     try {
-    //         const tx = await pwrWallet.withdraw(validator, '1', nonce);
-    //     } catch (e) {
-    //         // console.log(e);
-    //         expect(false).toBe(true);
-    //     }
-    // });
+        try {
+            const tx = await pwrWallet.withdraw(validator, '1', nonce);
+        } catch (e) {
+            // console.log(e);
+            expect(false).toBe(true);
+        }
+    });
 
-    // // vm id can be claimed only once, that's why this test is commented
-    // it('claims rewards from validators', async () => {
-    //     nonce += 1;
-    //     try {
-    //         const tx = await pwrWallet.claimVmId('68681', nonce);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //     }
-    // });
+    // vm id can be claimed only once, that's why this test is commented,
+    // I checked and it's working
+    it('claims vmid', async () => {
+        nonce += 1;
+        try {
+            const tx = await pwrWallet.claimVmId('68681', nonce);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
 
     it('removes a validator', async () => {
-        const validator = '0x1234abcd';
         nonce += 1;
 
         try {
@@ -313,20 +308,20 @@ describe('wallet_core', () => {
     //     }
     // });
 
-    // it('sets a conduit', async () => {
-    //     const conduitAddress = '0x8';
-    //     nonce += 1;
-    //     try {
-    //         const tx = await pwrWallet.setConduits(
-    //             '1',
-    //             [conduitAddress],
-    //             nonce
-    //         );
-    //         console.log('Set conduit transaction successful:', tx.res);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //     }
-    // });
+    it('sets a conduit', async () => {
+        const conduitAddress = '0x8';
+        nonce += 1;
+        try {
+            const tx = await pwrWallet.setConduits(
+                '1',
+                [conduitAddress],
+                nonce
+            );
+            console.log('Set conduit transaction successful:', tx.res);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
 
     // it('sends a conduit transaction', async () => {
     //     const vmId = 100;

@@ -113,6 +113,7 @@ export default class TransactionBuilder {
             nonce
         );
         const b_amount = BnToBytes(amountBN);
+
         const b_validator = HexToBytes(validator);
 
         const txnBytes = new Uint8Array([...base, ...b_amount, ...b_validator]);
@@ -237,28 +238,28 @@ export default class TransactionBuilder {
         return txnBytes;
     }
 
-    static getRemoveGuardianTransaction(
-        nonce: number,
-        chainId: number
-    ): Uint8Array {
-        if (nonce < 0) {
-            throw new Error('Nonce cannot be negative');
-        }
+    // static getRemoveGuardianTransaction(
+    //     nonce: number,
+    //     chainId: number
+    // ): Uint8Array {
+    //     if (nonce < 0) {
+    //         throw new Error('Nonce cannot be negative');
+    //     }
 
-        /*
-         * Identifier - 1
-         * chain id - 1
-         * Nonce - 4
-         * */
+    //     /*
+    //      * Identifier - 1
+    //      * chain id - 1
+    //      * Nonce - 4
+    //      * */
 
-        const base = this.getTransactionBase(
-            Transaction_ID.REMOVE_GUARDIAN,
-            chainId,
-            nonce
-        );
+    //     const base = this.getTransactionBase(
+    //         Transaction_ID.REMOVE_GUARDIAN,
+    //         chainId,
+    //         nonce
+    //     );
 
-        return base;
-    }
+    //     return base;
+    // }
 
     static getGuardianApprovalTransaction(
         transactions: Uint8Array[],
@@ -288,43 +289,59 @@ export default class TransactionBuilder {
         return txnBytes;
     }
 
-    // static getPayableVmDataTransaction(vmId: string, value: string,  data: string,  nonce: string, byte chainId) {
-    //     if (nonce < 0) {
-    //         throw new RuntimeException("Nonce cannot be negative");
-    //     }
+    public static getPayableVmDataTransaction(
+        vmId: string,
+        value: string,
+        data: string,
+        nonce: number,
+        chainId: number
+    ) {
+        if (nonce < 0) {
+            throw new Error('Nonce cannot be negative');
+        }
 
-    //     byte[] TransactionBase = getTransactionBase((byte) 11, nonce, chainId);
-    //     ByteBuffer buffer = ByteBuffer.allocate(TransactionBase.length + 16 + data.length);
-    //     buffer.put(TransactionBase);
-    //     buffer.putLong(vmId);
-    //     buffer.put(data);
-    //     buffer.putLong(value);
+        const base = this.getTransactionBase(
+            Transaction_ID.PAYABLE_VM_DATA_TXN,
+            chainId,
+            nonce
+        );
 
-    //     return buffer.array();
-    // }
+        const b_vmId = BnToBytes(new BigNumber(vmId));
+        const b_value = BnToBytes(new BigNumber(value));
+        const b_data = new TextEncoder().encode(data);
 
-    // public static getValidatorRemoveTransaction(
-    //     validator: string,
-    //     nonce: number,
-    //     chainId: number
-    // ): Uint8Array {
-    //     // assetAddressValidity(validator);
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_vmId,
+            ...b_data,
+            ...b_value,
+        ]);
 
-    //     if (nonce < 0) {
-    //         throw new Error('Nonce cannot be negative');
-    //     }
+        return txnBytes;
+    }
 
-    //     const base = this.getTransactionBase(
-    //         Transaction_ID.REMOVE_VALIDATOR,
-    //         chainId,
-    //         nonce
-    //     );
-    //     const b_validator = HexToBytes(validator);
+    public static getValidatorRemoveTransaction(
+        validator: string,
+        nonce: number,
+        chainId: number
+    ): Uint8Array {
+        // assetAddressValidity(validator);
 
-    //     const bytes = new Uint8Array([...base, ...b_validator]);
+        if (nonce < 0) {
+            throw new Error('Nonce cannot be negative');
+        }
 
-    //     return bytes;
-    // }
+        const base = this.getTransactionBase(
+            Transaction_ID.REMOVE_VALIDATOR,
+            chainId,
+            nonce
+        );
+        const b_validator = HexToBytes(validator);
+
+        const bytes = new Uint8Array([...base, ...b_validator]);
+
+        return bytes;
+    }
 
     // public static getConduitApprovalTransaction(vmId: string,  transactions: strn, int nonce, byte chainId) {
     //     if (nonce < 0) {
