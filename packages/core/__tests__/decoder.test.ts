@@ -19,13 +19,13 @@ describe('decoder', () => {
 
     const pvk =
         '0x65d39c88806fd85c9a860e1f26155af4321c5aaaf98d5d164bdab13b5e924ffd';
-    const senderHex = '0xe47d5f4c1731c3c0ea0a75872593cbf61f2cbf90';
+    const senderHex = '0xf8ef0db764721627e00e840c713c88e278a596d2';
     const senderBytes = hexToUint8Array(senderHex);
 
     const txnDet = {
         id: Transaction_ID.TRANSFER,
         chainId: 0,
-        nonce: 0,
+        nonce: 4,
         amount: '1',
         recipient: '0x0000000000000000000000000000000000000000',
     };
@@ -98,6 +98,22 @@ describe('decoder', () => {
             amount,
             recipient
         );
+
+        const signature = signTxn(txn, pvk);
+
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decode(txnBytes);
+
+        expect(result).toEqual({
+            sender: senderHex,
+            receiver: recipient,
+            value: amount,
+            nonce,
+            size: txnBytes.length,
+            rawTransaction: txnBytes,
+            chainId,
+        });
     });
 
     it('decode transfer txn', () => {

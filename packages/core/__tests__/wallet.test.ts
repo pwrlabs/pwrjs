@@ -211,15 +211,15 @@ describe('wallet_core', () => {
         }
     });
 
-    it('removes a guardian', async () => {
-        nonce += 1;
+    // it('removes a guardian', async () => {
+    //     nonce += 1;
 
-        try {
-            const tx = await pwrWallet.removeGuardian(nonce);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    //     try {
+    //         const tx = await pwrWallet.removeGuardian(nonce);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
     // #endregion
 

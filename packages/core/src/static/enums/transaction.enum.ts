@@ -6,7 +6,7 @@ export enum Transaction_ID {
     WITHDRAW = 4,
     VM_DATA_TXN = 5,
     CLAIM_VM_ID = 6,
-    REMOVE_VALIDATOR = 7,
+    // REMOVE_VALIDATOR = 7,
     SET_GUARDIAN = 8,
     REMOVE_GUARDIAN = 9,
     GUARDIAN_TXN = 10,

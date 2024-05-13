@@ -320,28 +320,28 @@ export default class TransactionBuilder {
         return txnBytes;
     }
 
-    public static getValidatorRemoveTransaction(
-        validator: string,
-        nonce: number,
-        chainId: number
-    ): Uint8Array {
-        // assetAddressValidity(validator);
+    // public static getValidatorRemoveTransaction(
+    //     validator: string,
+    //     nonce: number,
+    //     chainId: number
+    // ): Uint8Array {
+    //     // assetAddressValidity(validator);
 
-        if (nonce < 0) {
-            throw new Error('Nonce cannot be negative');
-        }
+    //     if (nonce < 0) {
+    //         throw new Error('Nonce cannot be negative');
+    //     }
 
-        const base = this.getTransactionBase(
-            Transaction_ID.REMOVE_VALIDATOR,
-            chainId,
-            nonce
-        );
-        const b_validator = HexToBytes(validator);
+    //     const base = this.getTransactionBase(
+    //         Transaction_ID.REMOVE_VALIDATOR,
+    //         chainId,
+    //         nonce
+    //     );
+    //     const b_validator = HexToBytes(validator);
 
-        const bytes = new Uint8Array([...base, ...b_validator]);
+    //     const bytes = new Uint8Array([...base, ...b_validator]);
 
-        return bytes;
-    }
+    //     return bytes;
+    // }
 
     // public static getConduitApprovalTransaction(vmId: string,  transactions: strn, int nonce, byte chainId) {
     //     if (nonce < 0) {

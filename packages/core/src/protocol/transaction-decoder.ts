@@ -1,82 +1,78 @@
-import { ethers } from 'ethers';
+import { Log, ethers } from 'ethers';
 import { Transaction } from '../record/transaction';
 import { Transaction_ID } from '../static/enums/transaction.enum';
 import PWRJS from './pwrjs';
-import { bytesToHex } from '../utils';
+import { HexToBytes, bytesToHex } from '../utils';
 
 // import ethUtil from 'ethereumjs-util';
 
 export default class TransactionDecoder {
-    // public decode(txn: Uint8Array) {
-    //     this.getSender(txn);
-    //     // return this.decode2(txn, sender);
-    // }
+    public decode(txn: Uint8Array) {
+        const sender = this.getSender(txn);
 
-    // public decode2(txn: Uint8Array, sender: Uint8Array) {
-    //     let buffer = Buffer.from(txn);
-    //     buffer = buffer.slice(1);
-    //     let nonce = buffer.readInt32BE();
-    //     buffer = buffer.slice(4);
-    //     let chainId = buffer.readInt8();
+        const senderBytes = HexToBytes(sender.toLowerCase());
+        return this.decode2(txn, senderBytes);
+    }
 
-    //     switch (txn[0]) {
-    //         case Transaction_ID.TRANSFER:
-    //             // return this.decodeTransfer(txn, sender, nonce);
-    //             break;
+    private decode2(txn: Uint8Array, sender: Uint8Array) {
+        const txnDv = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
-    //         case Transaction_ID.JOIN:
-    //             break;
+        // nonce is always 4 bytes, after identifies (1byte) and chainId (1byte)
+        const nonce = txnDv.getInt32(2, false);
 
-    //         case Transaction_ID.CLAIM_SPOT:
-    //             break;
+        switch (txn[0]) {
+            case Transaction_ID.TRANSFER:
+                return this.decodeTransfer(txn, sender, nonce);
 
-    //         case Transaction_ID.DELEGATE:
-    //             break;
+            case Transaction_ID.JOIN:
+                return this.decodeJoin(txn, sender, nonce);
 
-    //         case Transaction_ID.WITHDRAW:
-    //             break;
+            case Transaction_ID.CLAIM_SPOT:
+                return this.decodeClaimSpot(txn, sender, nonce);
 
-    //         case Transaction_ID.VM_DATA_TXN:
-    //             break;
+            case Transaction_ID.DELEGATE:
+                return this.decodeDelegate(txn, sender, nonce);
 
-    //         case Transaction_ID.CLAIM_VM_ID:
-    //             break;
+            case Transaction_ID.WITHDRAW:
+                return this.decodeWithdraw(txn, sender, nonce);
 
-    //         case Transaction_ID.REMOVE_VALIDATOR:
-    //             break;
+            case Transaction_ID.VM_DATA_TXN:
+                return this.decodeVmDataTxn(txn, sender, nonce);
 
-    //         case Transaction_ID.SET_GUARDIAN:
-    //             break;
+            case Transaction_ID.CLAIM_VM_ID:
+                return this.decodeClaimVmId(txn, sender, nonce);
 
-    //         case Transaction_ID.REMOVE_GUARDIAN:
-    //             break;
+            case Transaction_ID.SET_GUARDIAN:
+                return this.decodeSetGuardian(txn, sender, nonce);
 
-    //         case Transaction_ID.GUARDIAN_TXN:
-    //             break;
+            case Transaction_ID.REMOVE_GUARDIAN:
+                return this.decodeRemoveGuardianTxn(txn, sender, nonce);
 
-    //         case Transaction_ID.PAYABLE_VM_DATA_TXN:
-    //             break;
+            case Transaction_ID.GUARDIAN_TXN:
+                throw new Error('Guardian transaction not implemented');
 
-    //         case Transaction_ID.CONDUIT_TXN:
-    //             break;
+            case Transaction_ID.PAYABLE_VM_DATA_TXN:
+                throw new Error('Payable VM Data transaction not implemented');
 
-    //         case Transaction_ID.SET_CONDUIT:
-    //             break;
+            case Transaction_ID.CONDUIT_TXN:
+                throw new Error('Conduit transaction not implemented');
 
-    //         case Transaction_ID.ADD_CONDUITS:
-    //             break;
+            case Transaction_ID.SET_CONDUIT:
+                throw new Error('Set Conduit transaction not implemented');
 
-    //         case Transaction_ID.REMOVE_CONDUITS:
-    //             break;
+            case Transaction_ID.ADD_CONDUITS:
+                throw new Error('Add Conduits transaction not implemented');
 
-    //         case Transaction_ID.MOVE_STAKE:
-    //             break;
+            case Transaction_ID.REMOVE_CONDUITS:
+                throw new Error('Remove Conduits transaction not implemented');
 
-    //         default:
-    //             throw new Error('Invalid transaction type');
-    //             break;
-    //     }
-    // }
+            case Transaction_ID.MOVE_STAKE:
+                throw new Error('Move Stake transaction not implemented');
+
+            default:
+                throw new Error('Invalid transaction type');
+        }
+    }
 
     public decodeTransfer(
         txn: Uint8Array,
@@ -480,43 +476,43 @@ export default class TransactionDecoder {
     // ): Transaction {}
 
     // *~~~ asd ~~~
-    // private getSender(txn: Uint8Array) {
-    //     const signature = new Uint8Array(65);
-    //     const txnData = new Uint8Array(txn.length - 65);
+    private getSender(txn: Uint8Array) {
+        const signature = new Uint8Array(65);
+        const txnData = new Uint8Array(txn.length - 65);
 
-    //     // Copy the first part of txn to txnData
-    //     txnData.set(new Uint8Array(txn.buffer, txn.byteOffset, txnData.length));
+        // Copy the first part of txn to txnData
+        txnData.set(new Uint8Array(txn.buffer, txn.byteOffset, txnData.length));
 
-    //     // Copy the last 65 bytes of txn to signature
-    //     signature.set(
-    //         new Uint8Array(txn.buffer, txn.byteOffset + txnData.length, 65)
-    //     );
+        // Copy the last 65 bytes of txn to signature
+        signature.set(
+            new Uint8Array(txn.buffer, txn.byteOffset + txnData.length, 65)
+        );
 
-    //     // return getSigner(txnData, signature);
-    // }
+        return TransactionDecoder.getSigner(txnData, signature);
+    }
 
-    // static getSigner(txn: Uint8Array, signature: Uint8Array) {
-    //     // Extract r, s, and v from the signature
-    //     const r = ethers.hexlify(signature.slice(0, 32));
-    //     const s = ethers.hexlify(signature.slice(32, 64));
-    //     const v = signature[64];
+    static getSigner(txn: Uint8Array, signature: Uint8Array) {
+        // Extract r, s, and v from the signature
+        const r = ethers.hexlify(signature.slice(0, 32));
+        const s = ethers.hexlify(signature.slice(32, 64));
+        const v = signature[64];
 
-    //     // Create a signature object expected by Ethers
-    //     const fullSignature = {
-    //         r: r,
-    //         s: s,
-    //         v: v,
-    //     };
+        // Create a signature object expected by Ethers
+        const fullSignature = {
+            r: r,
+            s: s,
+            v: v,
+        };
 
-    //     // Compute the message digest (hash) of the transaction
-    //     const messageHash = ethers.keccak256(txn);
+        // Compute the message digest (hash) of the transaction
+        const messageHash = ethers.keccak256(txn);
 
-    //     // Recover the address
-    //     const recoveredAddress = ethers.recoverAddress(
-    //         messageHash,
-    //         fullSignature
-    //     );
+        // Recover the address
+        const recoveredAddress = ethers.recoverAddress(
+            messageHash,
+            fullSignature
+        );
 
-    //     return recoveredAddress;
-    // }
+        return recoveredAddress;
+    }
 }
