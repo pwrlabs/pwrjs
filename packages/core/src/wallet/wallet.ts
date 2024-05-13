@@ -564,32 +564,32 @@ export default class PWRWallet {
 
     // #region validators
 
-    async sendValidatorRemoveTxn(validator: string, nonce?: number) {
-        const _chainId = this.getChainId();
-        const _nonce = nonce || (await this.getNonce());
+    // async sendValidatorRemoveTxn(validator: string, nonce?: number) {
+    //     const _chainId = this.getChainId();
+    //     const _nonce = nonce || (await this.getNonce());
 
-        const txnDataBytes = TransactionBuilder.getValidatorRemoveTransaction(
-            validator,
-            _nonce,
-            _chainId
-        );
+    //     const txnDataBytes = TransactionBuilder.getValidatorRemoveTransaction(
+    //         validator,
+    //         _nonce,
+    //         _chainId
+    //     );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+    //     const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-        const finalTxnHex = Buffer.from(txnBytes).toString('hex');
+    //     const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+    //     const finalTxnHex = Buffer.from(txnBytes).toString('hex');
 
-        const res = await axios.post(`${url}/broadcast/`, {
-            txn: finalTxnHex,
-        });
+    //     const res = await axios.post(`${url}/broadcast/`, {
+    //         txn: finalTxnHex,
+    //     });
 
-        return {
-            txnDataBytes,
-            res: res.data,
-            finalTxnHex,
-            txnBytes,
-        };
-    }
+    //     return {
+    //         txnDataBytes,
+    //         res: res.data,
+    //         finalTxnHex,
+    //         txnBytes,
+    //     };
+    // }
 
     async moveStake(
         shareAmount: string,
@@ -697,31 +697,31 @@ export default class PWRWallet {
         };
     }
 
-    // async removeGuardian(nonce?: number) {
-    //     const _chainId = this.getChainId();
-    //     const _nonce = nonce || (await this.getNonce());
+    async removeGuardian(nonce?: number) {
+        const _chainId = this.getChainId();
+        const _nonce = nonce || (await this.getNonce());
 
-    //     const txnDataBytes = TransactionBuilder.getRemoveGuardianTransaction(
-    //         _nonce,
-    //         _chainId
-    //     );
+        const txnDataBytes = TransactionBuilder.getRemoveGuardianTransaction(
+            _nonce,
+            _chainId
+        );
 
-    //     const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
 
-    //     const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-    //     const txnHex = Buffer.from(txnBytes).toString('hex');
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        const txnHex = Buffer.from(txnBytes).toString('hex');
 
-    //     const res = await axios.post(`${url}/broadcast/`, {
-    //         txn: txnHex,
-    //     });
+        const res = await axios.post(`${url}/broadcast/`, {
+            txn: txnHex,
+        });
 
-    //     return {
-    //         txnDataBytes,
-    //         res: res.data,
-    //         txnHex,
-    //         txnBytes,
-    //     };
-    // }
+        return {
+            txnDataBytes,
+            res: res.data,
+            txnHex,
+            txnBytes,
+        };
+    }
 
     // #endregion
 

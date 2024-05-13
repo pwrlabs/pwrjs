@@ -211,15 +211,15 @@ describe('wallet_core', () => {
         }
     });
 
-    // it('removes a guardian', async () => {
-    //     nonce += 1;
+    it('removes a guardian', async () => {
+        nonce += 1;
 
-    //     try {
-    //         const tx = await pwrWallet.removeGuardian(nonce);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //     }
-    // });
+        try {
+            const tx = await pwrWallet.removeGuardian(nonce);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
 
     // #endregion
 
@@ -268,16 +268,16 @@ describe('wallet_core', () => {
         }
     });
 
-    it('removes a validator', async () => {
-        nonce += 1;
+    // it('removes a validator', async () => {
+    //     nonce += 1;
 
-        try {
-            const tx = await pwrWallet.sendValidatorRemoveTxn(validator, nonce);
-            console.log('Validator remove transaction successful:', tx);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    //     try {
+    //         const tx = await pwrWallet.sendValidatorRemoveTxn(validator, nonce);
+    //         console.log('Validator remove transaction successful:', tx);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
     // it('moves stake', async () => {
     //     const validator = '0x1234abcd';
