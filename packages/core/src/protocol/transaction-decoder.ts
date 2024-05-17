@@ -74,19 +74,7 @@ export default class TransactionDecoder {
         }
     }
 
-    public decodeTransfer(
-        txn: Uint8Array,
-        sender: Uint8Array,
-        nonce: number
-    ): {
-        sender: string;
-        receiver: string;
-        value: string;
-        nonce: number;
-        size: number;
-        rawTransaction: Uint8Array;
-        chainId: number;
-    } {
+    public decodeTransfer(txn: Uint8Array, sender: Uint8Array, nonce: number) {
         if (txn.length !== 34 && txn.length !== 99) {
             throw new Error('Invalid txn length for transfer txn');
         }
@@ -111,6 +99,7 @@ export default class TransactionDecoder {
             size: txn.length,
             rawTransaction: txn,
             chainId: txn[1],
+            type: txn[0],
         };
     }
 
@@ -147,6 +136,7 @@ export default class TransactionDecoder {
             ip: ip,
             rawTransaction: txn,
             chainId: txn[1],
+            type: txn[0],
         };
     }
 
@@ -167,6 +157,7 @@ export default class TransactionDecoder {
             size: txn.length,
             rawTransaction: txn,
             chainId: txn[1],
+            type: txn[0],
         };
     }
 
@@ -208,6 +199,7 @@ export default class TransactionDecoder {
             size: txn.length,
             rawTransaction: txn,
             chainId: txn[1],
+            type: txn[0],
         };
     }
 
@@ -250,6 +242,7 @@ export default class TransactionDecoder {
             size: txn.length,
             rawTransaction: txn,
             chainId: txn[1],
+            type: txn[0],
         };
     }
 
@@ -287,15 +280,11 @@ export default class TransactionDecoder {
             dataLength = txn.length - 79; // Adjusted for the presence of a signature
         }
 
-        console.log('dataLength', dataLength);
-
         const data = new Uint8Array(
             txn.buffer,
             txn.byteOffset + 14,
             dataLength
         ); // Data starts after the VM ID
-
-        console.log('data', data);
 
         return {
             sender: `0x${bytesToHex(sender)}`,
@@ -305,6 +294,7 @@ export default class TransactionDecoder {
             data: `0x${bytesToHex(data)}`,
             rawTransaction: txn,
             chainId: txn[1],
+            type: txn[0],
         };
     }
 
@@ -338,6 +328,7 @@ export default class TransactionDecoder {
             vmId: vmId.toString(),
             rawTransaction: txn,
             chainId: txn[1],
+            type: txn[0],
         };
     }
 
@@ -383,6 +374,7 @@ export default class TransactionDecoder {
             size: txn.length,
             rawTransaction: txn,
             chainId: txn[1],
+            type: txn[0],
         };
     }
 
@@ -407,6 +399,7 @@ export default class TransactionDecoder {
             size: txn.length,
             rawTransaction: txn,
             chainId: txn[1],
+            type: txn[0],
         };
     }
 

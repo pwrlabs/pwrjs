@@ -113,6 +113,7 @@ describe('decoder', () => {
             size: txnBytes.length,
             rawTransaction: txnBytes,
             chainId,
+            type: Transaction_ID.TRANSFER,
         });
     });
 
@@ -138,6 +139,7 @@ describe('decoder', () => {
             size: txnBytes.length,
             rawTransaction: txnBytes,
             chainId,
+            type: Transaction_ID.TRANSFER,
         });
     });
 
@@ -157,13 +159,15 @@ describe('decoder', () => {
         // Decode the transaction
         const result = decoder.decodeJoin(txnRaw, senderBytes, nonce);
 
-        // Check the results
-        // expect(result.sender).toEqual('0xdeadbeef');
-        expect(result.nonce).toEqual(0);
-        expect(result.size).toEqual(txnRaw.length);
-        expect(result.ip).toEqual(ip);
-        expect(result.rawTransaction).toEqual(txnRaw);
-        expect(result.chainId).toEqual(chainId);
+        expect(result).toEqual({
+            nonce,
+            size: txnRaw.length,
+            ip,
+            rawTransaction: txnRaw,
+            chainId,
+            sender: senderHex,
+            type: Transaction_ID.JOIN,
+        });
     });
 
     it('decode claim spot', () => {
@@ -190,6 +194,7 @@ describe('decoder', () => {
             chainId,
             rawTransaction: txnRaw,
             sender: senderHex,
+            type: Transaction_ID.CLAIM_SPOT,
         });
     });
 
@@ -216,6 +221,7 @@ describe('decoder', () => {
             size: txn.length,
             chainId,
             rawTransaction: txn,
+            type: Transaction_ID.DELEGATE,
         });
     });
 
@@ -241,6 +247,7 @@ describe('decoder', () => {
             size: txn.length,
             rawTransaction: txn,
             chainId,
+            type: Transaction_ID.WITHDRAW,
         });
     });
 
@@ -260,10 +267,6 @@ describe('decoder', () => {
         //     bytesAgain,
         //     dataAgain,
         // });
-
-        console.log({
-            data: vmDataTxn.data,
-        });
 
         const { id, chainId, vmId, data, nonce } = vmDataTxn;
 
@@ -288,6 +291,7 @@ describe('decoder', () => {
             data: `0x${bytesToHex(new TextEncoder().encode(data))}`,
             rawTransaction: txnBytes,
             chainId,
+            type: Transaction_ID.VM_DATA_TXN,
         });
     });
 
@@ -313,6 +317,7 @@ describe('decoder', () => {
             vmId,
             rawTransaction: txnBytes,
             chainId,
+            type: Transaction_ID.CLAIM_VM_ID,
         });
     });
 
@@ -340,6 +345,7 @@ describe('decoder', () => {
             size: txnBytes.length,
             rawTransaction: txnBytes,
             chainId,
+            type: Transaction_ID.SET_GUARDIAN,
         });
     });
 
@@ -367,6 +373,7 @@ describe('decoder', () => {
             size: txnBytes.length,
             rawTransaction: txnBytes,
             chainId,
+            type: Transaction_ID.REMOVE_GUARDIAN,
         });
     });
 });
