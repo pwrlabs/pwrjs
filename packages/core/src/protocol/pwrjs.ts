@@ -2,6 +2,8 @@ import axios from 'axios';
 import { Block } from '../record/block';
 import { VmDataTransaction } from '../record/vmDataTransaction';
 import { Validator } from '../record/validator';
+import TransactionDecoder from './transaction-decoder';
+import { Transaction_ID } from '../static/enums/transaction.enum';
 
 function EnsureRpcNodeUrl() {
     return function (
@@ -24,6 +26,7 @@ function EnsureRpcNodeUrl() {
 export default class PWRJS {
     static #rpcNodeUrl: string;
     static #feePerByte: number = 100;
+    static #ecdsaVerificationFee: number = 10000;
 
     // *~~*~~*~~ ~ *~~*~~*~~ //
 
@@ -33,6 +36,10 @@ export default class PWRJS {
 
     static getFeePerByte() {
         return PWRJS.#feePerByte;
+    }
+
+    static getEcsaVerificationFee() {
+        return PWRJS.#ecdsaVerificationFee;
     }
 
     static async getChainId(): Promise<number> {
@@ -51,6 +58,40 @@ export default class PWRJS {
         });
 
         return res.data.blockchainVersion;
+    }
+
+    // *~~*~~*~~ ~ *~~*~~*~~ //
+
+    static async getFee(txn: Uint8Array) {
+        const feePerByte = PWRJS.getFeePerByte();
+        const ecdsaVerificationFee = PWRJS.getEcsaVerificationFee();
+
+        const decoder = new TransactionDecoder();
+        const transaction = decoder.decode(txn) as unknown as {
+            sender: string;
+            nonce: string;
+            size: number;
+            rawTransaction: Uint8Array;
+            chainId: number;
+            transactions: { size: number }[];
+            type: number;
+        };
+
+        if (transaction.type === Transaction_ID.GUARDIAN_TXN) {
+            const guardianApprovalTransaction = transaction;
+
+            const sizeOfAllTransactions =
+                guardianApprovalTransaction.transactions.reduce(
+                    (acc, curr) => acc + curr.size,
+                    0
+                );
+
+            let fee = txn.length * feePerByte + ecdsaVerificationFee;
+            fee += sizeOfAllTransactions * ecdsaVerificationFee;
+            return fee;
+        } else {
+            return txn.length * feePerByte + ecdsaVerificationFee;
+        }
     }
 
     // *~~*~~*~~ ~ *~~*~~*~~ //

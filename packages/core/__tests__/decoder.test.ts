@@ -22,7 +22,7 @@ describe('decoder', () => {
     const senderHex = '0xf8ef0db764721627e00e840c713c88e278a596d2';
     const senderBytes = hexToUint8Array(senderHex);
 
-    const txnDet = {
+    const transferTxn = {
         id: Transaction_ID.TRANSFER,
         chainId: 0,
         nonce: 4,
@@ -89,8 +89,15 @@ describe('decoder', () => {
         guardian: '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767',
     };
 
+    const approveGuardianTxn = {
+        id: Transaction_ID.GUARDIAN_TXN,
+        chainId: 0,
+        nonce: 4,
+        guardian: '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767',
+    };
+
     it('decode', () => {
-        const { chainId, id, nonce, recipient, amount } = txnDet;
+        const { chainId, id, nonce, recipient, amount } = transferTxn;
 
         const txn = TransactionBuilder.getTransferPwrTransaction(
             chainId,
@@ -118,7 +125,7 @@ describe('decoder', () => {
     });
 
     it('decode transfer txn', () => {
-        const { id, chainId, nonce, amount, recipient } = txnDet;
+        const { id, chainId, nonce, amount, recipient } = transferTxn;
         const txn = TransactionBuilder.getTransferPwrTransaction(
             chainId,
             nonce,
@@ -374,6 +381,77 @@ describe('decoder', () => {
             rawTransaction: txnBytes,
             chainId,
             type: Transaction_ID.REMOVE_GUARDIAN,
+        });
+    });
+
+    it('decode guardian approval txn', () => {
+        const { id, chainId, nonce, guardian } = approveGuardianTxn;
+
+        const transferTxn1 = TransactionBuilder.getTransferPwrTransaction(
+            transferTxn.chainId,
+            transferTxn.nonce,
+            transferTxn.amount,
+            transferTxn.recipient
+        );
+
+        const transferTxn2 = TransactionBuilder.getTransferPwrTransaction(
+            transferTxn.chainId,
+            transferTxn.nonce,
+            transferTxn.amount,
+            '0x1234567890123456789012345678901234567890'
+        );
+
+        const signature1 = signTxn(transferTxn1, pvk);
+        const signature2 = signTxn(transferTxn2, pvk);
+
+        const txn1Bytes = new Uint8Array([...transferTxn1, ...signature1]);
+        const txn2Bytes = new Uint8Array([...transferTxn2, ...signature2]);
+
+        const txn = TransactionBuilder.getGuardianApprovalTransaction(
+            [txn1Bytes, txn2Bytes],
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeGuardianApprovalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            rawTransaction: txnBytes,
+            chainId,
+            transactions: [
+                {
+                    sender: senderHex,
+                    receiver: transferTxn.recipient,
+                    value: transferTxn.amount,
+                    nonce: transferTxn.nonce,
+                    size: txn1Bytes.length,
+                    rawTransaction: txn1Bytes,
+                    chainId: transferTxn.chainId,
+                    type: Transaction_ID.TRANSFER,
+                },
+                {
+                    sender: senderHex,
+                    receiver: '0x1234567890123456789012345678901234567890',
+                    value: transferTxn.amount,
+                    nonce: transferTxn.nonce,
+                    size: txn2Bytes.length,
+                    rawTransaction: txn2Bytes,
+                    chainId: transferTxn.chainId,
+                    type: Transaction_ID.TRANSFER,
+                },
+            ],
+            type: Transaction_ID.GUARDIAN_TXN,
         });
     });
 });

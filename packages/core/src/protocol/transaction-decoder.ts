@@ -403,6 +403,50 @@ export default class TransactionDecoder {
         };
     }
 
+    public decodeGuardianApprovalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        /*
+         * Identifier - 1
+         * chain id - 1
+         * Nonce - 4
+         * Txn - x
+         * signature - 65
+         * */
+
+        const buffer = new Uint8Array(txn);
+        let position = 6;
+
+        const wrappedTxns: Uint8Array[] = [];
+
+        while (buffer.length - position > 65) {
+            const txnLength =
+                (buffer[position] << 24) |
+                (buffer[position + 1] << 16) |
+                (buffer[position + 2] << 8) |
+                buffer[position + 3];
+            position += 4;
+
+            const wrappedTxn = buffer.slice(position, position + txnLength);
+            wrappedTxns.push(wrappedTxn);
+            position += txnLength;
+        }
+
+        const txns = wrappedTxns.map((wrappedTxn) => this.decode(wrappedTxn));
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            transactions: txns,
+            rawTransaction: buffer,
+            chainId: buffer[1],
+            type: buffer[0],
+        };
+    }
+
     // private static decodeWithdraw(
     //     txn: Uint8Array,
     //     sender: Uint8Array
