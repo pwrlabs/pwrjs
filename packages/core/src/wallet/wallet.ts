@@ -1,3 +1,5 @@
+/* prettier-ignore */
+
 import axios from 'axios';
 import WalletUtils from '../wallet.utils';
 import BigNumber from 'bignumber.js';
@@ -85,9 +87,15 @@ function generateTxnBytes(
 }
 
 function hashTxn(txnBytes: Uint8Array): ArrayBuffer {
-    const hashedTxn = keccak224.arrayBuffer(txnBytes);
+    const hashedTxn = keccak256.arrayBuffer(txnBytes);
     return hashedTxn;
 }
+
+type TxnRes = {
+    success: boolean;
+    transactionHash: string;
+    message: string;
+};
 
 function signTxn(txnBytes: Uint8Array, privateKey: string) {
     const hashedBytes = keccak256.arrayBuffer(txnBytes);
@@ -109,7 +117,7 @@ function signTxn(txnBytes: Uint8Array, privateKey: string) {
     return signature;
 }
 
-async function sendTxn(txnHex: string, txnHash: string) {
+async function sendTxn(txnHex: string, txnHash: string): Promise<TxnRes> {
     const url = `${pwrnode}/broadcast/`;
 
     try {
@@ -125,19 +133,19 @@ async function sendTxn(txnHex: string, txnHash: string) {
 
         const res = await raw.json();
 
-        console.log(res);
+        // console.log('--', res);
 
         if (!raw.ok) {
             return {
                 success: false,
-                transactionHash: txnHash,
+                transactionHash: '0x' + txnHash,
                 message: res.message,
             };
         }
 
         return {
             success: true,
-            transactionHash: txnHash,
+            transactionHash: '0x' + txnHash,
             message: null,
         };
     } catch (err) {
@@ -271,8 +279,11 @@ export default class PWRWallet {
         this.chainId = chainId;
     }
 
-    async transferPWR(to: string, amount: string, nonce?: number) {
-        const _nonce = nonce || (await this.getNonce());
+    async transferPWR(to: string, amount: string): Promise<TxnRes>;
+    async transferPWR(to: string, amount: string, nonce: number): Promise<TxnRes>;
+    async transferPWR(to: string, amount: string, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce ?? (await this.getNonce());
+
         const _chainId = this.getChainId();
         const txn = TransactionBuilder.getTransferPwrTransaction(
             _chainId,
@@ -294,7 +305,9 @@ export default class PWRWallet {
         return res;
     }
 
-    async join(ip: string, nonce?: number) {
+    async join(ip: string): Promise<TxnRes>;
+    async join(ip: string, nonce: number): Promise<TxnRes>;
+    async join(ip: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -316,7 +329,9 @@ export default class PWRWallet {
         return res;
     }
 
-    async claimActiveNodeSpot(nonce?: number) {
+    async claimActiveNodeSpot(): Promise<TxnRes>;
+    async claimActiveNodeSpot(nonce: number): Promise<TxnRes>;
+    async claimActiveNodeSpot(nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -337,58 +352,16 @@ export default class PWRWallet {
         return res;
     }
 
-    async delegate(to: string, amount: string, nonce?: number) {
-        const _nonce = nonce || (await this.getNonce());
-        const _chainId = this.getChainId();
+   
 
-        const txnDataBytes = TransactionBuilder.getDelegatedTransaction(
-            to,
-            amount,
-            _nonce,
-            _chainId
-        );
-
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
-        return res;
-    }
-
-    async withdraw(from: string, sharesAmount: string, nonce?: number) {
-        const _nonce = nonce || (await this.getNonce());
-        const _chainId = this.getChainId();
-
-        const txnDataBytes = TransactionBuilder.getWithdrawTransaction(
-            from,
-            sharesAmount,
-            _nonce,
-            _chainId
-        );
-
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
-        return res;
-    }
-
-    async sendVMDataTxn(vmId: string, dataBytes: Uint8Array, nonce?: number) {
-        const id = Transaction.VM_DATA_TXN;
-
+    async sendVMDataTxn(vmId: string, data: string): Promise<TxnRes>;
+    async sendVMDataTxn(vmId: string, data: string, nonce: number): Promise<TxnRes>;
+    async sendVMDataTxn(vmId: string, data: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
 
-        const data = bytesToHex(dataBytes);
+        // const data = bytesToHex(dataBytes);
         const _chainId = this.getChainId();
 
         const txnDataBytes = TransactionBuilder.getVmDataTransaction(
@@ -410,17 +383,13 @@ export default class PWRWallet {
         return res;
     }
 
-    async sendPayableVmDataTransaction(
-        vmId: string,
-        value: string,
-        dataBytes: Uint8Array,
-        nonce?: number
-    ) {
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: string): Promise<TxnRes>;
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, nonce: number): Promise<TxnRes>;
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
 
-        const data = bytesToHex(dataBytes);
         const _chainId = this.getChainId();
 
         const txnDataBytes = TransactionBuilder.getPayableVmDataTransaction(
@@ -441,6 +410,10 @@ export default class PWRWallet {
         const res = await sendTxn(txnHex, hashedTxnStr);
         return res;
     }
+
+   
+
+    // #region validators
 
     async claimVmId(vmId: string, nonce?: number) {
         const _nonce = nonce || (await this.getNonce());
@@ -463,93 +436,21 @@ export default class PWRWallet {
         return res;
     }
 
-    // #region validators
-
-    // async sendValidatorRemoveTxn(validator: string, nonce?: number) {
-    //     const _chainId = this.getChainId();
-    //     const _nonce = nonce || (await this.getNonce());
-
-    //     const txnDataBytes = TransactionBuilder.getValidatorRemoveTransaction(
-    //         validator,
-    //         _nonce,
-    //         _chainId
-    //     );
-
-    //     const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
-    //     const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-    //     const finalTxnHex = Buffer.from(txnBytes).toString('hex');
-
-    //     const res = await axios.post(`${url}/broadcast/`, {
-    //         txn: finalTxnHex,
-    //     });
-
-    //     return {
-    //         txnDataBytes,
-    //         res: res.data,
-    //         finalTxnHex,
-    //         txnBytes,
-    //     };
-    // }
-
-    async moveStake(
-        shareAmount: string,
-        fromValidator: string,
-        toValidator: string,
-        nonce?: number
-    ) {
-        const id = Transaction.TRANSFER;
-
+    async delegate(to: string, amount: string): Promise<TxnRes>;
+    async delegate(to: string, amount: string, nonce: number): Promise<TxnRes>;
+    async delegate(to: string, amount: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        const txnDataBytes = generateTxnBytes(
-            id,
-            _chainId,
-            _nonce,
-            shareAmount,
-            toValidator
-        );
-
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-
-        const res = await axios.post(`${pwrnode}/broadcast/`, {
-            txn: txnHex,
-        });
-
-        return {
-            txnDataBytes,
-            res: res.data,
-            txnHex,
-            txnBytes,
-        };
-    }
-
-    // #endregion
-
-    // #region guardians
-
-    async setGuardian(
-        guardian: string,
-        expiryDate: EpochTimeStamp,
-        nonce?: number
-    ) {
-        const _nonce = nonce || (await this.getNonce());
-        const _chainId = this.getChainId();
-
-        const txn = TransactionBuilder.getSetGuardianTransaction(
-            guardian,
-            expiryDate,
+        const txnDataBytes = TransactionBuilder.getDelegatedTransaction(
+            to,
+            amount,
             _nonce,
             _chainId
         );
 
-        const signature = signTxn(txn, this.privateKey);
-        const txnBytes = new Uint8Array([...txn, ...signature]);
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
 
         const txnHex = Buffer.from(txnBytes).toString('hex');
         const hashedTxnFinal = hashTxn(txnBytes);
@@ -559,10 +460,87 @@ export default class PWRWallet {
         return res;
     }
 
-    async sendGuardianApprovalTransaction(
-        transactions: Uint8Array[],
-        nonce?: number
-    ) {
+    async withdraw(from: string, sharesAmount: string): Promise<TxnRes>;
+    async withdraw(from: string, sharesAmount: string, nonce): Promise<TxnRes>;
+    async withdraw(from: string, sharesAmount: string, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes = TransactionBuilder.getWithdrawTransaction(
+            from,
+            sharesAmount,
+            _nonce,
+            _chainId
+        );
+
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
+        const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
+    }
+    
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string): Promise<TxnRes>;
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, nonce: number): Promise<TxnRes>;
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes = TransactionBuilder.getMoveStakeTransaction(
+            shareAmount,
+            fromValidator,
+            toValidator,
+            _nonce,
+            _chainId
+        );
+        
+
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
+        const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
+    }
+
+    // #endregion
+
+    // #region guardians
+
+    async setGuardian(guardian: string, expiryDate: EpochTimeStamp): Promise<TxnRes>;
+    async setGuardian(guardian: string, expiryDate: EpochTimeStamp, nonce: number): Promise<TxnRes>;
+    async setGuardian(guardian: string, expiryDate: EpochTimeStamp, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes = TransactionBuilder.getSetGuardianTransaction(
+            guardian,
+            expiryDate,
+            _nonce,
+            _chainId
+        );
+
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
+        const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
+    }
+
+    async sendGuardianApprovalTransaction(transactions: Uint8Array[]): Promise<TxnRes>;
+    async sendGuardianApprovalTransaction(transactions: Uint8Array[], nonce: number): Promise<TxnRes>;
+    async sendGuardianApprovalTransaction(transactions: Uint8Array[], nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -583,7 +561,9 @@ export default class PWRWallet {
         return res;
     }
 
-    async removeGuardian(nonce?: number) {
+    async removeGuardian(): Promise<TxnRes>;
+    async removeGuardian(nonce: number): Promise<TxnRes>;
+    async removeGuardian(nonce?: number): Promise<TxnRes> {
         const _chainId = this.getChainId();
         const _nonce = nonce || (await this.getNonce());
 

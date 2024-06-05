@@ -152,6 +152,37 @@ export default class TransactionBuilder {
         return txnBytes;
     }
 
+    static getMoveStakeTransaction(
+        sharesAmount: string,
+        fromValidator: string,
+        toValidator: string,
+        nonce: number,
+        chainId: number
+    ) {
+        if (nonce < 0) {
+            throw new Error('nonce cannot be negative');
+        }
+
+        const base = this.getTransactionBase(
+            Transaction_ID.MOVE_STAKE,
+            chainId,
+            nonce
+        );
+
+        const b_shares = BnToBytes(new BigNumber(sharesAmount));
+        const b_from = HexToBytes(fromValidator);
+        const b_to = HexToBytes(toValidator);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_shares,
+            ...b_from,
+            ...b_to,
+        ]);
+
+        return txnBytes;
+    }
+
     static getVmDataTransaction(
         vmId: string,
         data: string,
