@@ -7,7 +7,7 @@ import { keccak256, keccak224 } from 'js-sha3';
 import * as secp256k1 from 'secp256k1';
 import TransactionBuilder from '../protocol/transaction-builder';
 
-const url = 'https://pwrrpc.pwrlabs.io';
+const pwrnode = 'https://pwrrpc.pwrlabs.io';
 const _baseUrl = 'https://pwrexplorerbackend.pwrlabs.io';
 
 enum Transaction {
@@ -109,6 +109,42 @@ function signTxn(txnBytes: Uint8Array, privateKey: string) {
     return signature;
 }
 
+async function sendTxn(txnHex: string, txnHash: string) {
+    const url = `${pwrnode}/broadcast/`;
+
+    try {
+        const raw = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                txn: txnHex,
+            }),
+        });
+
+        const res = await raw.json();
+
+        console.log(res);
+
+        if (!raw.ok) {
+            return {
+                success: false,
+                transactionHash: txnHash,
+                message: res.message,
+            };
+        }
+
+        return {
+            success: true,
+            transactionHash: txnHash,
+            message: null,
+        };
+    } catch (err) {
+        throw err;
+    }
+}
+
 export default class PWRWallet {
     private address: string;
     private privateKey: string;
@@ -149,7 +185,7 @@ export default class PWRWallet {
     async getBalance() {
         const res = await axios({
             method: 'get',
-            url: `${url}/balanceOf/?userAddress=${this.address}`,
+            url: `${pwrnode}/balanceOf/?userAddress=${this.address}`,
         });
 
         return res.data.balance;
@@ -158,7 +194,7 @@ export default class PWRWallet {
     async getNonce() {
         const res = await axios({
             method: 'get',
-            url: `${url}/nonceOfUser/?userAddress=${this.address}`,
+            url: `${pwrnode}/nonceOfUser/?userAddress=${this.address}`,
         });
 
         return res.data.nonce;
@@ -236,8 +272,6 @@ export default class PWRWallet {
     }
 
     async transferPWR(to: string, amount: string, nonce?: number) {
-        const id = Transaction.TRANSFER;
-
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
         const txn = TransactionBuilder.getTransferPwrTransaction(
@@ -255,78 +289,52 @@ export default class PWRWallet {
         const hashedTxnFinal = hashTxn(txnBytes);
         const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const txnData = {
-            id,
-            nonce,
-            value: BigNumber(amount).shiftedBy(9).toString(),
-            to: to,
-            hash: `0x${hashedTxnStr}`,
-        };
+        const res = await sendTxn(txnHex, hashedTxnStr);
 
-        const res = await axios({
-            method: 'post',
-            url: `${url}/broadcast/`,
-            data: {
-                txn: txnHex,
-            },
-        });
-
-        return {
-            res: res.data,
-            txn: txnData,
-            txnBytes,
-            txnDataBytes: txn,
-            txnHex,
-        };
+        return res;
     }
 
     async join(ip: string, nonce?: number) {
-        const id = Transaction.JOIN;
+        const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
-
-        // const ipUtf8Bytes = Buffer.from(ip, 'utf8');
 
         const txnDataBytes = TransactionBuilder.getJoinTransaction(
             ip,
-            nonce,
+            _nonce,
             _chainId
         );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
         const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const res = await axios.post(`${url}/broadcast/`, { txn: txnHex });
+        const res = await sendTxn(txnHex, hashedTxnStr);
 
-        return {
-            res: res.data,
-            txnBytes,
-            txnDataBytes,
-            txnHex,
-        };
+        return res;
     }
 
     async claimActiveNodeSpot(nonce?: number) {
-        const id = Transaction.CLAIM_SPOT;
+        const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        const txnDataBytes = generateTxnBytes(id, _chainId, nonce, '', '');
+        const txnDataBytes =
+            TransactionBuilder.getClaimActiveNodeSpotTransaction(
+                _nonce,
+                _chainId
+            );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
         const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const res = await axios.post(`${url}/broadcast/`, {
-            txn: txnHex,
-        });
-
-        return {
-            txnDataBytes,
-            res: res.data,
-            txnHex,
-            txnBytes,
-        };
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
     }
 
     async delegate(to: string, amount: string, nonce?: number) {
@@ -341,18 +349,14 @@ export default class PWRWallet {
         );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
         const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const res = await axios.post(`${url}/broadcast/`, { txn: txnHex });
-
-        return {
-            txnDataBytes,
-            res: res.data,
-            txnHex,
-            txnBytes,
-        };
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
     }
 
     async withdraw(from: string, sharesAmount: string, nonce?: number) {
@@ -367,24 +371,14 @@ export default class PWRWallet {
         );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
         const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const res = await axios({
-            method: 'post',
-            url: `${url}/broadcast/`,
-            data: {
-                txn: txnHex,
-            },
-        });
-
-        return {
-            txnDataBytes,
-            res: res.data,
-            txnHex,
-            txnBytes,
-        };
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
     }
 
     async sendVMDataTxn(vmId: string, dataBytes: Uint8Array, nonce?: number) {
@@ -405,37 +399,15 @@ export default class PWRWallet {
         );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
         const txnHex = Buffer.from(txnBytes).toString('hex');
-
         const hashedTxnFinal = hashTxn(txnBytes);
-
         const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const txn = {
-            id,
-            nonce,
-            vmId,
-            data,
-            hash: `0x${hashedTxnStr}`,
-        };
+        const res = await sendTxn(txnHex, hashedTxnStr);
 
-        const res = await axios({
-            method: 'post',
-            url: `${url}/broadcast/`,
-            data: {
-                txn: txnHex,
-            },
-        });
-
-        return {
-            res: res.data,
-            txn,
-            txnBytes,
-            txnDataBytes,
-            txnHex,
-        };
+        return res;
     }
 
     async sendPayableVmDataTransaction(
@@ -444,8 +416,6 @@ export default class PWRWallet {
         dataBytes: Uint8Array,
         nonce?: number
     ) {
-        const id = Transaction.VM_DATA_TXN;
-
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
@@ -462,41 +432,17 @@ export default class PWRWallet {
         );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
         const txnHex = Buffer.from(txnBytes).toString('hex');
-
         const hashedTxnFinal = hashTxn(txnBytes);
-
         const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const txn = {
-            id,
-            nonce,
-            vmId,
-            data,
-            hash: `0x${hashedTxnStr}`,
-        };
-
-        const res = await axios({
-            method: 'post',
-            url: `${url}/broadcast/`,
-            data: {
-                txn: txnHex,
-            },
-        });
-
-        return {
-            res: res.data,
-            txn,
-            txnBytes,
-            txnDataBytes,
-            txnHex,
-        };
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
     }
 
     async claimVmId(vmId: string, nonce?: number) {
-        const id = Transaction.CLAIM_VM_ID;
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -507,60 +453,15 @@ export default class PWRWallet {
         );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
         const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const res = await axios({
-            method: 'post',
-            url: `${url}/broadcast/`,
-            data: {
-                txn: txnHex,
-            },
-        });
-
-        return {
-            txnDataBytes,
-            res: res.data,
-            txnHex,
-            txnBytes,
-        };
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
     }
-
-    // async withdrawPWR(from: string, pwrAmount: string, nonce?: number) {
-    //     const id = Transaction.WITHDRAW;
-
-    //     const _nonce = nonce || (await this.getNonce());
-    //     const _chainId = this.getChainId();
-
-    //     const txnDataBytes = generateTxnBytes(
-    //         id,
-    //         _chainId,
-    //         _nonce,
-    //         pwrAmount,
-    //         from
-    //     );
-
-    //     const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
-    //     const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-    //     const txnHex = Buffer.from(txnBytes).toString('hex');
-
-    //     const res = await axios({
-    //         method: 'post',
-    //         url: `${url}/broadcast/`,
-    //         data: {
-    //             txn: txnHex,
-    //         },
-    //     });
-
-    //     return {
-    //         txnDataBytes,
-    //         res: res.data,
-    //         txnHex,
-    //         txnBytes,
-    //     };
-    // }
 
     // #region validators
 
@@ -616,7 +517,7 @@ export default class PWRWallet {
 
         const txnHex = Buffer.from(txnBytes).toString('hex');
 
-        const res = await axios.post(`${url}/broadcast/`, {
+        const res = await axios.post(`${pwrnode}/broadcast/`, {
             txn: txnHex,
         });
 
@@ -637,9 +538,8 @@ export default class PWRWallet {
         expiryDate: EpochTimeStamp,
         nonce?: number
     ) {
-        const _chainId = this.getChainId();
-
         const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
 
         const txn = TransactionBuilder.getSetGuardianTransaction(
             guardian,
@@ -649,20 +549,14 @@ export default class PWRWallet {
         );
 
         const signature = signTxn(txn, this.privateKey);
-
         const txnBytes = new Uint8Array([...txn, ...signature]);
+
         const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const res = await axios.post(`${url}/broadcast/`, {
-            txn: txnHex,
-        });
-
-        return {
-            txnDataBytes: txn,
-            res: res.data,
-            txnHex,
-            txnBytes,
-        };
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
     }
 
     async sendGuardianApprovalTransaction(
@@ -670,8 +564,6 @@ export default class PWRWallet {
         nonce?: number
     ) {
         const _nonce = nonce || (await this.getNonce());
-
-        // const txnHex = Buffer.from(txn).toString('hex');
         const _chainId = this.getChainId();
 
         const txnDataBytes = TransactionBuilder.getGuardianApprovalTransaction(
@@ -681,20 +573,14 @@ export default class PWRWallet {
         );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-        const finalTxnHex = Buffer.from(txnBytes).toString('hex');
 
-        const res = await axios.post(`${url}/broadcast/`, {
-            txn: finalTxnHex,
-        });
+        const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        return {
-            txnDataBytes,
-            res: res.data,
-            txn: finalTxnHex,
-            txnBytes,
-        };
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
     }
 
     async removeGuardian(nonce?: number) {
@@ -707,20 +593,14 @@ export default class PWRWallet {
         );
 
         const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
         const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const res = await axios.post(`${url}/broadcast/`, {
-            txn: txnHex,
-        });
-
-        return {
-            txnDataBytes,
-            res: res.data,
-            txnHex,
-            txnBytes,
-        };
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
     }
 
     // #endregion
@@ -749,7 +629,7 @@ export default class PWRWallet {
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
         const txnHex = Buffer.from(txnBytes).toString('hex');
 
-        const res = await axios.post(`${url}/broadcast/`, {
+        const res = await axios.post(`${pwrnode}/broadcast/`, {
             txn: txnHex,
         });
 
@@ -785,7 +665,7 @@ export default class PWRWallet {
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
         const txnHexFinal = Buffer.from(txnBytes).toString('hex');
 
-        const res = await axios.post(`${url}/broadcast/`, {
+        const res = await axios.post(`${pwrnode}/broadcast/`, {
             txn: txnHexFinal,
         });
 

@@ -6,13 +6,17 @@ import TransactionBuilder from '../src/protocol/transaction-builder';
 import { signTxn } from '../src/utils';
 
 describe('wallet_core', () => {
+    const destinyAddress = '0xe01a20baa4b041a1d0700a43aac2425655d9f256';
+
     const pvk =
-        '0x65d39c88806fd85c9a860e1f26155af4321c5aaaf98d5d164bdab13b5e924ffd';
+        '0x350561f1d17b6c903f93c424000d976a3bb322d49173f01dfb51143e4a03d5cd';
     const pwrWallet = new PWRWallet(pvk);
+
+    const wallet0 = new PWRWallet();
 
     const pvkGuardian =
         '0xb8a70832e8fec8f6a0ec4721f5d5b0239834105eb52a606914e61fbe3506d278';
-    const guardianWallet = new PWRWallet(pvk);
+    const guardianWallet = new PWRWallet(pvkGuardian);
 
     const validator = '0x8f8f8732dFA29d55D2c5115D80915df508536F76';
 
@@ -25,6 +29,9 @@ describe('wallet_core', () => {
     const guardianAddress = '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
 
     console.log('validatorAddress', pwrWallet.getAddress());
+
+    console.log('wallet', pwrWallet.getAddress());
+
     console.log('pvk', pwrWallet.getPrivateKey());
 
     // beforeAll(async () => {
@@ -51,6 +58,7 @@ describe('wallet_core', () => {
 
         expect(testAddress.test(address)).toBe(true);
         expect(testPvk.test(privateKey)).toBe(true);
+
         expect(testPbk.test(publicKey)).toBe(true);
     });
 
@@ -64,7 +72,7 @@ describe('wallet_core', () => {
 
         nonce = _nonce;
 
-        console.log({ nonce: _nonce });
+        console.log({ nonce });
 
         // expect(nonce).toBeGreaterThanOrEqual(0);
         expect(_nonce).toBeGreaterThan(0);
@@ -75,16 +83,32 @@ describe('wallet_core', () => {
     // #region transactions
 
     it('Wallet transfer', async () => {
-        nonce += 1;
         try {
+            const amount = BigInt(1) * BigInt(10 ** 9);
             const tx = await pwrWallet.transferPWR(
-                '0xf8ef0db764721627e00e840c713c88e278a596d2',
-                '1',
+                destinyAddress,
+                amount.toString(),
                 nonce
             );
-            console.log('Transfer transaction successful:', tx.txn.hash);
+
+            console.log(tx);
+
+            console.log('Transfer transaction successful:', tx.transactionHash);
+            expect(tx.success).toBe(true);
         } catch (error) {
             console.log('transferpwr', error);
+            expect(false).toBe(true);
+        }
+
+        try {
+            const tx2 = await wallet0.transferPWR(
+                '0x0000000000000000000000000000000000000000',
+                '1'
+            );
+
+            expect(tx2.success).toBe(false);
+        } catch (error) {
+            console.log('error transfer txn', error);
             expect(false).toBe(true);
         }
     });
@@ -95,7 +119,7 @@ describe('wallet_core', () => {
         // NOTE: THE TXN FAILS BECAUSE OF THE NEEDED AMOUNT TO JOIN
         try {
             const tx = await pwrWallet.join('127.1.1.1', nonce);
-            console.log('Join transaction successful:', tx.res);
+            console.log('Join transaction successful:', tx.transactionHash);
         } catch (e) {
             expect(false).toBe(true);
         }
@@ -123,7 +147,7 @@ describe('wallet_core', () => {
 
         try {
             const tx = await pwrWallet.sendVMDataTxn(vmId, dataBytes, nonce);
-            console.log('VM data transaction successful:', tx.txn.hash);
+            console.log('VM data transaction successful:', tx.transactionHash);
         } catch (e) {
             expect(false).toBe(true);
             // console.error('Error sending VM data transaction:', e.message);
@@ -144,7 +168,7 @@ describe('wallet_core', () => {
                 dataBytes,
                 nonce
             );
-            console.log('VM data transaction successful:', tx.txn.hash);
+            console.log('VM data transaction successful:', tx.transactionHash);
         } catch (e) {
             console.log(e);
 
@@ -172,7 +196,10 @@ describe('wallet_core', () => {
                 epochTime,
                 nonce
             );
-            // console.log('Set guardian transaction successful:', tx.res);
+            console.log(
+                'Set guardian transaction successful:',
+                tx.transactionHash
+            );
         } catch (e) {
             expect(false).toBe(true);
         }
@@ -205,7 +232,10 @@ describe('wallet_core', () => {
                 nonceG
             );
 
-            // console.log('Guardian-wrapped transaction successful:', tx);
+            console.log(
+                'Guardian-wrapped transaction successful:',
+                tx.transactionHash
+            );
         } catch (e) {
             expect(false).toBe(true);
         }
@@ -216,6 +246,11 @@ describe('wallet_core', () => {
 
         try {
             const tx = await pwrWallet.removeGuardian(nonce);
+
+            console.log(
+                'remove guarian transaction successful:',
+                tx.transactionHash
+            );
         } catch (e) {
             expect(false).toBe(true);
         }
