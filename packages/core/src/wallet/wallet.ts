@@ -190,10 +190,12 @@ export default class PWRWallet {
     }
 
     async getBalance() {
-        const rawRes = await fetch(`${_baseUrl}/balance/${this.address}`);
+        const rawRes = await fetch(
+            `${pwrnode}/balanceOf/?userAddress=${this.address}`
+        );
         const res = await rawRes.json();
 
-        return res.data.balance;
+        return res.balance;
     }
 
     async getNonce() {
@@ -203,7 +205,7 @@ export default class PWRWallet {
 
         const res = await rawRes.json();
 
-        return res.data.nonce;
+        return res.nonce;
     }
 
     getPrivateKey(): string {
@@ -677,22 +679,6 @@ export default class PWRWallet {
 
         const res = await sendTxn(txnHex, hashedTxnStr);
         return res;
-
-        // const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-
-        // const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-        // const txnHex = Buffer.from(txnBytes).toString('hex');
-
-        // const res = await axios.post(`${pwrnode}/broadcast/`, {
-        //     txn: txnHex,
-        // });
-
-        // return {
-        //     txnDataBytes,
-        //     res: res.data,
-        //     txnHex,
-        //     txnBytes,
-        // };
     }
 
     async sendConduitTransaction(
@@ -700,30 +686,29 @@ export default class PWRWallet {
         txn: Uint8Array,
         nonce?: number
     ) {
-        // const id = Transaction.VM_DATA_TXN;
+        const id = Transaction.VM_DATA_TXN;
 
-        // const vmIdHex = vmId.toString(16);
-        // const txnHex = Buffer.from(txn).toString('hex');
-        // const _chainId = this.getChainId();
+        const vmIdHex = vmId.toString(16);
+        const txnHex1 = Buffer.from(txn).toString('hex');
+        const _chainId = this.getChainId();
 
-        // const txnDataBytes = generateDataTxnBytes(
-        //     id,
-        //     _chainId,
-        //     nonce,
-        //     vmIdHex,
-        //     txnHex
-        // );
+        const txnDataBytes = generateDataTxnBytes(
+            id,
+            _chainId,
+            nonce,
+            vmIdHex,
+            txnHex1
+        );
 
-        // const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        // const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
 
-        // const txnHex = Buffer.from(txnBytes).toString('hex');
-        // const hashedTxnFinal = hashTxn(txnBytes);
-        // const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+        const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        // const res = await sendTxn(txnHex, hashedTxnStr);
-        // return res;
-        return 0;
+        const res = await sendTxn(txnHex, hashedTxnStr);
+        return res;
     }
 
     //#endregion
