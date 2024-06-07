@@ -165,66 +165,66 @@ describe('wallet_core', () => {
 
     // #region guardians
 
-    // it('sets  guardian ', async () => {
-    //     // 7 days from now ms
+    it('sets  guardian ', async () => {
+        // 7 days from now ms
 
-    //     const futureDate = new Date();
-    //     futureDate.setDate(futureDate.getDate() + 7);
-    //     const epochTime = Math.floor(futureDate.getTime() / 1000);
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 7);
+        const epochTime = Math.floor(futureDate.getTime() / 1000);
 
-    //     try {
-    //         const tx = await pwrWallet.setGuardian(guardianAddress, epochTime);
-    //         console.log('Set guardian txn :', tx);
-    //         expect(tx.success).toBe(true);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //     }
-    // });
+        try {
+            const tx = await pwrWallet.setGuardian(guardianAddress, epochTime);
+            console.log('Set guardian txn :', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
 
-    // it('sends a guardian-wrapped transaction', async () => {
-    //     const _nonce = await pwrWallet.getNonce();
+    it('sends a guardian-wrapped transaction', async () => {
+        const _nonce = await pwrWallet.getNonce();
 
-    //     const exampleTxn = {
-    //         to: '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0',
-    //         amount: '1',
-    //         nonce: _nonce,
-    //         chainId: 0,
-    //     };
+        const exampleTxn = {
+            to: '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0',
+            amount: '1',
+            nonce: _nonce,
+            chainId: 0,
+        };
 
-    //     const txn = TransactionBuilder.getTransferPwrTransaction(
-    //         exampleTxn.chainId,
-    //         exampleTxn.nonce,
-    //         exampleTxn.amount,
-    //         exampleTxn.to
-    //     );
+        const txn = TransactionBuilder.getTransferPwrTransaction(
+            exampleTxn.chainId,
+            exampleTxn.nonce,
+            exampleTxn.amount,
+            exampleTxn.to
+        );
 
-    //     const signature = signTxn(txn, guardianWallet.getPrivateKey());
-    //     const txnBytes = new Uint8Array([...txn, ...signature]);
+        const signature = signTxn(txn, guardianWallet.getPrivateKey());
+        const txnBytes = new Uint8Array([...txn, ...signature]);
 
-    //     try {
-    //         const tx = await guardianWallet.sendGuardianApprovalTransaction([
-    //             txnBytes,
-    //         ]);
+        try {
+            const tx = await guardianWallet.sendGuardianApprovalTransaction([
+                txnBytes,
+            ]);
 
-    //         console.log('Guardian-wrapped txn', tx);
+            console.log('Guardian-wrapped txn', tx);
 
-    //         expect(tx.success).toBe(true);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //     }
-    // });
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
 
-    // it('removes a guardian', async () => {
-    //     try {
-    //         const tx = await pwrWallet.removeGuardian();
+    it('removes a guardian', async () => {
+        try {
+            const tx = await pwrWallet.removeGuardian();
 
-    //         console.log('remove guardian txn:', tx);
+            console.log('remove guardian txn:', tx);
 
-    //         expect(tx.success).toBe(true);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //     }
-    // });
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
 
     // #endregion
 
