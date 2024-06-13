@@ -69,6 +69,12 @@ export default class TransactionDecoder {
             case Transaction_ID.MOVE_STAKE:
                 throw new Error('Move Stake transaction not implemented');
 
+            //
+            case Transaction_ID.CHANGE_EARLY_WITHDRAW_PENALTY_PROPOSAL:
+                throw new Error(
+                    'Change Early Withdraw Penalty Proposal transaction not implemented'
+                );
+
             default:
                 throw new Error('Invalid transaction type');
         }
@@ -266,12 +272,10 @@ export default class TransactionDecoder {
             txn.byteLength
         );
 
-        const externalVmId = dataView.getBigUint64(6, false); // Assuming little-endian-
+        const externalVmId = dataView.getBigUint64(6, false); // Assuming little-endian
 
         let dataLength;
         const senderHex = bytesToHex(sender);
-
-        console.log('senderHex', senderHex);
 
         if (PWRJS.isVmAddress(senderHex)) {
             // Assuming `isVmAddress` checks if the address is a VM
@@ -447,72 +451,591 @@ export default class TransactionDecoder {
         };
     }
 
-    // private static decodeWithdraw(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+    // #region proposals
+    public decodeChangeEarlyWithdrawPenaltyProposal(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 18)
+            throw new Error(
+                'Invalid length for change early withdraw penalty proposal txn'
+            );
 
-    // private static decodeVmDataTxn(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        withdrawal penalty time - 8
+        withdrawal penalty - 4
+        description - x
+        signature - 65
+        */
 
-    // private static decodeClaimVmId(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
 
-    // private static decodeRemoveValidator(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        const titleSize = dataView.getInt32(6, false);
 
-    // private static decodeSetGuardian(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
 
-    // private static decodeRemoveGuardian(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        const withdraWalPenaltyTime = dataView.getBigInt64(
+            10 + titleSize,
+            false
+        );
+        const withdrawalPenalty = dataView.getInt32(18 + titleSize, false);
 
-    // private static decodeGuardianTxn(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        const description_b = new Uint8Array(
+            txn.buffer,
+            22 + titleSize,
+            txn.length - 87 - titleSize
+        );
+        const description = new TextDecoder().decode(description_b);
 
-    // private static decodePayableVmDataTxn(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            extraFee: 0,
+            withdrawalPenaltyTime: withdraWalPenaltyTime.toString(),
+            withdrawalPenalty: withdrawalPenalty,
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
 
-    // private static decodeConduitTxn(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+    public decodeChangeFeePerByteProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 16)
+            throw new Error(
+                'Invalid length for change fee per byte proposal txn'
+            );
 
-    // private static decodeSetConduit(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        fee per byte - 8
+        description - x
+        signature - 65
+        */
 
-    // private static decodeAddConduits(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
 
-    // private static decodeRemoveConduits(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        const titleSize = dataView.getInt32(6, false);
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
 
-    // private static decodeMoveStake(
-    //     txn: Uint8Array,
-    //     sender: Uint8Array
-    // ): Transaction {}
+        const feePerByte = dataView.getBigInt64(10 + titleSize, false);
 
-    // *~~~ asd ~~~
+        const description_b = new Uint8Array(
+            txn.buffer,
+            18 + titleSize,
+            txn.length - 83 - titleSize
+        );
+
+        const description = new TextDecoder().decode(description_b);
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            feePerByte: feePerByte.toString(),
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    public decodeChangeMaxBlockSizeProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 10)
+            throw new Error(
+                'Invalid length for change fee per byte proposal txn'
+            );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        max block size - 4
+        description - x
+        signature - 65
+        */
+
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
+
+        const titleSize = dataView.getInt32(6, false);
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
+
+        const maxBlockSize = dataView.getInt32(10 + titleSize, false);
+
+        const description_b = new Uint8Array(
+            txn.buffer,
+            14 + titleSize,
+            txn.length - 79 - titleSize
+        );
+
+        const description = new TextDecoder().decode(description_b);
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            maxBlockSize: maxBlockSize,
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    public decodeChangeOverallBurnPercentageProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 10)
+            throw new Error(
+                'Invalid length for change overall burn percentage proposal txn'
+            );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        burn percentage - 4
+        description - x
+        signature - 65
+        */
+
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
+
+        const titleSize = dataView.getInt32(6, false);
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
+
+        const overallBurnPercentage = dataView.getInt32(10 + titleSize, false);
+
+        const description_b = new Uint8Array(
+            txn.buffer,
+            14 + titleSize,
+            txn.length - 79 - titleSize
+        );
+
+        const description = new TextDecoder().decode(description_b);
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            burnPercentage: overallBurnPercentage,
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    public decodeChangeRewardPerYearProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 14)
+            throw new Error(
+                'Invalid length for change fee per byte proposal txn'
+            );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        reward per year - 8
+        description - x
+        signature - 65
+        */
+
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
+
+        const titleSize = dataView.getInt32(6, false);
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
+
+        const rewardPerYear = dataView.getBigInt64(10 + titleSize, false);
+
+        const description_b = new Uint8Array(
+            txn.buffer,
+            18 + titleSize,
+            txn.length - 83 - titleSize
+        );
+
+        const description = new TextDecoder().decode(description_b);
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            rewardPerYear: rewardPerYear.toString(),
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    public decodeChangeValidatorCountLimitProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 10)
+            throw new Error(
+                'Invalid length for change fee per byte proposal txn'
+            );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        validator count limit - 4
+        description - x
+        signature - 65
+        */
+
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
+
+        const titleSize = dataView.getInt32(6, false);
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
+
+        const validatorCountLimit = dataView.getInt32(10 + titleSize, false);
+
+        const description_b = new Uint8Array(
+            txn.buffer,
+            14 + titleSize,
+            txn.length - 79 - titleSize
+        );
+        const description = new TextDecoder().decode(description_b);
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            validatorCountLimit,
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    public decodeChangeValidatorJoiningFeeProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 14)
+            throw new Error(
+                'Invalid length for change fee per byte proposal txn'
+            );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        joining fee - 8
+        description - x
+        signature - 65
+        */
+
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
+
+        const titleSize = dataView.getInt32(6, false);
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
+
+        const joiningFee = dataView.getBigInt64(10 + titleSize, false);
+
+        const description_b = new Uint8Array(
+            txn.buffer,
+            18 + titleSize,
+            txn.length - 83 - titleSize
+        );
+
+        const description = new TextDecoder().decode(description_b);
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            joiningFee: joiningFee.toString(),
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    public decodeChangeVmIdClaimingFeeProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 18)
+            throw new Error(
+                'Invalid length for change vm id claiming fee proposal txn'
+            );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        vm id claiming fee - 8
+        description - x
+        signature - 65
+        */
+
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
+
+        const titleSize = dataView.getInt32(6, false);
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
+
+        const vmIdClaimingFee = dataView.getBigInt64(10 + titleSize, false);
+
+        const description_b = new Uint8Array(
+            txn.buffer,
+            18 + titleSize,
+            txn.length - 83 - titleSize
+        );
+
+        const description = new TextDecoder().decode(description_b);
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            claimingFee: vmIdClaimingFee.toString(),
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    public decodeChangeVmOwnerTxnFeeShareProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 10)
+            throw new Error(
+                'Invalid length for change vm owner txn fee share proposal txn'
+            );
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        vm owner txn fee share - 4
+        description - x
+        signature - 65
+        */
+
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
+
+        const titleSize = dataView.getInt32(6, false);
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
+
+        const vmOwnerTxnFeeShare = dataView.getInt32(10 + titleSize, false);
+
+        const description_b = new Uint8Array(
+            txn.buffer,
+            14 + titleSize,
+            txn.length - 79 - titleSize
+        );
+
+        const description = new TextDecoder().decode(description_b);
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            feeShare: vmOwnerTxnFeeShare,
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    public decodeOtherProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 6)
+            throw new Error(
+                'Invalid length for change vm owner txn fee share proposal txn'
+            );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        description - x
+        signature - 65
+        */
+
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
+
+        const titleSize = dataView.getInt32(6, false);
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
+
+        const description_b = new Uint8Array(
+            txn.buffer,
+            10 + titleSize,
+            txn.length - 75 - titleSize
+        );
+        const description = new TextDecoder().decode(description_b);
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    public decodeVoteOnProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 6)
+            throw new Error(
+                'Invalid length for change vm owner txn fee share proposal txn'
+            );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        proposal hash - 32
+        vote - 1
+        signature - 65
+        */
+
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
+
+        const proposalHash = new Uint8Array(txn.buffer, 6, 32);
+
+        const vote = txn[38];
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            proposalHash: `0x${bytesToHex(proposalHash)}`,
+            vote: vote,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    // #endregion
+
+    // *~~~ help methods ~~~* //
     private getSender(txn: Uint8Array) {
         const signature = new Uint8Array(65);
         const txnData = new Uint8Array(txn.length - 65);

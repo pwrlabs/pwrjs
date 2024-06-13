@@ -1,5 +1,11 @@
 import BigNumber from 'bignumber.js';
-import { BnToBytes, HexToBytes, decToBytes, decToBytes2 } from '../utils';
+import {
+    BnToBytes,
+    BnToDecimal,
+    HexToBytes,
+    decToBytes,
+    decToBytes2,
+} from '../utils';
 import { Transaction_ID } from '../static/enums/transaction.enum';
 
 export default class TransactionBuilder {
@@ -147,37 +153,6 @@ export default class TransactionBuilder {
             ...base,
             ...b_sharesAmount,
             ...b_validator,
-        ]);
-
-        return txnBytes;
-    }
-
-    static getMoveStakeTransaction(
-        sharesAmount: string,
-        fromValidator: string,
-        toValidator: string,
-        nonce: number,
-        chainId: number
-    ) {
-        if (nonce < 0) {
-            throw new Error('nonce cannot be negative');
-        }
-
-        const base = this.getTransactionBase(
-            Transaction_ID.MOVE_STAKE,
-            chainId,
-            nonce
-        );
-
-        const b_shares = BnToBytes(new BigNumber(sharesAmount));
-        const b_from = HexToBytes(fromValidator);
-        const b_to = HexToBytes(toValidator);
-
-        const txnBytes = new Uint8Array([
-            ...base,
-            ...b_shares,
-            ...b_from,
-            ...b_to,
         ]);
 
         return txnBytes;
@@ -399,4 +374,515 @@ export default class TransactionBuilder {
 
     //     return buffer.array();
     // }
+
+    static getMoveStakeTransaction(
+        sharesAmount: string,
+        fromValidator: string,
+        toValidator: string,
+        nonce: number,
+        chainId: number
+    ) {
+        if (nonce < 0) {
+            throw new Error('nonce cannot be negative');
+        }
+
+        const base = this.getTransactionBase(
+            Transaction_ID.MOVE_STAKE,
+            chainId,
+            nonce
+        );
+
+        const b_shares = BnToBytes(new BigNumber(sharesAmount));
+        const b_from = HexToBytes(fromValidator);
+        const b_to = HexToBytes(toValidator);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_shares,
+            ...b_from,
+            ...b_to,
+        ]);
+
+        return txnBytes;
+    }
+
+    // #region proposal
+
+    static getChangeEarlyWithdrawPenaltyProposalTxn(
+        withdrawalPenaltyTime: string, // time in seconds
+        withdrawalPenalty: number, // x/10000 number
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.CHANGE_EARLY_WITHDRAW_PENALTY_PROPOSAL,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        withdrawal penalty time - 8
+        withdrawal penalty - 4
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_withdrawalPenaltyTime = BnToBytes(
+            BigNumber(withdrawalPenaltyTime)
+        );
+        const b_withdrawalPenalty = decToBytes(withdrawalPenalty, 4);
+        const b_description = new TextEncoder().encode(description);
+
+        //
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_withdrawalPenaltyTime,
+            ...b_withdrawalPenalty,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getChangeFeePerByteProposalTxn(
+        feePerByte: string, //big number
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.CHANGE_FEE_PER_BYTE_PROPOSAL,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        fee per byte - 8
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_feePerByte = BnToBytes(new BigNumber(feePerByte));
+        const b_description = new TextEncoder().encode(description);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_feePerByte,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getChangeMaxBlockSizeProposalTxn(
+        maxBlockSize: number,
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.CHANGE_MAX_BLOCK_SIZE_PROPOSAL,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        max block size - 4
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_maxBlockSize = decToBytes(maxBlockSize, 4);
+        const b_description = new TextEncoder().encode(description);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_maxBlockSize,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getChangeMaxTxnSizeProposalTxn(
+        maxTxnSize: number,
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.CHANGE_MAX_TXN_SIZE_PROPOSAL,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        max txn size - 4
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_maxTxnSize = decToBytes(maxTxnSize, 4);
+        const b_description = new TextEncoder().encode(description);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_maxTxnSize,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getChangeOverallBurnPercentageProposalTxn(
+        burnPercentage: number,
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.CHANGE_OVERALL_BURN_PERCENTAGE_PROPOSAL,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        burn percentage - 4
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_burnPercentage = decToBytes(burnPercentage, 4);
+        const b_description = new TextEncoder().encode(description);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_burnPercentage,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getChangeRewardPerYearProposalTxn(
+        rewardPerYear: string,
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.CHANGE_REWARD_PER_YEAR_PROPOSAL_TXN,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        reward per year - 8
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_reward = BnToBytes(new BigNumber(rewardPerYear));
+        const b_description = new TextEncoder().encode(description);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_reward,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getChangeValidatorCountLimitProposalTxn(
+        validatorCountLimit: number,
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.CHANGE_VALIDATOR_COUNT_LIMIT_PROPOSAL,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        validator count limit - 4
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_validatorCountLimit = decToBytes(validatorCountLimit, 4);
+        const b_description = new TextEncoder().encode(description);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_validatorCountLimit,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getChangeValidatorJoiningFeeProposalTxn(
+        joiningFee: string,
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.CHANGE_VALIDATOR_JOINING_FEE_PROPOSAL,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        joining fee - 8
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_joiningFee = BnToBytes(new BigNumber(joiningFee));
+        const b_description = new TextEncoder().encode(description);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_joiningFee,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getChangeVmIdClaimingFeeProposalTxn(
+        claimingFee: string,
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.CHANGE_VM_ID_CLAIMING_FEE_PROPOSAL,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        vm id claiming fee - 8
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_claimingFee = BnToBytes(new BigNumber(claimingFee));
+        const b_description = new TextEncoder().encode(description);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_claimingFee,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getChangeVmOwnerTxnFeeShareProposalTxn(
+        feeShare: number,
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.CHANGE_VM_OWNER_TXN_FEE_SHARE_PROPOSAL,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        vm owner txn fee share - 4
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_feeShare = decToBytes(feeShare, 4);
+        const b_description = new TextEncoder().encode(description);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_feeShare,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getOtherProposalTxn(
+        title: string,
+        description: string,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.OTHER_PROPOSAL_TXN,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        description - x
+        signature - 65
+        */
+
+        const b_title = new TextEncoder().encode(title);
+        const b_title_length = decToBytes(b_title.length, 4);
+        const b_description = new TextEncoder().encode(description);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_title_length,
+            ...b_title,
+            ...b_description,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getVoteOnProposalTxn(
+        proposalHash: string,
+        vote: number,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getTransactionBase(
+            Transaction_ID.VOTE_ON_PROPOSAL_TXN,
+            chainId,
+            nonce
+        );
+
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        proposal hash - 32
+        vote - 1
+        signature - 65
+        */
+
+        const b_proposalHash = HexToBytes(proposalHash);
+        const b_vote = decToBytes(vote, 1);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...b_proposalHash,
+            ...b_vote,
+        ]);
+
+        return txnBytes;
+    }
+
+    // #endregion
 }

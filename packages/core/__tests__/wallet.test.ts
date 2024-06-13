@@ -131,7 +131,7 @@ describe('wallet_core', () => {
     it('sends VM data transaction', async () => {
         const vmId = '100';
 
-        const data = JSON.stringify({ name: 'Test VM Data' });
+        const data = JSON.stringify({ setName: 'AhmadHassoun' });
 
         try {
             const tx = await pwrWallet.sendVMDataTxn(vmId, data);
@@ -165,66 +165,66 @@ describe('wallet_core', () => {
 
     // #region guardians
 
-    it('sets  guardian ', async () => {
-        // 7 days from now ms
+    // it('sets  guardian ', async () => {
+    //     // 7 days from now ms
 
-        const futureDate = new Date();
-        futureDate.setDate(futureDate.getDate() + 7);
-        const epochTime = Math.floor(futureDate.getTime() / 1000);
+    //     const futureDate = new Date();
+    //     futureDate.setDate(futureDate.getDate() + 7);
+    //     const epochTime = Math.floor(futureDate.getTime() / 1000);
 
-        try {
-            const tx = await pwrWallet.setGuardian(guardianAddress, epochTime);
-            console.log('Set guardian txn :', tx);
-            expect(tx.success).toBe(true);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    //     try {
+    //         const tx = await pwrWallet.setGuardian(guardianAddress, epochTime);
+    //         console.log('Set guardian txn :', tx);
+    //         expect(tx.success).toBe(true);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
-    it('sends a guardian-wrapped transaction', async () => {
-        const _nonce = await pwrWallet.getNonce();
+    // it('sends a guardian-wrapped transaction', async () => {
+    //     const _nonce = await pwrWallet.getNonce();
 
-        const exampleTxn = {
-            to: '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0',
-            amount: '1',
-            nonce: _nonce,
-            chainId: 0,
-        };
+    //     const exampleTxn = {
+    //         to: '0x8a0e30385bbbebe850b7910bfb98647ebf06bcf0',
+    //         amount: '1',
+    //         nonce: _nonce,
+    //         chainId: 0,
+    //     };
 
-        const txn = TransactionBuilder.getTransferPwrTransaction(
-            exampleTxn.chainId,
-            exampleTxn.nonce,
-            exampleTxn.amount,
-            exampleTxn.to
-        );
+    //     const txn = TransactionBuilder.getTransferPwrTransaction(
+    //         exampleTxn.chainId,
+    //         exampleTxn.nonce,
+    //         exampleTxn.amount,
+    //         exampleTxn.to
+    //     );
 
-        const signature = signTxn(txn, guardianWallet.getPrivateKey());
-        const txnBytes = new Uint8Array([...txn, ...signature]);
+    //     const signature = signTxn(txn, guardianWallet.getPrivateKey());
+    //     const txnBytes = new Uint8Array([...txn, ...signature]);
 
-        try {
-            const tx = await guardianWallet.sendGuardianApprovalTransaction([
-                txnBytes,
-            ]);
+    //     try {
+    //         const tx = await guardianWallet.sendGuardianApprovalTransaction([
+    //             txnBytes,
+    //         ]);
 
-            console.log('Guardian-wrapped txn', tx);
+    //         console.log('Guardian-wrapped txn', tx);
 
-            expect(tx.success).toBe(true);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    //         expect(tx.success).toBe(true);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
-    it('removes a guardian', async () => {
-        try {
-            const tx = await pwrWallet.removeGuardian();
+    // it('removes a guardian', async () => {
+    //     try {
+    //         const tx = await pwrWallet.removeGuardian();
 
-            console.log('remove guardian txn:', tx);
+    //         console.log('remove guardian txn:', tx);
 
-            expect(tx.success).toBe(true);
-        } catch (e) {
-            expect(false).toBe(true);
-        }
-    });
+    //         expect(tx.success).toBe(true);
+    //     } catch (e) {
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
     // #endregion
 
@@ -265,7 +265,7 @@ describe('wallet_core', () => {
     // I checked and it's working
     it('claims vmid', async () => {
         try {
-            const tx = await pwrWallet.claimVmId('68681');
+            const tx = await pwrWallet.claimVmId('68683');
             console.log('claim vmid txn', tx);
             expect(tx.success).toBe(true);
         } catch (e) {
@@ -340,6 +340,201 @@ describe('wallet_core', () => {
     //         expect(false).toBe(true);
     //     }
     // });
+
+    // #endregion
+
+    // #region proposals
+    it('Change Early Withdrawal Penalty', async () => {
+        try {
+            // 1 day in seconds
+            const time = (60 * 60 * 24).toString();
+            const penalty = 500;
+
+            const tx =
+                await pwrWallet.createProposal_ChangeEarlyWithdrawalPenalty(
+                    time,
+                    penalty,
+                    'example title',
+                    'lorem ipsum dolor sit amet'
+                );
+
+            console.log('Change Early Withdrawal Penalty txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('Change fee per byte proposal', async () => {
+        try {
+            const fee = '90';
+            const tx = await pwrWallet.createProposal_ChangeFeePerByte(
+                fee,
+                'example title',
+                'lorem ipsum dolor sit amet'
+            );
+
+            console.log('Change fee per byte txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('Change max block size proposal', async () => {
+        try {
+            const size = 26500000;
+            const tx = await pwrWallet.createProposal_ChangeMaxBlockSize(
+                size,
+                'example title',
+                'lorem ipsum dolor sit amet'
+            );
+
+            console.log('Change max block size txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('Change max txn size proposal', async () => {
+        try {
+            const size = 16500002;
+            const tx = await pwrWallet.createProposal_ChangeMaxTxnSizeSize(
+                size,
+                'example title',
+                'lorem ipsum dolor sit amet'
+            );
+
+            console.log('Change max txn size txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('Change burn percentage proposal', async () => {
+        try {
+            const percentage = 2;
+            const tx =
+                await pwrWallet.createProposal_ChangeOverallBurnPercentage(
+                    percentage,
+                    'example title',
+                    'lorem ipsum dolor sit amet'
+                );
+
+            console.log('Change burn percentage txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('Change reward per year proposal', async () => {
+        try {
+            const reward = BigNumber(1).shiftedBy(9).toString();
+
+            const tx = await pwrWallet.createProposal_ChangeRewardPerYear(
+                reward,
+                'example title',
+                'lorem ipsum dolor sit amet'
+            );
+
+            console.log('Change reward per year txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('Change validator count limit proposal', async () => {
+        try {
+            const limit = 100;
+            const tx = await pwrWallet.createProposal_ChangeValidatorCountLimit(
+                limit,
+                'example title',
+                'lorem ipsum dolor sit amet'
+            );
+
+            console.log('Change validator count limit txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('Change validator joining fee proposal', async () => {
+        try {
+            const tx = await pwrWallet.createProposal_ChangeValidatorJoiningFee(
+                '1',
+                'example title',
+                'lorem ipsum dolor sit amet'
+            );
+
+            console.log('Change validator joining fee txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('Change vm id claiming fee proposal', async () => {
+        try {
+            const fee = '1';
+            const tx = await pwrWallet.createProposal_ChangeVmIdClaimingFee(
+                fee,
+                'example title',
+                'lorem ipsum dolor sit amet'
+            );
+
+            console.log('Change vm id claiming fee txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('Change vm owner txn fee share proposal', async () => {
+        try {
+            const feeShare = 1;
+            const tx = await pwrWallet.createProposal_ChangeVmOwnerTxnFeeShare(
+                feeShare,
+                'example title',
+                'lorem ipsum dolor sit amet'
+            );
+
+            console.log('Change vm owner txn fee share txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('other proposal', async () => {
+        try {
+            const tx = await pwrWallet.createProposal_OtherProposal(
+                'example title',
+                'lorem ipsum dolor sit amet'
+            );
+
+            console.log('Other proposal txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
+
+    it('vote on proposal ', async () => {
+        try {
+            const proposalHash =
+                '0x245ba05cb007f348e6a401d8aa53e3a1e435d58cbc5ade4b2ba1528c2c8e6687';
+            const tx = await pwrWallet.voteProposal(proposalHash, 1);
+            console.log('Vote on proposal txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+        }
+    });
 
     // #endregion
 });

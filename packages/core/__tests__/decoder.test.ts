@@ -96,6 +96,94 @@ describe('decoder', () => {
         guardian: '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767',
     };
 
+    const proposal1 = {
+        withdrawalTime: (60 * 60 * 24).toString(),
+        penalty: 500,
+        title: 'proposal 1',
+        description: 'Change early withdraw penalty',
+        chainId: 0,
+        nonce: 5,
+    };
+
+    const proposal2 = {
+        feePerByte: '80',
+        title: 'proposal 2',
+        description: 'decode Change Fee Per Byte Proposal Txn',
+        chainId: 0,
+        nonce: 6,
+    };
+
+    const proposal3 = {
+        maxBlockSize: 1000,
+        title: 'proposal 3',
+        description: 'Change max block size',
+        chainId: 0,
+        nonce: 7,
+    };
+
+    const proposal4 = {
+        burnPercentage: 2,
+        title: 'proposal 4',
+        description: 'Burn percentage proposal',
+        chainId: 0,
+        nonce: 8,
+    };
+
+    const proposal5 = {
+        rewardPerYear: '100000000',
+        title: 'proposal 5',
+        description: 'Change max block size',
+        chainId: 0,
+        nonce: 9,
+    };
+
+    const proposal6 = {
+        validatorCountLimit: 1500,
+        title: 'proposal 6',
+        description: 'Change max block size',
+        chainId: 0,
+        nonce: 9,
+    };
+
+    const proposal7 = {
+        joiningFee: '1',
+        title: 'proposal 7',
+        description: 'Change validator joining fee',
+        chainId: 0,
+        nonce: 10,
+    };
+
+    const proposal8 = {
+        claimingFee: '1',
+        title: 'proposal 8',
+        description: 'Change validator claiming fee',
+        chainId: 0,
+        nonce: 11,
+    };
+
+    const proposal9 = {
+        title: 'proposal 9',
+        feeShare: 1,
+        description: 'Change validator claiming fee',
+        chainId: 0,
+        nonce: 12,
+    };
+
+    const proposal10 = {
+        title: 'proposal 10',
+        description: 'Change validator claiming fee',
+        chainId: 0,
+        nonce: 13,
+    };
+
+    const voteOnProposal = {
+        proposalHash:
+            '0x245ba05cb007f348e6a401d8aa53e3a1e435d58cbc5ade4b2ba1528c2c8e6687',
+        vote: 1,
+        chainId: 0,
+        nonce: 14,
+    };
+
     it('decode', () => {
         const { chainId, id, nonce, recipient, amount } = transferTxn;
 
@@ -328,6 +416,8 @@ describe('decoder', () => {
         });
     });
 
+    // #region guardian
+
     it('decode set guardian txn', () => {
         const { id, chainId, nonce, guardian, expiryDate } = setGuardianTxn;
 
@@ -452,6 +542,375 @@ describe('decoder', () => {
                 },
             ],
             type: Transaction_ID.GUARDIAN_TXN,
+        });
+    });
+
+    // #endregion
+
+    // #region proposal
+    it('decode proposal change early withdraw penalty proposal txn', () => {
+        const { chainId, nonce, withdrawalTime, penalty, title, description } =
+            proposal1;
+
+        const txn = TransactionBuilder.getChangeEarlyWithdrawPenaltyProposalTxn(
+            withdrawalTime,
+            penalty,
+            title,
+            description,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeChangeEarlyWithdrawPenaltyProposal(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            extraFee: 0,
+            withdrawalPenaltyTime: withdrawalTime,
+            withdrawalPenalty: penalty,
+            title,
+            description,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.CHANGE_EARLY_WITHDRAW_PENALTY_PROPOSAL,
+        });
+    });
+
+    it('decode proposal change fee per byte proposal txn', () => {
+        const { chainId, description, feePerByte, title, nonce } = proposal2;
+
+        const txn = TransactionBuilder.getChangeFeePerByteProposalTxn(
+            feePerByte,
+            title,
+            description,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeChangeFeePerByteProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            feePerByte,
+            title,
+            description,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.CHANGE_FEE_PER_BYTE_PROPOSAL,
+        });
+    });
+
+    it('decode proposal change max block size proposal txn', () => {
+        const { chainId, description, maxBlockSize, nonce, title } = proposal3;
+
+        const txn = TransactionBuilder.getChangeMaxBlockSizeProposalTxn(
+            maxBlockSize,
+            title,
+            description,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeChangeMaxBlockSizeProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            maxBlockSize,
+            title,
+            description,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.CHANGE_MAX_BLOCK_SIZE_PROPOSAL,
+        });
+    });
+
+    it('decode burn percentage proposal', () => {
+        const { chainId, description, nonce, title, burnPercentage } =
+            proposal4;
+
+        const txn =
+            TransactionBuilder.getChangeOverallBurnPercentageProposalTxn(
+                burnPercentage,
+                title,
+                description,
+                nonce,
+                chainId
+            );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeChangeOverallBurnPercentageProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce: nonce,
+            size: txnBytes.length,
+            burnPercentage,
+            description,
+            title,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.CHANGE_OVERALL_BURN_PERCENTAGE_PROPOSAL,
+        });
+    });
+
+    it('decode reward per year proposal', () => {
+        const { chainId, description, nonce, title, rewardPerYear } = proposal5;
+
+        const txn = TransactionBuilder.getChangeRewardPerYearProposalTxn(
+            rewardPerYear,
+            title,
+            description,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeChangeRewardPerYearProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            rewardPerYear,
+            title,
+            description,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.CHANGE_REWARD_PER_YEAR_PROPOSAL_TXN,
+        });
+    });
+
+    it('decode validator count limit proposal', () => {
+        const { chainId, description, nonce, title, validatorCountLimit } =
+            proposal6;
+
+        const txn = TransactionBuilder.getChangeValidatorCountLimitProposalTxn(
+            validatorCountLimit,
+            title,
+            description,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeChangeValidatorCountLimitProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            validatorCountLimit,
+            title,
+            description,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.CHANGE_VALIDATOR_COUNT_LIMIT_PROPOSAL,
+        });
+    });
+
+    it('decode validator joining fee proposal', () => {
+        const { chainId, description, nonce, title, joiningFee } = proposal7;
+
+        const txn = TransactionBuilder.getChangeValidatorJoiningFeeProposalTxn(
+            joiningFee,
+            title,
+            description,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeChangeValidatorJoiningFeeProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            joiningFee,
+            title,
+            description,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.CHANGE_VALIDATOR_JOINING_FEE_PROPOSAL,
+        });
+    });
+
+    it('decode validator claiming fee proposal', () => {
+        const { chainId, description, nonce, title, claimingFee } = proposal8;
+
+        const txn = TransactionBuilder.getChangeVmIdClaimingFeeProposalTxn(
+            claimingFee,
+            title,
+            description,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeChangeVmIdClaimingFeeProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            claimingFee,
+            title,
+            description,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.CHANGE_VM_ID_CLAIMING_FEE_PROPOSAL,
+        });
+    });
+
+    it('decode change fee share proposal', () => {
+        const { chainId, description, nonce, title, feeShare } = proposal9;
+
+        const txn = TransactionBuilder.getChangeVmOwnerTxnFeeShareProposalTxn(
+            feeShare,
+            title,
+            description,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeChangeVmOwnerTxnFeeShareProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            feeShare,
+            title,
+            description,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.CHANGE_VM_OWNER_TXN_FEE_SHARE_PROPOSAL,
+        });
+    });
+
+    it('decode other proposal', () => {
+        const { chainId, description, nonce, title } = proposal10;
+
+        const txn = TransactionBuilder.getOtherProposalTxn(
+            title,
+            description,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeOtherProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            title,
+            description,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.OTHER_PROPOSAL_TXN,
+        });
+    });
+
+    it('decode vote on proposal', () => {
+        const { proposalHash, vote, chainId, nonce } = voteOnProposal;
+
+        const txn = TransactionBuilder.getVoteOnProposalTxn(
+            proposalHash,
+            vote,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeVoteOnProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            proposalHash,
+            vote,
+            rawTransaction: txnBytes,
+            chainId: txn[1],
+            type: txn[0],
         });
     });
 });

@@ -7,6 +7,7 @@ import { keccak256 } from 'js-sha3';
 
 import * as secp256k1 from 'secp256k1';
 import TransactionBuilder from '../protocol/transaction-builder';
+import { Transaction_ID } from '../static/enums/transaction.enum';
 
 const pwrnode = 'https://pwrrpc.pwrlabs.io';
 const _baseUrl = 'https://pwrexplorerbackend.pwrlabs.io';
@@ -131,8 +132,6 @@ async function sendTxn(txnHex: string, txnHash: string): Promise<TxnRes> {
         });
 
         const res = await raw.json();
-
-        // console.log('--', res);
 
         if (!raw.ok) {
             return {
@@ -280,16 +279,10 @@ export default class PWRWallet {
     }
 
     async transferPWR(to: string, amount: string): Promise<TxnRes>;
-    async transferPWR(
-        to: string,
-        amount: string,
-        nonce: number
-    ): Promise<TxnRes>;
-    async transferPWR(
-        to: string,
-        amount: string,
-        nonce?: number
-    ): Promise<TxnRes> {
+    // prettier-ignore
+    async transferPWR(to: string, amount: string, nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async transferPWR(to: string, amount: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce ?? (await this.getNonce());
 
         const _chainId = this.getChainId();
@@ -300,16 +293,7 @@ export default class PWRWallet {
             to
         );
 
-        const signature = signTxn(txn, this.privateKey);
-
-        const txnBytes = new Uint8Array([...txn, ...signature]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
-
+        const res = await this.signAndSend(txn);
         return res;
     }
 
@@ -325,14 +309,7 @@ export default class PWRWallet {
             _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.signAndSend(txnDataBytes);
 
         return res;
     }
@@ -349,28 +326,15 @@ export default class PWRWallet {
                 _chainId
             );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.signAndSend(txnDataBytes);
         return res;
     }
 
     async sendVMDataTxn(vmId: string, data: string): Promise<TxnRes>;
-    async sendVMDataTxn(
-        vmId: string,
-        data: string,
-        nonce: number
-    ): Promise<TxnRes>;
-    async sendVMDataTxn(
-        vmId: string,
-        data: string,
-        nonce?: number
-    ): Promise<TxnRes> {
+    //prettier-ignore
+    async sendVMDataTxn(vmId: string, data: string, nonce: number): Promise<TxnRes>;
+    //prettier-ignore
+    async sendVMDataTxn(vmId: string, data: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
@@ -385,35 +349,16 @@ export default class PWRWallet {
             _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
-
+        const res = await this.signAndSend(txnDataBytes);
         return res;
     }
 
-    async sendPayableVmDataTransaction(
-        vmId: string,
-        value: string,
-        data: string
-    ): Promise<TxnRes>;
-    async sendPayableVmDataTransaction(
-        vmId: string,
-        value: string,
-        data: string,
-        nonce: number
-    ): Promise<TxnRes>;
-    async sendPayableVmDataTransaction(
-        vmId: string,
-        value: string,
-        data: string,
-        nonce?: number
-    ): Promise<TxnRes> {
+    // prettier-ignore
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: string): Promise<TxnRes>;
+    // prettier-ignore
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
@@ -428,19 +373,14 @@ export default class PWRWallet {
             _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.signAndSend(txnDataBytes);
         return res;
     }
 
     // #region validators
 
+    async claimVmId(vmId: string): Promise<TxnRes>;
+    async claimVmId(vmId: string, nonce: number): Promise<TxnRes>;
     async claimVmId(vmId: string, nonce?: number) {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
@@ -451,24 +391,14 @@ export default class PWRWallet {
             _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.signAndSend(txnDataBytes);
         return res;
     }
 
     async delegate(to: string, amount: string): Promise<TxnRes>;
     async delegate(to: string, amount: string, nonce: number): Promise<TxnRes>;
-    async delegate(
-        to: string,
-        amount: string,
-        nonce?: number
-    ): Promise<TxnRes> {
+    // prettier-ignore
+    async delegate(to: string, amount: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -479,14 +409,7 @@ export default class PWRWallet {
             _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.signAndSend(txnDataBytes);
         return res;
     }
 
@@ -507,34 +430,16 @@ export default class PWRWallet {
             _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.signAndSend(txnDataBytes);
         return res;
     }
 
-    async moveStake(
-        shareAmount: string,
-        fromValidator: string,
-        toValidator: string
-    ): Promise<TxnRes>;
-    async moveStake(
-        shareAmount: string,
-        fromValidator: string,
-        toValidator: string,
-        nonce: number
-    ): Promise<TxnRes>;
-    async moveStake(
-        shareAmount: string,
-        fromValidator: string,
-        toValidator: string,
-        nonce?: number
-    ): Promise<TxnRes> {
+    // prettier-ignore
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string): Promise<TxnRes>;
+    // prettier-ignore
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -546,14 +451,7 @@ export default class PWRWallet {
             _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.signAndSend(txnDataBytes);
         return res;
     }
 
@@ -561,20 +459,12 @@ export default class PWRWallet {
 
     // #region guardians
 
-    async setGuardian(
-        guardian: string,
-        expiryDate: EpochTimeStamp
-    ): Promise<TxnRes>;
-    async setGuardian(
-        guardian: string,
-        expiryDate: EpochTimeStamp,
-        nonce: number
-    ): Promise<TxnRes>;
-    async setGuardian(
-        guardian: string,
-        expiryDate: EpochTimeStamp,
-        nonce?: number
-    ): Promise<TxnRes> {
+    // prettier-ignore
+    async setGuardian(guardian: string, expiryDate: EpochTimeStamp): Promise<TxnRes>;
+    // prettier-ignore
+    async setGuardian(guardian: string, expiryDate: EpochTimeStamp, nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async setGuardian(guardian: string, expiryDate: EpochTimeStamp, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -585,28 +475,16 @@ export default class PWRWallet {
             _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.signAndSend(txnDataBytes);
         return res;
     }
 
-    async sendGuardianApprovalTransaction(
-        transactions: Uint8Array[]
-    ): Promise<TxnRes>;
-    async sendGuardianApprovalTransaction(
-        transactions: Uint8Array[],
-        nonce: number
-    ): Promise<TxnRes>;
-    async sendGuardianApprovalTransaction(
-        transactions: Uint8Array[],
-        nonce?: number
-    ): Promise<TxnRes> {
+    // prettier-ignore
+    async sendGuardianApprovalTransaction(transactions: Uint8Array[]): Promise<TxnRes>;
+    // prettier-ignore
+    async sendGuardianApprovalTransaction(transactions: Uint8Array[], nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async sendGuardianApprovalTransaction(transactions: Uint8Array[], nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -616,14 +494,7 @@ export default class PWRWallet {
             _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.signAndSend(txnDataBytes);
         return res;
     }
 
@@ -638,14 +509,7 @@ export default class PWRWallet {
             _chainId
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.signAndSend(txnDataBytes);
         return res;
     }
 
@@ -712,4 +576,283 @@ export default class PWRWallet {
     }
 
     //#endregion
+
+    // #region proposals
+    // prettier-ignore
+    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string, nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getChangeEarlyWithdrawPenaltyProposalTxn(
+                withdrawlPenaltyTime,
+                withdrawalPenalty,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // prettier-ignore
+    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string,  nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string,  nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getChangeFeePerByteProposalTxn(
+                feePerByte,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // prettier-ignore
+    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getChangeMaxBlockSizeProposalTxn(
+                maxBlockSize,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // prettier-ignore
+    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string, nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getChangeMaxTxnSizeProposalTxn(
+                maxTxnSize,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // prettier-ignore
+    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string, nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getChangeOverallBurnPercentageProposalTxn(
+                burnPercentage,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // prettier-ignore
+    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string,  nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getChangeRewardPerYearProposalTxn(
+                rewardPerYear,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // prettier-ignore
+    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string,  nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getChangeValidatorCountLimitProposalTxn(
+                validatorCountLimit,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // prettier-ignore
+    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string,  nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string,  nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getChangeValidatorJoiningFeeProposalTxn(
+                joiningFee,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // prettier-ignore
+    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getChangeVmIdClaimingFeeProposalTxn(
+                claimingFee,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // prettier-ignore
+    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string,  nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string,  nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getChangeVmOwnerTxnFeeShareProposalTxn(
+                feeShare,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // prettier-ignore
+    async createProposal_OtherProposal( title: string,  description: string): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_OtherProposal( title: string,  description: string,  nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async createProposal_OtherProposal( title: string,  description: string,  nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getOtherProposalTxn(
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    //prettier-ignore
+    async voteProposal( proposalHash: string,  vote: number): Promise<TxnRes>;
+    //prettier-ignore
+    async voteProposal( proposalHash: string,  vote: number,  nonce: number): Promise<TxnRes>;
+    //prettier-ignore
+    async voteProposal( proposalHash: string,  vote: number,  nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+        const _chainId = this.getChainId();
+
+        const txnDataBytes =
+            TransactionBuilder.getVoteOnProposalTxn(
+                proposalHash,
+                vote,
+                _nonce,
+                _chainId
+            );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
+    // #endregion
+
+    private async signAndSend(txnDataBytes: Uint8Array): Promise<TxnRes> {
+        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+
+        const txnHex = Buffer.from(txnBytes).toString('hex');
+        const hashedTxnFinal = hashTxn(txnBytes);
+        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+
+        const res = await sendTxn(txnHex, hashedTxnStr);
+
+        return res;
+    }
 }

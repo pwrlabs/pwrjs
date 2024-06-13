@@ -1,173 +1,499 @@
-import axios from 'axios';
 import { Block } from '../record/block';
 import { VmDataTransaction } from '../record/vmDataTransaction';
 import { Validator } from '../record/validator';
 import TransactionDecoder from './transaction-decoder';
 import { Transaction_ID } from '../static/enums/transaction.enum';
-
-function EnsureRpcNodeUrl() {
-    return function (
-        target: any,
-        propertyKey: string,
-        descriptor: PropertyDescriptor
-    ) {
-        const originalMethod = descriptor.value;
-
-        descriptor.value = function (...args: any[]) {
-            if (!PWRJS.getRpcNodeUrl()) {
-                throw new Error('RPC Node URL is not defined');
-            }
-
-            return originalMethod.apply(this, args);
-        };
-    };
-}
+import { bytesToHex } from '../utils';
+import HttpService from '../services/http.service';
+import {
+    ActiveValidatorCountRes,
+    AllValidtorsRes,
+    BLockTimestamp,
+    BLockchainVersionRes,
+    BalanceRes,
+    BlockNumberRes,
+    BlockRes,
+    BlocksCountRes,
+    BurnPercentageRes,
+    ChainRes,
+    DelegatorsCount,
+    EcsdaFeeRes,
+    FeePerByteRes,
+    MaxBlockRes,
+    MaxGuardianTimeRes,
+    MaxTransactionSizeRes,
+    MinimunDelegatingAmountRes,
+    NonceRes,
+    ProposalFeeRes,
+    ProposalValidityTimeRes,
+    RewardsPerYearRes,
+    StandbyValidatorCountRes,
+    TotalValidatorCountRes,
+    TotalVotingPowerRes,
+    ValidatorCountRes,
+    ValidatorJoiningFeeRes,
+    ValidatorOperationalFeeRes,
+    ValidatorSlashingFeeRes,
+    VmDataTransactionsRes,
+    WithdrawlLockTimeRes,
+    vmClaimingFeeRes,
+    vmOwnerTransactionFeeShareRes,
+} from '../services/responses';
 
 export default class PWRJS {
-    static #rpcNodeUrl: string;
-    static #feePerByte: number = 100;
-    static #ecdsaVerificationFee: number = 10000;
+    // private ecdsaVerificationFee: number = 10000;
+    private chainId: number;
+    private axios: HttpService;
 
-    // *~~*~~*~~ ~ *~~*~~*~~ //
+    // #region constructor
 
-    static getRpcNodeUrl(): string {
-        return PWRJS.#rpcNodeUrl;
-    }
-
-    static getFeePerByte() {
-        return PWRJS.#feePerByte;
-    }
-
-    static getEcsaVerificationFee() {
-        return PWRJS.#ecdsaVerificationFee;
-    }
-
-    static async getChainId(): Promise<number> {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/chainId/`,
-        });
-
-        return res.data.chainId;
-    }
-
-    static async getBlockchainVersion(): Promise<number> {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/blockchainVersion/`,
-        });
-
-        return res.data.blockchainVersion;
-    }
-
-    // *~~*~~*~~ ~ *~~*~~*~~ //
-
-    static async getFee(txn: Uint8Array) {
-        const feePerByte = PWRJS.getFeePerByte();
-        const ecdsaVerificationFee = PWRJS.getEcsaVerificationFee();
-
-        const decoder = new TransactionDecoder();
-        const transaction = decoder.decode(txn) as unknown as {
-            sender: string;
-            nonce: string;
-            size: number;
-            rawTransaction: Uint8Array;
-            chainId: number;
-            transactions: { size: number }[];
-            type: number;
-        };
-
-        if (transaction.type === Transaction_ID.GUARDIAN_TXN) {
-            const guardianApprovalTransaction = transaction;
-
-            const sizeOfAllTransactions =
-                guardianApprovalTransaction.transactions.reduce(
-                    (acc, curr) => acc + curr.size,
-                    0
-                );
-
-            let fee = txn.length * feePerByte + ecdsaVerificationFee;
-            fee += sizeOfAllTransactions * ecdsaVerificationFee;
-            return fee;
-        } else {
-            return txn.length * feePerByte + ecdsaVerificationFee;
+    constructor(private rpcNodeUrl: string) {
+        this.axios = new HttpService(rpcNodeUrl);
+        try {
+            this.fetchChainId().then((chainId) => {
+                this.chainId = chainId;
+            });
+        } catch (error) {
+            throw new Error('Failed to get chain ID from the RPC node');
         }
     }
 
-    // *~~*~~*~~ ~ *~~*~~*~~ //
-
-    @EnsureRpcNodeUrl()
-    static async getNonceOfAddress(address: string): Promise<string> {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/nonceOfUser/?userAddress=${address}`,
-        });
-
-        return res.data.nonce;
+    private async fetchChainId(): Promise<number> {
+        const res = await this.axios.get<ChainRes>('/chainId/');
+        return res.chainId;
     }
 
-    @EnsureRpcNodeUrl()
-    static async getBalanceOfAddress(address: string): Promise<string> {
-        const url = `${PWRJS.getRpcNodeUrl()}/balanceOf/?userAddress=${address}`;
+    // #endregion
 
-        const res = await axios({
-            method: 'get',
-            url,
-        });
+    // #region props
 
-        return res.data.balance;
+    public setRpcNodeUrl(rpcNodeUrl: string) {
+        this.rpcNodeUrl = rpcNodeUrl;
     }
 
-    // *~~*~~*~~ ~ *~~*~~*~~ //
-
-    @EnsureRpcNodeUrl()
-    static async getBlocksCount(): Promise<number> {
-        const url = `${PWRJS.getRpcNodeUrl()}/blocksCount/`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        return res.data.blocksCount;
+    public getRpcNodeUrl(): string {
+        return this.rpcNodeUrl;
     }
 
-    @EnsureRpcNodeUrl()
-    static async getLatestBlockNumber(): Promise<Block> {
-        const latestBlock = await PWRJS.getBlocksCount();
-
-        const num = latestBlock - 1;
-
-        const res = await PWRJS.getBlockByNumber(num);
-
-        return res;
+    public getChainId(): number {
+        return this.chainId;
     }
 
-    @EnsureRpcNodeUrl()
-    static async getBlockByNumber(blockNumber: number): Promise<Block> {
-        const url = `${PWRJS.getRpcNodeUrl()}/block/?blockNumber=${blockNumber}`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        return res.data.block;
+    public async getFeePerByte(): Promise<number> {
+        const res = await this.axios.get<FeePerByteRes>('/feePerByte/');
+        return res.feePerByte;
     }
 
-    // *~~*~~*~~ ~ *~~*~~*~~ //
+    public async getBlockchainVersion(): Promise<number> {
+        const res = await this.axios.get<BLockchainVersionRes>(
+            '/blockchainVersion/'
+        );
+        return res.blockchainVersion;
+    }
 
-    static async getVMDataTransactions(
+    // #endregion
+
+    // #region fee
+
+    // static async getFee(txn: Uint8Array) {
+    //     const feePerByte = PWRJS.getFeePerByte();
+    //     const ecdsaVerificationFee = PWRJS.getEcsaVerificationFee();
+
+    //     const decoder = new TransactionDecoder();
+    //     const transaction = decoder.decode(txn) as unknown as {
+    //         sender: string;
+    //         nonce: string;
+    //         size: number;
+    //         rawTransaction: Uint8Array;
+    //         chainId: number;
+    //         transactions: { size: number }[];
+    //         type: number;
+    //     };
+
+    //     if (transaction.type === Transaction_ID.GUARDIAN_TXN) {
+    //         const guardianApprovalTransaction = transaction;
+
+    //         const sizeOfAllTransactions =
+    //             guardianApprovalTransaction.transactions.reduce(
+    //                 (acc, curr) => acc + curr.size,
+    //                 0
+    //             );
+
+    //         let fee = txn.length * feePerByte + ecdsaVerificationFee;
+    //         fee += sizeOfAllTransactions * ecdsaVerificationFee;
+    //         return fee;
+    //     } else {
+    //         return txn.length * feePerByte + ecdsaVerificationFee;
+    //     }
+    // }
+
+    public async getEcdsaVerificationFee(): Promise<number> {
+        const res = await this.axios.get<EcsdaFeeRes>('/ecdsaVerificationFee/');
+        return res.ecdsaVerificationFee;
+    }
+
+    // #endregion
+
+    // #region wallet
+
+    public async getNonceOfAddress(address: string): Promise<string> {
+        const url = `/nonceOfUser/?userAddress=${address}`;
+        const res = await this.axios.get<NonceRes>(url);
+        return res.nonce;
+    }
+
+    public async getBalanceOfAddress(address: string): Promise<string> {
+        const url = `/balanceOf/?userAddress=${address}`;
+        const res = await this.axios.get<BalanceRes>(url);
+        return res.balance;
+    }
+
+    // #endregion
+
+    // #region general
+    public async getBurnPercentage() {
+        const url = `/burnPercentage/`;
+        const res = await this.axios.get<BurnPercentageRes>(url);
+
+        return res.burnPercentage;
+    }
+
+    public async getTotalVotingPower() {
+        const url = `/totalVotingPower/`;
+        const res = await this.axios.get<TotalVotingPowerRes>(url);
+        return res.totalVotingPower;
+    }
+
+    public async getPwrRewardsPerYear() {
+        const url = `/pwrRewardsPerYear/`;
+        const res = await this.axios.get<RewardsPerYearRes>(url);
+        return res.pwrRewardsPerYear;
+    }
+
+    public async getWithdrawalLockTime() {
+        const url = `/withdrawalLockTime/`;
+        const res = await this.axios.get<WithdrawlLockTimeRes>(url);
+        return res.withdrawalLockTime;
+    }
+
+    public async getActiveVotingPower() {
+        const rawRes = await fetch(`${this.rpcNodeUrl}/activeVotingPower/`);
+        const res = await rawRes.json();
+
+        return res.activeVotingPower;
+    }
+
+    public async getEarlyWithdrawPenalty() {
+        const url = `/allEarlyWithdrawPenalties/`;
+        const res = await this.axios.get<any>(url);
+
+        const penaltiesRes = res.earlyWithdrawPenalties;
+
+        const penalties: Record<string, string> = {};
+
+        for (const key in penaltiesRes) {
+            const withdrawTime = parseInt(key);
+            const penalty = penaltiesRes[key];
+            penalties[withdrawTime] = penalty;
+        }
+
+        return penalties;
+    }
+
+    // #endregio
+
+    // #region block
+
+    public async getBlocksCount(): Promise<number> {
+        const url = `/blocksCount/`;
+        const res = await this.axios.get<BlocksCountRes>(url);
+        return res.blocksCount;
+    }
+
+    public async getMaxBlockSize(): Promise<number> {
+        const url = `/maxBlockSize/`;
+        const res = await this.axios.get<MaxBlockRes>(url);
+        return res.maxBlockSize;
+    }
+
+    public async getMaxTransactionSize(): Promise<number> {
+        const url = `/maxTransactionSize/`;
+        const res = await this.axios.get<MaxTransactionSizeRes>(url);
+        return res.maxTransactionSize;
+    }
+
+    public async getBlockNumber(): Promise<number> {
+        const url = `/blockNumber/`;
+        const res = await this.axios.get<BlockNumberRes>(url);
+        return res.blockNumber;
+    }
+
+    public async getBlockTimestamp(): Promise<number> {
+        const url = `/blockTimestamp/`;
+        const res = await this.axios.get<BLockTimestamp>(url);
+        return res.blockTimestamp;
+    }
+
+    public async getLatestBlockNumber(): Promise<number> {
+        const blocksCouunt = await this.getBlocksCount();
+        return blocksCouunt - 1;
+    }
+
+    public async getBlockByNumber(blockNumber: number): Promise<Block> {
+        const url = `/block/?blockNumber=${blockNumber}`;
+        const res = await this.axios.get<BlockRes>(url);
+        return res.block;
+    }
+
+    // #endregion
+
+    // #region proposal
+
+    public async getProposalFee() {
+        const url = `/proposalFee/`;
+        const res = await this.axios.get<ProposalFeeRes>(url);
+        return res.proposalFee;
+    }
+
+    public async getProposalValidityTime() {
+        const url = `/proposalValidityTime/`;
+        const res = await this.axios.get<ProposalValidityTimeRes>(url);
+        return res.proposalValidityTime;
+    }
+
+    // #endregion
+
+    // #region validators
+
+    public async getValidatorCountLimit(): Promise<number> {
+        const url = `/validatorCountLimit/`;
+        const res = await this.axios.get<ValidatorCountRes>(url);
+        return res.validatorCountLimit;
+    }
+
+    public async getValidatorSlashingFee(): Promise<number> {
+        const url = `/validatorSlashingFee/`;
+        const res = await this.axios.get<ValidatorSlashingFeeRes>(url);
+        return res.validatorSlashingFee;
+    }
+
+    public async getValidatorOperationalFee(): Promise<number> {
+        const url = `/validatorOperationalFee/`;
+        const res = await this.axios.get<ValidatorOperationalFeeRes>(url);
+        return res.validatorOperationalFee;
+    }
+
+    public async getValidatorJoiningFee() {
+        const url = `/validatorJoiningFee/`;
+        const res = await this.axios.get<ValidatorJoiningFeeRes>(url);
+        return res.validatorJoiningFee;
+    }
+
+    public async getMinimumDelegatingAmount() {
+        const url = `/minimumDelegatingAmount/`;
+        const res = await this.axios.get<MinimunDelegatingAmountRes>(url);
+        return res.minimumDelegatingAmount;
+    }
+
+    public async getTotalValidatorsCount(): Promise<number> {
+        const url = `/totalValidatorsCount/`;
+        const res = await this.axios.get<TotalValidatorCountRes>(url);
+        return res.validatorsCount;
+    }
+
+    public async getStandbyValidatorsCount(): Promise<number> {
+        const url = `/standbyValidatorsCount/`;
+        const res = await this.axios.get<StandbyValidatorCountRes>(url);
+        return res.validatorsCount;
+    }
+
+    public async getActiveValidatorsCount(): Promise<number> {
+        const url = `/activeValidatorsCount/`;
+        const res = await this.axios.get<ActiveValidatorCountRes>(url);
+        return res.validatorsCount;
+    }
+
+    public async getTotalDelegatorsCount(): Promise<number> {
+        const url = `/totalDelegatorsCount/`;
+        const res = await this.axios.get<DelegatorsCount>(url);
+        return res.delegatorsCount;
+    }
+
+    public async getAllValidators(): Promise<Validator[]> {
+        const url = `/allValidators/`;
+        const res = await this.axios.get<AllValidtorsRes>(url);
+
+        const validators = res.validators;
+
+        const list = [];
+
+        for (let i = 0; i < validators.length; i++) {
+            const v = validators[i];
+
+            // prettier-ignore
+            const validator = {
+                address: v.address,
+                ip: v.ip,
+                isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
+                votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
+                shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
+                delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
+                status: v.hasOwnProperty('status') ? v.status : 'unknown',
+            };
+
+            list.push(validator);
+        }
+
+        return list;
+    }
+
+    public async getStandbyValidators(): Promise<any[]> {
+        const url = `/standbyValidators/`;
+        const res = await this.axios.get<any>(url);
+        const validators = res.validators;
+
+        const list = [];
+
+        for (let i = 0; i < validators.length; i++) {
+            const v = validators[i];
+
+            // prettier-ignore
+            const validator = {
+                address: v.address,
+                ip: v.ip,
+                isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
+                votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
+                shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
+                delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
+                status: 'standby', 
+            };
+
+            list.push(validator);
+        }
+
+        return list;
+    }
+
+    public async getActiveValidators(): Promise<any[]> {
+        const url = `/activeValidators/`;
+        const res = await this.axios.get<any>(url);
+
+        const validatorsData = res.validators;
+        const validatorsList = [];
+
+        for (let i = 0; i < validatorsData.length; i++) {
+            const v = validatorsData[i];
+
+            // prettier-ignore
+            const validator = {
+                address: v.address,
+                ip: v.ip,
+                isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
+                votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
+                shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
+                delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
+                status: 'active', 
+            };
+
+            validatorsList.push(validator);
+        }
+
+        return validatorsList;
+    }
+
+    public async getValidator(address: string): Promise<any> {
+        const url = `/validator/?validatorAddress=${address}`;
+        const res = await this.axios.get<any>(url);
+
+        const v = res.validator;
+
+        // prettier-ignore
+        const validator = {
+            address: v.hasOwnProperty('address') ? v.address : '0x',
+            ip: v.hasOwnProperty('ip') ? v.ip : '',
+            isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
+            votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
+            shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
+            delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
+            status: v.hasOwnProperty('status') ? v.status : 'unknown',
+        };
+
+        return validator;
+    }
+
+    public async getDelegatees(address: string): Promise<Validator[]> {
+        const url = `/delegateesOfUser/?userAddress=${address}`;
+        const res = await this.axios.get<any>(url);
+
+        const validatorsData = res.delegatees;
+        const validatorsList = [];
+
+        for (let i = 0; i < validatorsData.length; i++) {
+            const v = validatorsData[i];
+
+            // prettier-ignore
+            const validator = {
+                address: v.hasOwnProperty('address') ? v.address : '0x',
+                ip: v.hasOwnProperty('ip') ? v.ip : '',
+                isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
+                votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
+                shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
+                delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
+                status: v.hasOwnProperty('status') ? v.status : 'unknown',
+            }
+
+            validatorsList.push(validator);
+        }
+
+        return validatorsList;
+    }
+
+    // prettier-ignore
+    public async getDelegatedPWR(delegatorAddress: string, validatorAddress: string) {
+        const url = `/validator/delegator/delegatedPWROfAddress/?userAddress=${delegatorAddress}&validatorAddress=${validatorAddress}`;
+        const res = await this.axios.get<any>(url);
+        return res.delegatedPWR;
+    }
+
+    // prettier-ignore
+    public async getSharesOfDelegator(delegatorAddress: string, validatorAddress: string) {
+        const url = `/validator/delegator/sharesOfAddress/?userAddress=${delegatorAddress}&validatorAddress=${validatorAddress}`;
+        const res = await this.axios.get<any>(url);
+        return res.shares;
+    }
+
+    public async getShareValue(validator: string) {
+        const url = `/validator/shareValue/?validatorAddress=${validator}`;
+        const res = await this.axios.get<any>(url);
+
+        return res.shareValue;
+    }
+
+    // #endregion
+
+    // #region vm
+
+    public async getVmOwnerTransactionFeeShare() {
+        const url = `/vmOwnerTransactionFeeShare/`;
+        const res = await this.axios.get<vmOwnerTransactionFeeShareRes>(url);
+        return res.vmOwnerTransactionFeeShare;
+    }
+
+    public async getVmIdClaimingFee() {
+        const url = `/vmIdClaimingFee/`;
+        const res = await this.axios.get<vmClaimingFeeRes>(url);
+        return res.vmIdClaimingFee;
+    }
+
+    public async getVMDataTransactions(
         startingBlock: string,
         endingBlock: string,
         vmId: string
     ): Promise<VmDataTransaction[]> {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/getVmTransactions/?startingBlock=${startingBlock}&endingBlock=${endingBlock}&vmId=${vmId}`,
-        });
+        const url = `/getVmTransactions/?startingBlock=${startingBlock}&endingBlock=${endingBlock}&vmId=${vmId}`;
+        const res = await this.axios.get<VmDataTransactionsRes>(url);
 
-        const transactions: VmDataTransaction[] = res.data.transactions;
+        const transactions: VmDataTransaction[] = res.transactions;
         const txnArray = new Array(transactions.length);
 
         for (let i = 0; i < transactions.length; i++) {
@@ -178,142 +504,9 @@ export default class PWRJS {
         return txnArray;
     }
 
-    static async getVMDataTransactionsFiltered() {}
+    // static async getVMDataTransactionsFiltered() {}
 
-    // *~~*~~*~~ ~ *~~*~~*~~ //
-
-    @EnsureRpcNodeUrl()
-    static async getTotalValidatorsCount(): Promise<number> {
-        const url = `${PWRJS.getRpcNodeUrl()}/totalValidatorsCount/`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        return res.data.validatorsCount;
-    }
-
-    @EnsureRpcNodeUrl()
-    static async getStandbyValidatorsCount(): Promise<number> {
-        const url = `${PWRJS.getRpcNodeUrl()}/standbyValidatorsCount/`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        return res.data.validatorsCount;
-    }
-
-    @EnsureRpcNodeUrl()
-    static async getActiveValidatorsCount(): Promise<number> {
-        const url = `${PWRJS.getRpcNodeUrl()}/activeValidatorsCount/`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        return res.data.validatorsCount;
-    }
-
-    @EnsureRpcNodeUrl()
-    static async getTotalDelegatorsCount(): Promise<number> {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/totalDelegatorsCount/`,
-        });
-
-        return res.data.delegatorsCount;
-    }
-
-    @EnsureRpcNodeUrl()
-    static async getAllValidators(): Promise<Validator[]> {
-        const url = `${PWRJS.getRpcNodeUrl()}/allValidators/`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        return res.data.validators;
-    }
-
-    @EnsureRpcNodeUrl()
-    static async getStandbyValidators(): Promise<[]> {
-        const url = `${PWRJS.getRpcNodeUrl()}/standbyValidators/`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        return res.data.validators;
-    }
-
-    @EnsureRpcNodeUrl()
-    static async getActiveValidators(): Promise<[]> {
-        const url = `${PWRJS.getRpcNodeUrl()}/activeValidators/`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        return res.data.validators;
-    }
-
-    @EnsureRpcNodeUrl()
-    static async getValidator(address: string): Promise<Validator> {
-        const url = `${PWRJS.getRpcNodeUrl()}/validator/?validatorAddress=${address}`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        return res.data.validator;
-    }
-
-    @EnsureRpcNodeUrl()
-    static async getDelegatees(address: string): Promise<Validator[]> {
-        const url = `${PWRJS.getRpcNodeUrl()}/delegateesOfUser/?userAddress=${address}`;
-
-        const res = await axios({
-            method: 'get',
-            url,
-        });
-
-        return res.data.validators;
-    }
-
-    @EnsureRpcNodeUrl()
-    static async getDelegatedPWR(
-        delegatorAddress: string,
-        validatorAddress: string
-    ) {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/validator/delegator/delegatedPWROfAddress/?userAddress=${delegatorAddress}&validatorAddress=${validatorAddress}`,
-        });
-
-        return res.data;
-    }
-
-    @EnsureRpcNodeUrl()
-    static async getShareValue(validator: string) {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/validator/shareValue/?validatorAddress=${validator}`,
-        });
-
-        return res.data.shareValue;
-    }
-
-    // *~~*~~*~~ ~ VM ~ *~~*~~*~~ //
-
-    static getVmIdAddress(vmId: number): string {
+    public getVmIdAddress(vmId: number): string {
         let hexAddress: string = vmId >= 0 ? '1' : '0';
 
         if (vmId < 0) vmId = -vmId;
@@ -329,7 +522,7 @@ export default class PWRJS {
         return '0x' + hexAddress;
     }
 
-    static isVmAddress(address: string) {
+    public static isVmAddress(address: string): boolean {
         if (
             address == null ||
             (address.length !== 40 && address.length !== 42)
@@ -370,88 +563,110 @@ export default class PWRJS {
         return true;
     }
 
-    @EnsureRpcNodeUrl()
-    static async getOwnerOfVm(vmId: string): Promise<any> {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/ownerOfVmId/?vmId=${vmId}`,
-        });
+    public async getOwnerOfVm(vmId: string): Promise<string | null> {
+        const url = `/ownerOfVmId/?vmId=${vmId}`;
+        const res = await this.axios.get<any>(url);
 
-        return res.data.claimed;
+        if (res.hasOwnProperty('claimed')) {
+            return res.owner;
+        }
+
+        return null;
     }
 
-    static async getConduitsOfVm(vmId: string): Promise<Validator[]> {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/conduitsOfVm/?vmId=${vmId}`,
-        });
+    public async getConduitsOfVm(vmId: string): Promise<Validator[]> {
+        const url = `/conduitsOfVm/?vmId=${vmId}`;
+        const res = await this.axios.get<any>(url);
 
-        const validators = res.data.conduits;
+        const validatorsData = res.conduits;
+        const validatorsList = [];
 
-        return validators;
+        for (let i = 0; i < validatorsData.length; i++) {
+            const v = validatorsData[i];
+
+            // prettier-ignore
+            const validator = {
+                address: v.address,
+                ip: v.ip,
+                isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
+                votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
+                shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
+                delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
+                status: null,
+            };
+
+            validatorsList.push(validator);
+        }
+
+        return validatorsList;
     }
 
-    // *~~*~~*~~ ~ *~~*~~*~~ //
+    // #endregion
 
-    static updateFeePerByte(feePerByte: number) {
-        PWRJS.#feePerByte = feePerByte;
+    // #region guardian
+
+    public async getMaxGuardianTime() {
+        const url = `/maxGuardianTime/`;
+        const res = await this.axios.get<MaxGuardianTimeRes>(url);
+        return res.maxGuardianTime;
     }
 
-    static setRpcNodeUrl(rpcNodeUrl: string) {
-        PWRJS.#rpcNodeUrl = rpcNodeUrl;
+    public async isTransactionValidForGuardianApproval(transaction: string) {
+        const url = `/isTransactionValidForGuardianApproval/`;
+        const res = await this.axios.post<any>(url, { data: { transaction } });
+
+        if (res.valid) {
+            return {
+                valid: res.valid,
+                guardianAddress: `0x${res.guardian}`,
+                transaction: res.transaction,
+            };
+        } else {
+            return {
+                valid: res.valid,
+                errorMesage: res.error,
+                transaction: null,
+                guardianAddress: `0x${res.guardian}`,
+            };
+        }
     }
 
-    // *~~*~~*~~ ~ guardian ~ *~~*~~*~~ //
-
-    static async getGuardianOfAddress(address: string) {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/guardianOf/?userAddress=${address}`,
-        });
-
-        if (res.data.isGuarded === false) return null;
-
-        return res.data.guardian;
+    public async isTransactionValidForGuardianApprovalBytes(
+        transaction: Uint8Array
+    ) {
+        return this.isTransactionValidForGuardianApproval(
+            bytesToHex(transaction)
+        );
     }
 
-    // *~~*~~*~~ ~ *~~*~~*~~ //
+    public async getGuardianOfAddress(address: string) {
+        const url = `/guardianOf/?userAddress=${address}`;
+        const res = await this.axios.get<any>(url);
 
-    static async isTransactionValidForGuardianApproval(txn: string) {
-        const res = await axios({
-            method: 'post',
-            url: `${PWRJS.getRpcNodeUrl()}/isTransactionValidForGuardianApproval/`,
-            data: {
-                transaction: txn,
-            },
-        });
+        if (res.isGuarded) {
+            return res.guardian;
+        }
 
-        // implement logic for false response
-
-        return res.data;
+        return null;
     }
 
-    static async getActiveVotingPower() {
-        const res = await axios({
-            method: 'get',
-            url: `${PWRJS.getRpcNodeUrl()}/activeVotingPower/`,
-        });
+    // #endregion
 
-        return res.data.activeVotingPower;
-    }
-
-    // *~~*~~*~~ ~ *~~*~~*~~ //
-    @EnsureRpcNodeUrl()
-    static async broadcastTxn(txnBytes: Uint8Array): Promise<any[]> {
+    public async broadcastTxn(txnBytes: Uint8Array): Promise<any[]> {
         const txnHex = Buffer.from(txnBytes).toString('hex');
 
-        const res = await axios({
-            method: 'post',
-            url: `${PWRJS.getRpcNodeUrl()}/broadcast/`,
-            data: {
-                txn: txnHex,
+        const url = `${this.rpcNodeUrl}/broadcast/`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
             },
+            body: JSON.stringify({ txn: txnHex, transaction: txnHex }),
         });
 
-        return res.data;
+        const data = await res.json();
+
+        return data;
     }
 }

@@ -1,10 +1,24 @@
 export type Block = {
+    processedWithoutCriticalErrors: boolean;
     blockHash: string;
-    success: boolean;
+    networkVotingPower: number;
     blockNumber: number;
-    blockReward: string;
+    blockReward: number;
     transactionCount: number;
-    transactions: [];
+    transactions: {
+        positionInTheBlock: number;
+        size: number;
+        receiver: string;
+        sender: string;
+        success: boolean;
+        fee: number;
+        paid: boolean;
+        type: string;
+        nonce: number;
+        value: number;
+        extraFee: number;
+        hash: string;
+    }[];
     blockSubmitter: string;
     blockSize: number;
     timestamp: number;

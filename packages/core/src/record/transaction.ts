@@ -1,6 +1,6 @@
 export type Transaction = {
     size: number;
-    blockNumber: BigInt;
+    blockNumber: number;
     positionInTheBlock: number;
     fee: string;
     type: string;
@@ -10,6 +10,9 @@ export type Transaction = {
     hash: string;
     timestamp: number;
     value: string;
+    extraFee: string;
     rawTransaction: string;
-    chainId: string;
+    chainId: number;
+    errorMeage: string;
+    success: boolean;
 };
