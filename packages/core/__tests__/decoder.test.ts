@@ -121,6 +121,14 @@ describe('decoder', () => {
         nonce: 7,
     };
 
+    const proposal3_5 = {
+        maxTxnSize: 1000,
+        title: 'proposal 3.5',
+        description: 'Change max txn size',
+        chainId: 0,
+        nonce: 75,
+    };
+
     const proposal4 = {
         burnPercentage: 2,
         title: 'proposal 4',
@@ -648,6 +656,39 @@ describe('decoder', () => {
             rawTransaction: txnBytes,
             chainId,
             type: Transaction_ID.CHANGE_MAX_BLOCK_SIZE_PROPOSAL,
+        });
+    });
+
+    it('decode proposal change max txn size proposal txn', () => {
+        const { chainId, description, maxTxnSize, nonce, title } = proposal3_5;
+
+        const txn = TransactionBuilder.getChangeMaxTxnSizeProposalTxn(
+            maxTxnSize,
+            title,
+            description,
+            nonce,
+            chainId
+        );
+
+        const signature = signTxn(txn, pvk);
+        const txnBytes = new Uint8Array([...txn, ...signature]);
+
+        const result = decoder.decodeChangeMaxTxnSizeProposalTxn(
+            txnBytes,
+            senderBytes,
+            nonce
+        );
+
+        expect(result).toEqual({
+            sender: senderHex,
+            nonce,
+            size: txnBytes.length,
+            maxTxnSize,
+            title,
+            description,
+            rawTransaction: txnBytes,
+            chainId,
+            type: Transaction_ID.CHANGE_MAX_TXN_SIZE_PROPOSAL,
         });
     });
 

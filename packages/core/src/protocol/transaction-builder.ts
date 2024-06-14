@@ -1,11 +1,5 @@
 import BigNumber from 'bignumber.js';
-import {
-    BnToBytes,
-    BnToDecimal,
-    HexToBytes,
-    decToBytes,
-    decToBytes2,
-} from '../utils';
+import { BnToBytes, HexToBytes, decToBytes, decToBytes2 } from '../utils';
 import { Transaction_ID } from '../static/enums/transaction.enum';
 
 export default class TransactionBuilder {

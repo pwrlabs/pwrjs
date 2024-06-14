@@ -69,11 +69,57 @@ export default class TransactionDecoder {
             case Transaction_ID.MOVE_STAKE:
                 throw new Error('Move Stake transaction not implemented');
 
-            //
             case Transaction_ID.CHANGE_EARLY_WITHDRAW_PENALTY_PROPOSAL:
-                throw new Error(
-                    'Change Early Withdraw Penalty Proposal transaction not implemented'
-                );
+                // prettier-ignore
+                return this.decodeChangeEarlyWithdrawPenaltyProposal(txn, sender, nonce);
+
+            case Transaction_ID.CHANGE_FEE_PER_BYTE_PROPOSAL:
+                // prettier-ignore
+                return this.decodeChangeFeePerByteProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.CHANGE_MAX_BLOCK_SIZE_PROPOSAL:
+                // prettier-ignore
+                return this.decodeChangeMaxBlockSizeProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.CHANGE_MAX_TXN_SIZE_PROPOSAL:
+                // prettier-ignore
+                return this.decodeChangeMaxTxnSizeProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.CHANGE_OVERALL_BURN_PERCENTAGE_PROPOSAL:
+                // prettier-ignore
+                return this.decodeChangeOverallBurnPercentageProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.CHANGE_REWARD_PER_YEAR_PROPOSAL_TXN:
+                // prettier-ignore
+                return this.decodeChangeRewardPerYearProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.CHANGE_OVERALL_BURN_PERCENTAGE_PROPOSAL:
+                // prettier-ignore
+                return this.decodeChangeOverallBurnPercentageProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.CHANGE_VALIDATOR_COUNT_LIMIT_PROPOSAL:
+                // prettier-ignore
+                return this.decodeChangeValidatorCountLimitProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.CHANGE_VALIDATOR_JOINING_FEE_PROPOSAL:
+                // prettier-ignore
+                return this.decodeChangeValidatorJoiningFeeProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.CHANGE_VM_ID_CLAIMING_FEE_PROPOSAL:
+                // prettier-ignore
+                return this.decodeChangeVmIdClaimingFeeProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.CHANGE_VM_OWNER_TXN_FEE_SHARE_PROPOSAL:
+                // prettier-ignore
+                return this.decodeChangeVmOwnerTxnFeeShareProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.OTHER_PROPOSAL_TXN:
+                // prettier-ignore
+                return this.decodeOtherProposalTxn(txn, sender, nonce);
+
+            case Transaction_ID.VOTE_ON_PROPOSAL_TXN:
+                // prettier-ignore
+                return this.decodeVoteOnProposalTxn(txn, sender, nonce);
 
             default:
                 throw new Error('Invalid transaction type');
@@ -613,6 +659,58 @@ export default class TransactionDecoder {
             nonce: nonce,
             size: txn.length,
             maxBlockSize: maxBlockSize,
+            description,
+            title,
+            rawTransaction: txn,
+            chainId: txn[1],
+            type: txn[0],
+        };
+    }
+
+    public decodeChangeMaxTxnSizeProposalTxn(
+        txn: Uint8Array,
+        sender: Uint8Array,
+        nonce: number
+    ) {
+        if (txn.length < 10)
+            throw new Error(
+                'Invalid length for change fee per byte proposal txn'
+            );
+        /*
+        Identifier - 1
+        chain id - 1
+        nonce - 4
+        title size identifier - 4
+        title - x
+        max txn size - 4
+        description - x
+        signature - 65
+        */
+
+        const dataView = new DataView(
+            txn.buffer,
+            txn.byteOffset,
+            txn.byteLength
+        );
+
+        const titleSize = dataView.getInt32(6, false);
+        const title_b = new Uint8Array(txn.buffer, 10, titleSize);
+        const title = new TextDecoder().decode(title_b);
+
+        const maxTxnSize = dataView.getInt32(10 + titleSize, false);
+
+        const description_b = new Uint8Array(
+            txn.buffer,
+            14 + titleSize,
+            txn.length - 79 - titleSize
+        );
+        const description = new TextDecoder().decode(description_b);
+
+        return {
+            sender: `0x${bytesToHex(sender)}`,
+            nonce: nonce,
+            size: txn.length,
+            maxTxnSize: maxTxnSize,
             description,
             title,
             rawTransaction: txn,
