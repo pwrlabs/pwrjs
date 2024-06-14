@@ -122,6 +122,11 @@ export default class PWRJS {
             let fee = txn.length * feePerByte + ecdsaVerificationFee;
             fee += sizeOfAllTransactions * ecdsaVerificationFee;
             return fee;
+        }
+
+        if (Number(transaction.type) >= 17 && Number(transaction.type) <= 28) {
+            const proposalFee = await this.getProposalFee();
+            return txn.length * feePerByte + ecdsaVerificationFee + proposalFee;
         } else {
             return txn.length * feePerByte + ecdsaVerificationFee;
         }
