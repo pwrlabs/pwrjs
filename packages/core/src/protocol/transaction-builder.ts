@@ -176,6 +176,29 @@ export default class TransactionBuilder {
         return txnBytes;
     }
 
+    static getVmDataTransaction2(
+        vmId: string,
+        data: Uint8Array,
+        nonce: number,
+        chainId: number
+    ): Uint8Array {
+        if (nonce < 0) {
+            throw new Error('Nonce cannot be negative');
+        }
+
+        const base = this.getTransactionBase(
+            Transaction_ID.VM_DATA_TXN,
+            chainId,
+            nonce
+        );
+
+        const b_vmId = BnToBytes(new BigNumber(vmId));
+
+        const txnBytes = new Uint8Array([...base, ...b_vmId, ...data]);
+
+        return txnBytes;
+    }
+
     static getClaimVmIdTransaction(
         vmId: string,
         nonce: number,

@@ -143,6 +143,24 @@ describe('wallet_core', () => {
         }
     });
 
+    it('sends vm data bytes transaction', async () => {
+        const vmId = '100';
+        const data = {
+            setName: 'AhmadHassoun',
+        };
+
+        const dataBytes = new TextEncoder().encode(JSON.stringify(data));
+
+        try {
+            const tx = await pwrWallet.sendVMDataTxn2(vmId, dataBytes);
+            console.log('VM data bytes txn  :', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+            // console.error('Error sending VM data transaction:', e.message);
+        }
+    });
+
     it('sends payable VM data  transaction', async () => {
         const vmId = '100';
         const data = 'test data';

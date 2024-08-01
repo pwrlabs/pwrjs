@@ -353,6 +353,28 @@ export default class PWRWallet {
         return res;
     }
 
+    async sendVMDataTxn2(vmId: string, data: Uint8Array): Promise<TxnRes>;
+    // prettier-ignore
+    async sendVMDataTxn2(vmId: string, data: Uint8Array, nonce: number): Promise<TxnRes>;
+    // prettier-ignore
+    async sendVMDataTxn2(vmId: string, data: Uint8Array, nonce?: number): Promise<TxnRes> {
+        const _nonce = nonce || (await this.getNonce());
+
+        const _vmId = vmId;
+
+        const _chainId = this.getChainId();
+
+        const txnDataBytes = TransactionBuilder.getVmDataTransaction2(
+            _vmId,
+            data,
+            _nonce,
+            _chainId
+        );
+
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+    }
+
     // prettier-ignore
     async sendPayableVmDataTransaction(vmId: string, value: string, data: string): Promise<TxnRes>;
     // prettier-ignore
