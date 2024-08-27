@@ -1,0 +1,76 @@
+{
+  "version": "6.0",
+  "nxVersion": "18.0.4",
+  "deps": {},
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {},
+    "nonProjectFiles": [
+      {
+        "file": "core/README.md",
+        "hash": "3083432672096554536"
+      },
+      {
+        "file": "core/__tests__/pwrjs.test.ts",
+        "hash": "3449241791228004635"
+      },
+      {
+        "file": "core/__tests__/validator.test.ts",
+        "hash": "4730632551525174636"
+      },
+      {
+        "file": "core/__tests__/wallet.test.ts",
+        "hash": "17556142376123518289"
+      },
+      {
+        "file": "core/jest.config.js",
+        "hash": "9625460574794279287"
+      },
+      {
+        "file": "core/package.json",
+        "hash": "14292737342340666536"
+      },
+      {
+        "file": "core/src/block/block.ts",
+        "hash": "7951701915029410153"
+      },
+      {
+        "file": "core/src/index.ts",
+        "hash": "2699687666601646729"
+      },
+      {
+        "file": "core/src/pwr/pwr.ts",
+        "hash": "17319076872885790155"
+      },
+      {
+        "file": "core/src/reward/reward.ts",
+        "hash": "3674794975119214681"
+      },
+      {
+        "file": "core/src/transaction/transaction.ts",
+        "hash": "10396058683008912774"
+      },
+      {
+        "file": "core/src/utils.ts",
+        "hash": "6933903795740324175"
+      },
+      {
+        "file": "core/src/validator/validator.ts",
+        "hash": "17872457193995002949"
+      },
+      {
+        "file": "core/src/wallet.utils.ts",
+        "hash": "8403507128989787901"
+      },
+      {
+        "file": "core/src/wallet/wallet.ts",
+        "hash": "13126844796095839434"
+      },
+      {
+        "file": "core/tsconfig.json",
+        "hash": "16579974225161609212"
+      }
+    ]
+  }
+}
