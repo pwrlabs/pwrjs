@@ -2,27 +2,33 @@
 
 PWRJS is a javasrcipt library for interacting with the PWR network. It provides an easy interface for wallet management and sending transactions on PWR.
 
-<!-- primary badges -->
-<p align="center">
-  <a href="https://www.npmjs.com/package/@pwrjs/core">
-    <img src='https://img.shields.io/npm/v/@pwrjs/core' />
-  </a>
-  <a href="https://www.npmjs.com/package/@pwrjs/core">
-    <img src='https://img.shields.io/npm/dt/@pwrjs/core?color=blueviolet' />
-  </a>
-  <a href="https://github.com/pwrlabs/pwrjs/blob/main/LICENSE/">
-    <img src="https://img.shields.io/badge/license-MIT-black">
-  </a>
-  <!-- <a href="https://github.com/pwrlabs/pwrjs/stargazers">
-    <img src='https://img.shields.io/github/stars/pwrlabs/pwrjs?color=yellow' />
-  </a> -->
-  <a href="https://pwrlabs.io/">
-    <img src="https://img.shields.io/badge/powered_by-PWR Chain-navy">
-  </a>
-  <a href="https://x.com/pwrlabs">
-    <img src="https://img.shields.io/badge/follow_us-Twitter-blue">
-  </a>
-</p>
+<div align="center">
+<!-- markdownlint-restore -->
+
+[![Pull Requests welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg?style=flat-square)](https://github.com/pwrlabs/pwrjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+<a href="https://www.npmjs.com/package/@pwrjs/core">
+  <img src='https://img.shields.io/npm/v/@pwrjs/core' />
+</a>
+<a href="https://www.npmjs.com/package/@pwrjs/core">
+  <img src='https://img.shields.io/npm/dt/@pwrjs/core?color=blueviolet' />
+</a>
+<a href="https://github.com/pwrlabs/pwrjs/blob/main/LICENSE/">
+  <img src="https://img.shields.io/badge/license-MIT-black">
+</a>
+<!-- <a href="https://github.com/pwrlabs/pwrjs/stargazers">
+  <img src='https://img.shields.io/github/stars/pwrlabs/pwrjs?color=yellow' />
+</a> -->
+<a href="https://pwrlabs.io/">
+  <img src="https://img.shields.io/badge/powered_by-PWR Chain-navy">
+</a>
+<a href="https://www.youtube.com/@pwrlabs">
+  <img src="https://img.shields.io/badge/Community%20calls-Youtube-red?logo=youtube"/>
+</a>
+<a href="https://twitter.com/pwrlabs">
+  <img src="https://img.shields.io/twitter/follow/pwrlabs?style=social"/>
+</a>
+
+</div>
 
 ## Installation
 
