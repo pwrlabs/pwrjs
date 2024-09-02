@@ -40,8 +40,6 @@ import {
     vmOwnerTransactionFeeShareRes,
 } from '../services/responses';
 
-//
-
 export default class PWRJS {
     // private ecdsaVerificationFee: number = 10000;
     private chainId: number;
