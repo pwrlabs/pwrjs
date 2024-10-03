@@ -1,6 +1,6 @@
 # PWRJS
 
-PWRJS is a javasrcipt library for interacting with the PWR network. It provides an easy interface for wallet management and sending transactions on PWR.
+PWRJS is a JavaScript library for interacting with the PWR blobkchain. It provides an interface for wallet management and sending transactions on PWR.
 
 <div align="center">
 <!-- markdownlint-restore -->
@@ -59,9 +59,10 @@ import { PWRJS, PWRWallet } from '@pwrjs/core';
 const { PWRJS, PWRWallet } = require('@pwrjs/core');
 ```
 
-**Set your RPC node:**
+**Create a new instance**
 
 ```ts
+const pwrjs = new PWRJS('https://pwrrpc.pwrlabs.io/');
 const pwrjs = new PWRJS('https://pwrrpc.pwrlabs.io/');
 ```
 
