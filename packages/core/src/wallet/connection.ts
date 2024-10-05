@@ -62,9 +62,7 @@ export async function getConnection(): Promise<string> {
     if (await isConnected()) {
         const account = await window.pwr.getConnections();
 
-        if (!(account.length)) {
-            return "";
-        } else {
+        if (account.length) {
             return account[0];
         }
     }
