@@ -1,8 +1,16 @@
 declare global {
     interface PWR {
+        // data
+        name: string;
+        version: string;
+        // actions
+        restablishConnection: () => Promise<string>;
         connect: () => Promise<any>;
-        getConnections: () => Promise<any>;
         disconnect: (data: object) => Promise<any>;
+        getConnections: () => Promise<any>;
+        areAutomatedTransactionsEnabled: () => Promise<any>;
+        getFingerprints: () => Promise<any>;
+        // transactions
         transferPwr: (txnData: object) => Promise<string>;
         dataTransaction: (txnData: object) => Promise<string>;
         bytesDataTransaction: (txnData: object) => Promise<string>;
@@ -23,10 +31,13 @@ declare global {
         voteOnProposal: (txnData: object) => Promise<string>;
         maxBlockSize: (txnData: object) => Promise<string>;
         maxTransactionSize: (txnData: object) => Promise<string>;
-
+        // events
         onAccountChange: {
 			addListener: (callback: (accounts: string[]) => void) => void;
 		};
+        onConnect: {
+            addListener: (callback: (address: string) => void) => void;
+        };
         onDisconnect: {
 			addListener: (callback: () => void) => void;
 		};
@@ -36,6 +47,10 @@ declare global {
         pwr?: PWR;
     }
 }
+
+type AccountChangeCallback = (accounts: string[]) => void;
+type ConnectCallback = (address: string) => void;
+type DisconnectCallback = () => void;
 
 export function isInstalled() {
     if (typeof window.pwr === 'undefined') {
@@ -87,5 +102,22 @@ export async function disconnect() {
         } catch (error) {
             console.error('Failed to disconnect PWR Chain Wallet:', error);
         }
+    }
+}
+
+export async function getEvent(
+    eventName: "onAccountChange" | "onConnect" | "onDisconnect", 
+    callback: AccountChangeCallback | ConnectCallback | DisconnectCallback
+): Promise<void> {
+    if (eventName == "onAccountChange") {
+        window.pwr.onAccountChange.addListener(callback as AccountChangeCallback);
+    }
+    else if (eventName == "onConnect") {
+        window.pwr.onConnect.addListener(callback as ConnectCallback);
+    }
+    else if (eventName == "onDisconnect") {
+        window.pwr.onDisconnect.addListener(callback as DisconnectCallback);
+    } else {
+        console.error(`There is no event named ${eventName}`);
     }
 }
