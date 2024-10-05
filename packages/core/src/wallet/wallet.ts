@@ -7,7 +7,7 @@ import { keccak256 } from 'js-sha3';
 
 import * as secp256k1 from 'secp256k1';
 import TransactionBuilder from '../protocol/transaction-builder';
-import { isConnected } from "./connection";
+import { getConnection } from "./connection";
 
 const pwrnode = 'https://pwrrpc.pwrlabs.io';
 
@@ -95,36 +95,6 @@ type TxnRes = {
     transactionHash: string;
     message: string;
 };
-
-declare global {
-    interface PWR {
-        getConnections: () => Promise<any>;
-        transferPwr: (txnData: object) => Promise<string>;
-        dataTransaction: (txnData: object) => Promise<string>;
-        bytesDataTransaction: (txnData: object) => Promise<string>;
-        payableVmDataTransaction: (txnData: object) => Promise<string>;
-        claimIdVm: (txnData: object) => Promise<string>;
-        delegate: (txnData: object) => Promise<string>;
-        withdraw: (txnData: object) => Promise<string>;
-        moveStake: (txnData: object) => Promise<string>;
-        earlyWithdrawPenalty: (txnData: object) => Promise<string>;
-        feePerByte: (txnData: object) => Promise<string>;
-        otherProposal: (txnData: object) => Promise<string>;
-        overallBurnPercentage: (txnData: object) => Promise<string>;
-        rewardPerYear: (txnData: object) => Promise<string>;
-        validatorCountLimit: (txnData: object) => Promise<string>;
-        validatorJoiningFee: (txnData: object) => Promise<string>;
-        vmIdClaimingFee: (txnData: object) => Promise<string>;
-        vmOwnerTransactionFeeShare: (txnData: object) => Promise<string>;
-        voteOnProposal: (txnData: object) => Promise<string>;
-        maxBlockSize: (txnData: object) => Promise<string>;
-        maxTransactionSize: (txnData: object) => Promise<string>;
-    }
-
-    interface Window {
-        pwr?: PWR;
-    }
-}
 
 function signTxn(txnBytes: Uint8Array, privateKey: string) {
     const hashedBytes = keccak256.arrayBuffer(txnBytes);
@@ -317,12 +287,10 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.transferPwr({ from: account[0], to: to, amount: amount });
-                    return res;
-                }
+                const res = await window.pwr.transferPwr({ from: sender, to: to, amount: amount });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -384,12 +352,10 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.dataTransaction({ from: account[0], vmId: _vmId, data: data });
-                    return res;
-                }
+                const res = await window.pwr.dataTransaction({ from: sender, vmId: _vmId, data: data });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -417,12 +383,10 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.bytesDataTransaction({ from: account[0], vmId: _vmId, data: data });
-                    return res;
-                }
+                const res = await window.pwr.bytesDataTransaction({ from: sender, vmId: _vmId, data: data });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -451,12 +415,10 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.payableVmDataTransaction({ from: account[0], vmId: _vmId, value: value, data: data });
-                    return res;
-                }
+                const res = await window.pwr.payableVmDataTransaction({ from: sender, vmId: _vmId, value: value, data: data });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -484,12 +446,10 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.claimIdVm({ from: account[0], vmId: vmId });
-                    return res;
-                }
+                const res = await window.pwr.claimIdVm({ from: sender, vmId: vmId });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -514,12 +474,10 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.delegate({ from: account[0], to: to, amount: amount });
-                    return res;
-                }
+                const res = await window.pwr.delegate({ from: sender, to: to, amount: amount });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -549,12 +507,10 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.withdraw({ from: account[0], shares: sharesAmount });
-                    return res;
-                }
+                const res = await window.pwr.withdraw({ from: sender, shares: sharesAmount });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -582,12 +538,10 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.moveStake({ from: account[0], sharesAmount: shareAmount, fromValidator: fromValidator, toValidator: toValidator });
-                    return res;
-                }
+                const res = await window.pwr.moveStake({ from: sender, sharesAmount: shareAmount, fromValidator: fromValidator, toValidator: toValidator });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -746,18 +700,16 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.earlyWithdrawPenalty({ 
-                        from: account[0], 
-                        title: title, 
-                        description: description, 
-                        earlyWithdrawPenalty: withdrawalPenalty, 
-                        earlyWithdrawTime: withdrawlPenaltyTime 
-                    });
-                    return res;
-                }
+                const res = await window.pwr.earlyWithdrawPenalty({ 
+                    from: sender, 
+                    title: title, 
+                    description: description, 
+                    earlyWithdrawPenalty: withdrawalPenalty, 
+                    earlyWithdrawTime: withdrawlPenaltyTime 
+                });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -788,14 +740,12 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.feePerByte({ 
-                        from: account[0], feePerByte: feePerByte, title: title, description: description,
-                    });
-                    return res;
-                }
+                const res = await window.pwr.feePerByte({ 
+                    from: sender, feePerByte: feePerByte, title: title, description: description,
+                });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -825,15 +775,13 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.maxBlockSize({ 
-                        from: account[0], title: title, description: description, maxBlockSize: maxBlockSize
-                    });
-    
-                    return res;
-                }
+                const res = await window.pwr.maxBlockSize({ 
+                    from: sender, title: title, description: description, maxBlockSize: maxBlockSize
+                });
+
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -863,15 +811,13 @@ export default class PWRWallet {
 
         if (website) {            
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.maxTransactionSize({ 
-                        from: account[0], title: title, description: description, maxTxnSize: maxTxnSize
-                    });
-    
-                    return res;
-                }
+                const res = await window.pwr.maxTransactionSize({ 
+                    from: sender, title: title, description: description, maxTxnSize: maxTxnSize
+                });
+
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -901,14 +847,12 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.overallBurnPercentage({ 
-                        from: account[0], title: title, description: description, overallBurnPercentage: burnPercentage
-                    });
-                    return res;
-                }
+                const res = await window.pwr.overallBurnPercentage({ 
+                    from: sender, title: title, description: description, overallBurnPercentage: burnPercentage
+                });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -938,14 +882,12 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.rewardPerYear({ 
-                        from: account[0], title: title, description: description, rewardPerYear: rewardPerYear
-                    });
-                    return res;
-                }
+                const res = await window.pwr.rewardPerYear({ 
+                    from: sender, title: title, description: description, rewardPerYear: rewardPerYear
+                });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -975,14 +917,12 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.validatorCountLimit({ 
-                        from: account[0], title: title, description: description, validatorCountLimit: validatorCountLimit
-                    });
-                    return res;
-                }
+                const res = await window.pwr.validatorCountLimit({ 
+                    from: sender, title: title, description: description, validatorCountLimit: validatorCountLimit
+                });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -1012,14 +952,12 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.validatorJoiningFee({ 
-                        from: account[0], title: title, description: description, validatorJoiningFee: joiningFee
-                    });
-                    return res;
-                }
+                const res = await window.pwr.validatorJoiningFee({ 
+                    from: sender, title: title, description: description, validatorJoiningFee: joiningFee
+                });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -1049,14 +987,12 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.vmIdClaimingFee({ 
-                        from: account[0], title: title, description: description, vmIdClaimingFee: claimingFee
-                    });
-                    return res;
-                }
+                const res = await window.pwr.vmIdClaimingFee({ 
+                    from: sender, title: title, description: description, vmIdClaimingFee: claimingFee
+                });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -1086,14 +1022,12 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.vmOwnerTransactionFeeShare({ 
-                        from: account[0], title: title, description: description, vmOwnerTxnFeeShare: feeShare
-                    });
-                    return res;
-                }
+                const res = await window.pwr.vmOwnerTransactionFeeShare({ 
+                    from: sender, title: title, description: description, vmOwnerTxnFeeShare: feeShare
+                });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -1123,14 +1057,12 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.otherProposal({ 
-                        from: account[0], title: title, description: description,
-                    });
-                    return res;
-                }
+                const res = await window.pwr.otherProposal({ 
+                    from: sender, title: title, description: description,
+                });
+                return res;
             } catch (err) {
                 console.error(err);
             }
@@ -1159,14 +1091,12 @@ export default class PWRWallet {
 
         if (website) {
             try {
-                if ((await isConnected())) {
-                    const account = await window.pwr.getConnections();
+                const sender = await getConnection();
 
-                    const res = await window.pwr.voteOnProposal({ 
-                        from: account[0], proposalHash: proposalHash, vote: vote
-                    });
-                    return res;
-                }
+                const res = await window.pwr.voteOnProposal({ 
+                    from: sender, proposalHash: proposalHash, vote: vote
+                });
+                return res;
             } catch (err) {
                 console.error(err);
             }

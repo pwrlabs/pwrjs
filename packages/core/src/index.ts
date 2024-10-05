@@ -1,7 +1,7 @@
 import PWRWallet from './wallet/wallet';
 import PWRJS from './protocol/pwrjs';
 
-import { connect, disconnect, isInstalled, isConnected } from './wallet/connection';
+import { connect, disconnect, isInstalled, getConnection } from './wallet/connection';
 
 import TransactionDecoder from './protocol/transaction-decoder';
 import TransactionBuilder from './protocol/transaction-builder';
@@ -13,7 +13,7 @@ export {
     connect,
     disconnect,
     isInstalled,
-    isConnected,
+    getConnection,
     TransactionDecoder, 
     TransactionBuilder 
 };
