@@ -50,12 +50,11 @@ export async function isConnected(): Promise<boolean> {
     if (isInstalled()) {
         const account = await window.pwr.getConnections()
 
-        if (!(account.length)) {
-            return false;
-        } else {
+        if (account.length) {
             return true;
         }
     }
+    return false;
 }
 
 export async function getConnection(): Promise<string> {
