@@ -63,7 +63,6 @@ const { PWRJS, PWRWallet } = require('@pwrjs/core');
 
 ```ts
 const pwrjs = new PWRJS('https://pwrrpc.pwrlabs.io/');
-const pwrjs = new PWRJS('https://pwrrpc.pwrlabs.io/');
 ```
 
 **Generate a new wallet:**
