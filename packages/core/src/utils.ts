@@ -2,6 +2,14 @@ import BigNumber from 'bignumber.js';
 import { keccak256 } from 'js-sha3';
 import * as secp256k1 from 'secp256k1';
 
+export function decodeHex(hex: string): Uint8Array {
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+    }
+    return bytes;
+}
+
 export function HexToBytes(hex: string): Uint8Array {
     const hexString = hex.startsWith('0x') ? hex.slice(2) : hex;
     const byteArray = new Uint8Array(hexString.length / 2);

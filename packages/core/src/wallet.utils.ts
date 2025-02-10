@@ -10,7 +10,7 @@ class WalletUtils {
     // 	return wallet;
     // }
 
-    static fromPrivateKey(privateKeyStr: string) {
+    static fromPrivateKey(privateKeyStr: string): EthereumWallet {
         const privateKeyBytes = Buffer.from(privateKeyStr.slice(2), 'hex');
 
         const wallet = EthereumWallet.fromPrivateKey(privateKeyBytes);
@@ -57,7 +57,7 @@ class WalletUtils {
         return wallet;
     }
 
-    static getRandomWallet() {
+    static getRandomWallet(): EthereumWallet {
         const mnemonic = WalletUtils.generateMnemonic();
         const wallet = WalletUtils.getWalletFromMnemonic(mnemonic);
         return wallet;

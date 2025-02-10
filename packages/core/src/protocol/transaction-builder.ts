@@ -1,6 +1,21 @@
 import BigNumber from 'bignumber.js';
-import { BnToBytes, HexToBytes, decToBytes, decToBytes2 } from '../utils';
+import {
+    BnToBytes,
+    HexToBytes,
+    bytesToHex,
+    decToBytes,
+    decToBytes2,
+    decodeHex,
+} from '../utils';
 import { Transaction_ID } from '../static/enums/transaction.enum';
+
+function assetAddressValidity(to: string): void {
+    // Implement your address validation logic here.  This is a placeholder.
+    // Example (replace with your actual validation):
+    if (!to.startsWith('0x') || to.length !== 42) {
+        throw new Error('Invalid address format');
+    }
+}
 
 export default class TransactionBuilder {
     private static getTransactionBase(
@@ -8,21 +23,27 @@ export default class TransactionBuilder {
         chainId: number,
         nonce: number
     ) {
-        const b_Id = decToBytes(id, 1);
-        const b_chainId = decToBytes(chainId, 1);
-        const b_nonce = decToBytes(nonce, 4);
+        const buffer = new ArrayBuffer(9);
+        const view = new DataView(buffer);
 
-        const txnBytes = new Uint8Array([...b_Id, ...b_chainId, ...b_nonce]);
+        view.setInt32(0, id);
+        view.setUint8(4, chainId);
+        view.setInt32(5, nonce);
 
-        return txnBytes;
+        const byteArray = new Uint8Array(buffer);
+
+        return byteArray;
     }
 
     static getTransferPwrTransaction(
-        chainId: number,
-        nonce: number,
+        to: string,
         amount: string,
-        to: string
+        nonce: number,
+        chainId: number
     ): Uint8Array {
+        assetAddressValidity(to);
+
+        const amountBigInt = BigInt(amount);
         const amountBN = BigNumber(amount);
 
         if (amountBN.comparedTo(0) < 0) {
@@ -33,7 +54,7 @@ export default class TransactionBuilder {
         }
 
         /*
-         * Identifier - 1
+         * Identifier - 4
          * chain id - 1
          * Nonce - 4
          * amount - 8
@@ -46,12 +67,29 @@ export default class TransactionBuilder {
             nonce
         );
 
-        const b_amount = BnToBytes(amountBN);
-        const b_to = HexToBytes(to);
+        // const b_amount = BnToBytes(amountBN);
+        // const b_to = HexToBytes(to);
 
-        const txnBytes = new Uint8Array([...base, ...b_amount, ...b_to]);
+        // const txnBytes = new Uint8Array([...base, ...b_amount, ...b_to]);
 
-        return txnBytes;
+        // console.log('---', bytesToHex(txnBytes));
+
+        const buffer = new Uint8Array(base.length + 8 + 20);
+
+        buffer.set(base, 0); // copy base
+
+        //write the amount as a long 8 bytes
+        const amountBytes = new Uint8Array(8);
+        const dataView = new DataView(amountBytes.buffer);
+        dataView.setBigUint64(0, amountBigInt, false);
+        buffer.set(amountBytes, base.length);
+
+        const toBytes = decodeHex(to.substring(2));
+        buffer.set(toBytes, base.length + 8);
+
+        console.log('---', bytesToHex(buffer));
+
+        return buffer;
     }
 
     static getJoinTransaction(
@@ -162,21 +200,19 @@ export default class TransactionBuilder {
             throw new Error('Nonce cannot be negative');
         }
 
-        const base = this.getTransactionBase(
-            Transaction_ID.VM_DATA_TXN,
-            chainId,
-            nonce
-        );
-
-        const b_vmId = BnToBytes(new BigNumber(vmId));
         const b_data = new TextEncoder().encode(data);
 
-        const txnBytes = new Uint8Array([...base, ...b_vmId, ...b_data]);
+        const buffer = TransactionBuilder.getVmBytesDataTransaction(
+            vmId,
+            b_data,
+            nonce,
+            chainId
+        );
 
-        return txnBytes;
+        return buffer;
     }
 
-    static getVmDataTransaction2(
+    static getVmBytesDataTransaction(
         vmId: string,
         data: Uint8Array,
         nonce: number,
@@ -186,17 +222,28 @@ export default class TransactionBuilder {
             throw new Error('Nonce cannot be negative');
         }
 
+        const _vmId = BigInt(vmId);
+
         const base = this.getTransactionBase(
             Transaction_ID.VM_DATA_TXN,
             chainId,
             nonce
         );
 
-        const b_vmId = BnToBytes(new BigNumber(vmId));
+        const buffer = new Uint8Array(base.length + 8 + 4 + data.length);
 
-        const txnBytes = new Uint8Array([...base, ...b_vmId, ...data]);
+        buffer.set(base, 0);
 
-        return txnBytes;
+        // write vmid
+        const vmIdBytes = new Uint8Array(8);
+        const vmIdDataView = new DataView(vmIdBytes.buffer);
+        vmIdDataView.setBigUint64(0, _vmId, false);
+        buffer.set(vmIdBytes, base.length);
+
+        // write data length
+        buffer.set(data, base.length + 8 + 4);
+
+        return buffer;
     }
 
     static getClaimVmIdTransaction(

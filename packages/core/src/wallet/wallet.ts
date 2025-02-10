@@ -7,7 +7,7 @@ import { keccak256 } from 'js-sha3';
 
 import * as secp256k1 from 'secp256k1';
 import TransactionBuilder from '../protocol/transaction-builder';
-import { getConnection } from "./connection";
+import { Transaction_ID } from '../static/enums/transaction.enum';
 
 const pwrnode = 'https://pwrrpc.pwrlabs.io';
 
@@ -131,6 +131,8 @@ async function sendTxn(txnHex: string, txnHash: string): Promise<TxnRes> {
         });
 
         const res = await raw.json();
+
+        console.log('res', res);
 
         if (!raw.ok) {
             return {
@@ -277,34 +279,23 @@ export default class PWRWallet {
         this.chainId = chainId;
     }
 
-    async transferPWR(to: string, amount: string, website: boolean): Promise<TxnRes | string>;
+    async transferPWR(to: string, amount: string): Promise<TxnRes>;
     // prettier-ignore
-    async transferPWR(to: string, amount: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async transferPWR(to: string, amount: string, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async transferPWR(to: string, amount: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async transferPWR(to: string, amount: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce ?? (await this.getNonce());
+
         const _chainId = this.getChainId();
+        const txn = TransactionBuilder.getTransferPwrTransaction(
+            to,
+            amount,
+            _nonce,
+            _chainId,
+        );
 
-        if (website) {
-            try {
-                const sender = await getConnection();
-
-                const res = await window.pwr.transferPwr({ from: sender, to: to, amount: amount });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txn = TransactionBuilder.getTransferPwrTransaction(
-                _chainId,
-                _nonce,
-                amount,
-                to
-            );
-    
-            const res = await this.signAndSend(txn);
-            return res;
-        }
+        const res = await this.signAndSend(txn);
+        return res;
     }
 
     async join(ip: string): Promise<TxnRes>;
@@ -340,223 +331,152 @@ export default class PWRWallet {
         return res;
     }
 
-    async sendVMDataTxn(vmId: string, data: string, website: boolean): Promise<TxnRes | string>;
+    async sendVMDataTxn(vmId: string, data: string): Promise<TxnRes>;
     //prettier-ignore
-    async sendVMDataTxn(vmId: string, data: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async sendVMDataTxn(vmId: string, data: string, nonce: number): Promise<TxnRes>;
     //prettier-ignore
-    async sendVMDataTxn(vmId: string, data: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async sendVMDataTxn(vmId: string, data: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
+
         const _vmId = vmId;
+
         // const data = bytesToHex(dataBytes);
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes = TransactionBuilder.getVmDataTransaction(
+            _vmId,
+            data,
+            _nonce,
+            _chainId
+        );
 
-                const res = await window.pwr.dataTransaction({ from: sender, vmId: _vmId, data: data });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes = TransactionBuilder.getVmDataTransaction(
-                _vmId,
-                data,
-                _nonce,
-                _chainId
-            );
-
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
+     
     }
 
-    async sendVMDataTxn2(vmId: string, data: Uint8Array, website: boolean): Promise<TxnRes | string>;
+    async sendVMDataTxn2(vmId: string, data: Uint8Array): Promise<TxnRes>;
     // prettier-ignore
-    async sendVMDataTxn2(vmId: string, data: Uint8Array, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async sendVMDataTxn2(vmId: string, data: Uint8Array, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async sendVMDataTxn2(vmId: string, data: Uint8Array, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async sendVMDataTxn2(vmId: string, data: Uint8Array, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
+
         const _vmId = vmId;
+
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes = TransactionBuilder.getVmBytesDataTransaction(
+            _vmId,
+            data,
+            _nonce,
+            _chainId
+        );
 
-                const res = await window.pwr.bytesDataTransaction({ from: sender, vmId: _vmId, data: data });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes = TransactionBuilder.getVmDataTransaction2(
-                _vmId,
-                data,
-                _nonce,
-                _chainId
-            );
-
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, website: boolean): Promise<TxnRes | string>;
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: string): Promise<TxnRes>;
     // prettier-ignore
-    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
+
         const _vmId = vmId;
+
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes = TransactionBuilder.getPayableVmDataTransaction(
+            _vmId,
+            value,
+            data,
+            _nonce,
+            _chainId
+        );
 
-                const res = await window.pwr.payableVmDataTransaction({ from: sender, vmId: _vmId, value: value, data: data });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes = TransactionBuilder.getPayableVmDataTransaction(
-                _vmId,
-                value,
-                data,
-                _nonce,
-                _chainId
-            );
-
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // #region validators
 
-    async claimVmId(vmId: string, website: boolean): Promise<TxnRes | string>;
-    async claimVmId(vmId: string, website: boolean, nonce: number): Promise<TxnRes | string>;
-    async claimVmId(vmId: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async claimVmId(vmId: string): Promise<TxnRes>;
+    async claimVmId(vmId: string, nonce: number): Promise<TxnRes>;
+    async claimVmId(vmId: string, nonce?: number) {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes = TransactionBuilder.getClaimVmIdTransaction(
+            vmId,
+            _nonce,
+            _chainId
+        );
 
-                const res = await window.pwr.claimIdVm({ from: sender, vmId: vmId });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes = TransactionBuilder.getClaimVmIdTransaction(
-                vmId,
-                _nonce,
-                _chainId
-            );
-
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
-    async delegate(to: string, amount: string, website: boolean): Promise<TxnRes | string>;
-    async delegate(to: string, amount: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async delegate(to: string, amount: string): Promise<TxnRes>;
+    async delegate(to: string, amount: string, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async delegate(to: string, amount: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async delegate(to: string, amount: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes = TransactionBuilder.getDelegatedTransaction(
+            to,
+            amount,
+            _nonce,
+            _chainId
+        );
 
-                const res = await window.pwr.delegate({ from: sender, to: to, amount: amount });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes = TransactionBuilder.getDelegatedTransaction(
-                to,
-                amount,
-                _nonce,
-                _chainId
-            );
-
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
-    async withdraw(from: string, sharesAmount: string, website: boolean): Promise<TxnRes | string>;
-    async withdraw(from: string, sharesAmount: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async withdraw(from: string, sharesAmount: string): Promise<TxnRes>;
+    async withdraw(from: string, sharesAmount: string, nonce): Promise<TxnRes>;
     async withdraw(
         from: string,
         sharesAmount: string,
-        website: boolean,
         nonce?: number
-    ): Promise<TxnRes | string> {
+    ): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes = TransactionBuilder.getWithdrawTransaction(
+            from,
+            sharesAmount,
+            _nonce,
+            _chainId
+        );
 
-                const res = await window.pwr.withdraw({ from: sender, shares: sharesAmount });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes = TransactionBuilder.getWithdrawTransaction(
-                from,
-                sharesAmount,
-                _nonce,
-                _chainId
-            );
-
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, website: boolean): Promise<TxnRes | string>;
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string): Promise<TxnRes>;
     // prettier-ignore
-    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes = TransactionBuilder.getMoveStakeTransaction(
+            shareAmount,
+            fromValidator,
+            toValidator,
+            _nonce,
+            _chainId
+        );
 
-                const res = await window.pwr.moveStake({ from: sender, sharesAmount: shareAmount, fromValidator: fromValidator, toValidator: toValidator });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes = TransactionBuilder.getMoveStakeTransaction(
-                shareAmount,
-                fromValidator,
-                toValidator,
-                _nonce,
-                _chainId
-            );
-
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // #endregion
@@ -683,39 +603,16 @@ export default class PWRWallet {
 
     // #region proposals
     // prettier-ignore
-    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeEarlyWithdrawalPenalty(
-        withdrawlPenaltyTime: string, 
-        withdrawalPenalty: number, 
-        title: string, 
-        description: string, 
-        website: boolean, 
-        nonce?: number
-    ): Promise<TxnRes | string> {
+    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
-
-                const res = await window.pwr.earlyWithdrawPenalty({ 
-                    from: sender, 
-                    title: title, 
-                    description: description, 
-                    earlyWithdrawPenalty: withdrawalPenalty, 
-                    earlyWithdrawTime: withdrawlPenaltyTime 
-                });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getChangeEarlyWithdrawPenaltyProposalTxn(
+        const txnDataBytes =
+            TransactionBuilder.getChangeEarlyWithdrawPenaltyProposalTxn(
                 withdrawlPenaltyTime,
                 withdrawalPenalty,
                 title,
@@ -724,34 +621,21 @@ export default class PWRWallet {
                 _chainId
             );
 
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string, website: boolean,  nonce: number): Promise<TxnRes | string>;
+    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string,  nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string, website: boolean,  nonce?: number): Promise<TxnRes | string> {
+    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string,  nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
-
-                const res = await window.pwr.feePerByte({ 
-                    from: sender, feePerByte: feePerByte, title: title, description: description,
-                });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getChangeFeePerByteProposalTxn(
+        const txnDataBytes =
+            TransactionBuilder.getChangeFeePerByteProposalTxn(
                 feePerByte,
                 title,
                 description,
@@ -759,359 +643,226 @@ export default class PWRWallet {
                 _chainId
             );
 
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes =
+            TransactionBuilder.getChangeMaxBlockSizeProposalTxn(
+                maxBlockSize,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
 
-                const res = await window.pwr.maxBlockSize({ 
-                    from: sender, title: title, description: description, maxBlockSize: maxBlockSize
-                });
-
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getChangeMaxBlockSizeProposalTxn(
-                    maxBlockSize,
-                    title,
-                    description,
-                    _nonce,
-                    _chainId
-                );
-    
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async createProposal_ChangeMaxTxnSize(maxTxnSize: number, title: string, description: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeMaxTxnSize(maxTxnSize: number, title: string, description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeMaxTxnSize(maxTxnSize: number, title: string, description: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {            
-            try {
-                const sender = await getConnection();
+        const txnDataBytes =
+            TransactionBuilder.getChangeMaxTxnSizeProposalTxn(
+                maxTxnSize,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
 
-                const res = await window.pwr.maxTransactionSize({ 
-                    from: sender, title: title, description: description, maxTxnSize: maxTxnSize
-                });
-
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getChangeMaxTxnSizeProposalTxn(
-                    maxTxnSize,
-                    title,
-                    description,
-                    _nonce,
-                    _chainId
-                );
-    
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number, title: string, description: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number, title: string, description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number, title: string, description: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes =
+            TransactionBuilder.getChangeOverallBurnPercentageProposalTxn(
+                burnPercentage,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
 
-                const res = await window.pwr.overallBurnPercentage({ 
-                    from: sender, title: title, description: description, overallBurnPercentage: burnPercentage
-                });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getChangeOverallBurnPercentageProposalTxn(
-                    burnPercentage,
-                    title,
-                    description,
-                    _nonce,
-                    _chainId
-                );
-
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string, description: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string,  nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string, description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string, description: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes =
+            TransactionBuilder.getChangeRewardPerYearProposalTxn(
+                rewardPerYear,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
 
-                const res = await window.pwr.rewardPerYear({ 
-                    from: sender, title: title, description: description, rewardPerYear: rewardPerYear
-                });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getChangeRewardPerYearProposalTxn(
-                    rewardPerYear,
-                    title,
-                    description,
-                    _nonce,
-                    _chainId
-                );
-
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string, description: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string,  nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string, description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string, description: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes =
+            TransactionBuilder.getChangeValidatorCountLimitProposalTxn(
+                validatorCountLimit,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
 
-                const res = await window.pwr.validatorCountLimit({ 
-                    from: sender, title: title, description: description, validatorCountLimit: validatorCountLimit
-                });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getChangeValidatorCountLimitProposalTxn(
-                    validatorCountLimit,
-                    title,
-                    description,
-                    _nonce,
-                    _chainId
-                );
-    
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async createProposal_ChangeValidatorJoiningFee( joiningFee: string, title: string, description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeValidatorJoiningFee( joiningFee: string, title: string, description: string, website: boolean,  nonce: number): Promise<TxnRes | string>;
+    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string,  nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeValidatorJoiningFee( joiningFee: string, title: string, description: string, website: boolean,  nonce?: number): Promise<TxnRes | string> {
+    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string,  nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes =
+            TransactionBuilder.getChangeValidatorJoiningFeeProposalTxn(
+                joiningFee,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
 
-                const res = await window.pwr.validatorJoiningFee({ 
-                    from: sender, title: title, description: description, validatorJoiningFee: joiningFee
-                });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getChangeValidatorJoiningFeeProposalTxn(
-                    joiningFee,
-                    title,
-                    description,
-                    _nonce,
-                    _chainId
-                );
-    
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes =
+            TransactionBuilder.getChangeVmIdClaimingFeeProposalTxn(
+                claimingFee,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
 
-                const res = await window.pwr.vmIdClaimingFee({ 
-                    from: sender, title: title, description: description, vmIdClaimingFee: claimingFee
-                });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getChangeVmIdClaimingFeeProposalTxn(
-                    claimingFee,
-                    title,
-                    description,
-                    _nonce,
-                    _chainId
-                );
-    
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string, website: boolean,  nonce: number): Promise<TxnRes | string>;
+    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string,  nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string, website: boolean,  nonce?: number): Promise<TxnRes | string> {
+    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string,  nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes =
+            TransactionBuilder.getChangeVmOwnerTxnFeeShareProposalTxn(
+                feeShare,
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
 
-                const res = await window.pwr.vmOwnerTransactionFeeShare({ 
-                    from: sender, title: title, description: description, vmOwnerTxnFeeShare: feeShare
-                });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getChangeVmOwnerTxnFeeShareProposalTxn(
-                    feeShare,
-                    title,
-                    description,
-                    _nonce,
-                    _chainId
-                );
-    
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // prettier-ignore
-    async createProposal_OtherProposal( title: string,  description: string, website: boolean): Promise<TxnRes | string>;
+    async createProposal_OtherProposal( title: string,  description: string): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_OtherProposal( title: string,  description: string, website: boolean,  nonce: number): Promise<TxnRes | string>;
+    async createProposal_OtherProposal( title: string,  description: string,  nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async createProposal_OtherProposal( title: string,  description: string, website: boolean,  nonce?: number): Promise<TxnRes | string> {
+    async createProposal_OtherProposal( title: string,  description: string,  nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes =
+            TransactionBuilder.getOtherProposalTxn(
+                title,
+                description,
+                _nonce,
+                _chainId
+            );
 
-                const res = await window.pwr.otherProposal({ 
-                    from: sender, title: title, description: description,
-                });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getOtherProposalTxn(
-                    title,
-                    description,
-                    _nonce,
-                    _chainId
-                );
-
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     //prettier-ignore
-    async voteProposal(proposalHash: string, vote: number, website: boolean): Promise<TxnRes | string>;
+    async voteProposal( proposalHash: string,  vote: number): Promise<TxnRes>;
     //prettier-ignore
-    async voteProposal(proposalHash: string, vote: number, website: boolean, nonce: number): Promise<TxnRes | string>;
+    async voteProposal( proposalHash: string,  vote: number,  nonce: number): Promise<TxnRes>;
     //prettier-ignore
-    async voteProposal(proposalHash: string, vote: number, website: boolean, nonce?: number): Promise<TxnRes | string> {
+    async voteProposal( proposalHash: string,  vote: number,  nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
-        if (website) {
-            try {
-                const sender = await getConnection();
+        const txnDataBytes =
+            TransactionBuilder.getVoteOnProposalTxn(
+                proposalHash,
+                vote,
+                _nonce,
+                _chainId
+            );
 
-                const res = await window.pwr.voteOnProposal({ 
-                    from: sender, proposalHash: proposalHash, vote: vote
-                });
-                return res;
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const txnDataBytes =
-                TransactionBuilder.getVoteOnProposalTxn(
-                    proposalHash,
-                    vote,
-                    _nonce,
-                    _chainId
-                );
-    
-            const res = await this.signAndSend(txnDataBytes);
-            return res;
-        }
+        const res = await this.signAndSend(txnDataBytes);
+        return res;
     }
 
     // #endregion
@@ -1123,6 +874,11 @@ export default class PWRWallet {
         const txnHex = Buffer.from(txnBytes).toString('hex');
         const hashedTxnFinal = hashTxn(txnBytes);
         const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+
+        console.log({
+            txnHex,
+            hashedTxnStr,
+        });
 
         const res = await sendTxn(txnHex, hashedTxnStr);
 
