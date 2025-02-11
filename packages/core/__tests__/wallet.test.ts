@@ -133,7 +133,7 @@ describe('wallet_core', () => {
         const data = JSON.stringify({ setName: 'AhmadHassoun' });
 
         try {
-            const tx = await pwrWallet.sendVMDataTxn(vmId, data);
+            const tx = await pwrWallet.sendVMStringDataTxn(vmId, data);
             console.log('VM data txn:', tx);
             expect(tx.success).toBe(true);
         } catch (e) {
@@ -151,7 +151,7 @@ describe('wallet_core', () => {
         const dataBytes = new TextEncoder().encode(JSON.stringify(data));
 
         try {
-            const tx = await pwrWallet.sendVMDataTxn2(vmId, dataBytes);
+            const tx = await pwrWallet.sendVMDataTxn(vmId, dataBytes);
             console.log('VM data bytes txn  :', tx);
             expect(tx.success).toBe(true);
         } catch (e) {
@@ -160,23 +160,25 @@ describe('wallet_core', () => {
         }
     });
 
-    // it('sends payable VM data  transaction', async () => {
-    //     const vmId = '100';
-    //     const data = 'test data';
+    it('sends payable VM data  transaction', async () => {
+        const vmId = '100';
+        const data = 'test data';
 
-    //     try {
-    //         const tx = await pwrWallet.sendPayableVmDataTransaction(
-    //             vmId,
-    //             '1',
-    //             data
-    //         );
-    //         console.log('payable VM data txn:', tx);
-    //         expect(tx.success).toBe(true);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //         // console.error('Error sending VM data transaction:', e.message);
-    //     }
-    // });
+        const dataBytes = new TextEncoder().encode(data);
+
+        try {
+            const tx = await pwrWallet.sendPayableVmDataTransaction(
+                vmId,
+                '1',
+                dataBytes
+            );
+            console.log('payable VM data txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+            // console.error('Error sending VM data transaction:', e.message);
+        }
+    });
 
     // #endregion
 
@@ -278,11 +280,11 @@ describe('wallet_core', () => {
     //     }
     // });
 
-    // // vm id can be claimed only once, that's why this test is commented,
-    // // I checked and it's working
+    // vm id can be claimed only once, that's why this test is commented,
+    // I checked and it's working
     // it('claims vmid', async () => {
     //     try {
-    //         const tx = await pwrWallet.claimVmId('68683');
+    //         const tx = await pwrWallet.claimVmId('20');
     //         console.log('claim vmid txn', tx);
     //         expect(tx.success).toBe(true);
     //     } catch (e) {

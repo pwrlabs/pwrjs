@@ -24,6 +24,7 @@ import {
     MaxTransactionSizeRes,
     MinimunDelegatingAmountRes,
     NonceRes,
+    OwrnerOfVMRes,
     ProposalFeeRes,
     ProposalValidityTimeRes,
     RewardsPerYearRes,
@@ -122,11 +123,6 @@ export default class PWRJS {
             let fee = txn.length * feePerByte + ecdsaVerificationFee;
             fee += sizeOfAllTransactions * ecdsaVerificationFee;
             return fee;
-        }
-
-        if (Number(transaction.type) >= 17 && Number(transaction.type) <= 28) {
-            const proposalFee = await this.getProposalFee();
-            return txn.length * feePerByte + ecdsaVerificationFee + proposalFee;
         } else {
             return txn.length * feePerByte + ecdsaVerificationFee;
         }
@@ -511,7 +507,7 @@ export default class PWRJS {
 
     // static async getVMDataTransactionsFiltered() {}
 
-    public getVmIdAddress(vmId: number): string {
+    public getVmIdAddress(vmId: bigint): string {
         let hexAddress: string = vmId >= 0 ? '1' : '0';
 
         if (vmId < 0) vmId = -vmId;
@@ -570,7 +566,7 @@ export default class PWRJS {
 
     public async getOwnerOfVm(vmId: string): Promise<string | null> {
         const url = `/ownerOfVmId/?vmId=${vmId}`;
-        const res = await this.axios.get<any>(url);
+        const res = await this.axios.get<OwrnerOfVMRes>(url);
 
         if (res.hasOwnProperty('claimed')) {
             return res.owner;

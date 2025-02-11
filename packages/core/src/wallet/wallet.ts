@@ -132,8 +132,6 @@ async function sendTxn(txnHex: string, txnHash: string): Promise<TxnRes> {
 
         const res = await raw.json();
 
-        console.log('res', res);
-
         if (!raw.ok) {
             return {
                 success: false,
@@ -331,11 +329,11 @@ export default class PWRWallet {
         return res;
     }
 
-    async sendVMDataTxn(vmId: string, data: string): Promise<TxnRes>;
+    async sendVMStringDataTxn(vmId: string, data: string): Promise<TxnRes>;
     //prettier-ignore
-    async sendVMDataTxn(vmId: string, data: string, nonce: number): Promise<TxnRes>;
+    async sendVMStringDataTxn(vmId: string, data: string, nonce: number): Promise<TxnRes>;
     //prettier-ignore
-    async sendVMDataTxn(vmId: string, data: string, nonce?: number): Promise<TxnRes> {
+    async sendVMStringDataTxn(vmId: string, data: string, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
@@ -355,11 +353,11 @@ export default class PWRWallet {
      
     }
 
-    async sendVMDataTxn2(vmId: string, data: Uint8Array): Promise<TxnRes>;
+    async sendVMDataTxn(vmId: string, data: Uint8Array): Promise<TxnRes>;
     // prettier-ignore
-    async sendVMDataTxn2(vmId: string, data: Uint8Array, nonce: number): Promise<TxnRes>;
+    async sendVMDataTxn(vmId: string, data: Uint8Array, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async sendVMDataTxn2(vmId: string, data: Uint8Array, nonce?: number): Promise<TxnRes> {
+    async sendVMDataTxn(vmId: string, data: Uint8Array, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
@@ -378,16 +376,17 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async sendPayableVmDataTransaction(vmId: string, value: string, data: string): Promise<TxnRes>;
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: Uint8Array): Promise<TxnRes>;
     // prettier-ignore
-    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, nonce: number): Promise<TxnRes>;
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: Uint8Array, nonce: number): Promise<TxnRes>;
     // prettier-ignore
-    async sendPayableVmDataTransaction(vmId: string, value: string, data: string, nonce?: number): Promise<TxnRes> {
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: Uint8Array, nonce?: number): Promise<TxnRes> {
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
 
         const _chainId = this.getChainId();
+      
 
         const txnDataBytes = TransactionBuilder.getPayableVmDataTransaction(
             _vmId,
@@ -410,7 +409,7 @@ export default class PWRWallet {
         const _chainId = this.getChainId();
 
         const txnDataBytes = TransactionBuilder.getClaimVmIdTransaction(
-            vmId,
+            BigInt(vmId),
             _nonce,
             _chainId
         );
@@ -874,11 +873,6 @@ export default class PWRWallet {
         const txnHex = Buffer.from(txnBytes).toString('hex');
         const hashedTxnFinal = hashTxn(txnBytes);
         const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        console.log({
-            txnHex,
-            hashedTxnStr,
-        });
 
         const res = await sendTxn(txnHex, hashedTxnStr);
 

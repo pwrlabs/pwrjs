@@ -247,7 +247,7 @@ export default class TransactionBuilder {
     }
 
     static getClaimVmIdTransaction(
-        vmId: string,
+        vmId: bigint,
         nonce: number,
         chainId: number
     ): Uint8Array {
@@ -257,11 +257,17 @@ export default class TransactionBuilder {
             nonce
         );
 
-        const b_vmId = BnToBytes(new BigNumber(vmId));
+        const buffer = new Uint8Array(base.length + 8);
 
-        const txnBytes = new Uint8Array([...base, ...b_vmId]);
+        buffer.set(base, 0);
 
-        return txnBytes;
+        const vmIdBytes = new Uint8Array(8);
+        const dataview = new DataView(vmIdBytes.buffer);
+        dataview.setBigUint64(0, vmId, false);
+
+        buffer.set(vmIdBytes, base.length);
+
+        return buffer;
     }
 
     static getSetGuardianTransaction(
@@ -362,7 +368,7 @@ export default class TransactionBuilder {
     public static getPayableVmDataTransaction(
         vmId: string,
         value: string,
-        data: string,
+        data: Uint8Array,
         nonce: number,
         chainId: number
     ) {
@@ -376,18 +382,29 @@ export default class TransactionBuilder {
             nonce
         );
 
-        const b_vmId = BnToBytes(new BigNumber(vmId));
-        const b_value = BnToBytes(new BigNumber(value));
-        const b_data = new TextEncoder().encode(data);
+        const buffer = new Uint8Array(base.length + 16 + 4 + data.length);
 
-        const txnBytes = new Uint8Array([
-            ...base,
-            ...b_vmId,
-            ...b_data,
-            ...b_value,
-        ]);
+        buffer.set(base, 0);
 
-        return txnBytes;
+        const vmIdBytes = new Uint8Array(8);
+        const vmIdDataView = new DataView(vmIdBytes.buffer);
+        vmIdDataView.setBigUint64(0, BigInt(vmId), false);
+        buffer.set(vmIdBytes, base.length);
+
+        // write data
+        const dataLengthBytes = new Uint8Array(4);
+        const dataLengthDataView = new DataView(dataLengthBytes.buffer);
+        dataLengthDataView.setInt32(0, data.length, false);
+        buffer.set(dataLengthBytes, base.length + 8);
+
+        buffer.set(data, base.length + 8 + 4);
+
+        const valueBytes = new Uint8Array(8);
+        const valueDataview = new DataView(valueBytes.buffer);
+        valueDataview.setBigUint64(0, BigInt(value), false);
+        buffer.set(valueBytes, base.length + 8 + 4 + data.length);
+
+        return buffer;
     }
 
     // public static getValidatorRemoveTransaction(

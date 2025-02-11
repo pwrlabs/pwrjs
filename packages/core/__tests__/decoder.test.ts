@@ -196,10 +196,10 @@ describe('decoder', () => {
         const { chainId, id, nonce, recipient, amount } = transferTxn;
 
         const txn = TransactionBuilder.getTransferPwrTransaction(
-            chainId,
-            nonce,
+            recipient,
             amount,
-            recipient
+            nonce,
+            chainId
         );
 
         const signature = signTxn(txn, pvk);
@@ -223,10 +223,10 @@ describe('decoder', () => {
     it('decode transfer txn', () => {
         const { id, chainId, nonce, amount, recipient } = transferTxn;
         const txn = TransactionBuilder.getTransferPwrTransaction(
-            chainId,
-            nonce,
+            recipient,
             amount,
-            recipient
+            nonce,
+            chainId
         );
 
         const signature = signTxn(txn, pvk);
@@ -402,7 +402,7 @@ describe('decoder', () => {
         const { chainId, id, nonce, vmId } = claimVmIdTxn;
 
         const txn = TransactionBuilder.getClaimVmIdTransaction(
-            vmId,
+            BigInt(vmId),
             nonce,
             chainId
         );
@@ -486,17 +486,17 @@ describe('decoder', () => {
         const { id, chainId, nonce, guardian } = approveGuardianTxn;
 
         const transferTxn1 = TransactionBuilder.getTransferPwrTransaction(
-            transferTxn.chainId,
-            transferTxn.nonce,
+            transferTxn.recipient,
             transferTxn.amount,
-            transferTxn.recipient
+            transferTxn.nonce,
+            transferTxn.chainId
         );
 
         const transferTxn2 = TransactionBuilder.getTransferPwrTransaction(
-            transferTxn.chainId,
-            transferTxn.nonce,
+            '0x1234567890123456789012345678901234567890',
             transferTxn.amount,
-            '0x1234567890123456789012345678901234567890'
+            transferTxn.nonce,
+            transferTxn.chainId
         );
 
         const signature1 = signTxn(transferTxn1, pvk);

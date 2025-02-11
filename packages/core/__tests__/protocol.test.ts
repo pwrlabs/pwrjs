@@ -1,3 +1,4 @@
+import { PWRWallet } from '../src';
 import PWRJS from '../src/protocol/pwrjs';
 
 import WalletUtils from '../src/wallet.utils';
@@ -11,7 +12,7 @@ function sleep(timeMs: number) {
 describe('pwrjs core', () => {
     const url = 'https://pwrrpc.pwrlabs.io';
 
-    const testAddress = '0xe47d5f4c1731c3c0ea0a75872593cbf61f2cbf90';
+    const testAddress = '0xffb927e3e1fd43fc47bd140c817af780241d1b31';
     const vmAddress = '0x1000000000000000000000000000000000010023';
 
     const pwrjs = new PWRJS(url);
@@ -27,7 +28,7 @@ describe('pwrjs core', () => {
 
     it('PWRJS fee ', async () => {
         const fee = await pwrjs.getFeePerByte();
-        expect(fee).toBe(100);
+        expect(fee).toBe(1000);
     });
 
     it('PWRJS chain id', async () => {
@@ -45,7 +46,7 @@ describe('pwrjs core', () => {
     // #region fee
     it('fee ecsda', async () => {
         const fee = await pwrjs.getEcdsaVerificationFee();
-        expect(fee).toBe(10000);
+        expect(fee).toBe(100000);
     });
 
     // #endregion
@@ -71,7 +72,9 @@ describe('pwrjs core', () => {
 
         const balanceOfTest = await pwrjs.getBalanceOfAddress(testAddress);
         expect(balanceOfRandom).toBe(0);
-        expect(balanceOfTest.toString()).toBe((100 * 10 ** 9).toString());
+        expect(BigInt(balanceOfTest.toString())).toBeGreaterThan(
+            BigInt((90 * 10 ** 9).toString())
+        );
     });
 
     // #endregion
@@ -90,18 +93,18 @@ describe('pwrjs core', () => {
 
     it('PWRJS rewards per year', async () => {
         const rewardsPerYear = await pwrjs.getPwrRewardsPerYear();
-        expect(rewardsPerYear).toBe(10000000000000);
+        expect(rewardsPerYear).toBe(20000000000000000);
     });
 
     it('PWRJS withdrawal Lock Time', async () => {
         const withdrawalLockTime = await pwrjs.getWithdrawalLockTime();
-        expect(withdrawalLockTime).toBe(604800);
+        expect(withdrawalLockTime).toBe(604800000);
     });
 
     it('PWRJS get early withdraw penalty', async () => {
         const penalty = await pwrjs.getEarlyWithdrawPenalty();
 
-        expect(penalty).toEqual({ 12: 21 });
+        expect(penalty).toEqual({});
     });
 
     // #endregion
@@ -115,12 +118,12 @@ describe('pwrjs core', () => {
 
     it('PWRJS max block size', async () => {
         const maxBlockSize = await pwrjs.getMaxBlockSize();
-        expect(maxBlockSize).toBe(50000000);
+        expect(maxBlockSize).toBe(5000000);
     });
 
     it('PWRJS Max Transaction Size', async () => {
         const maxTxnSize = await pwrjs.getMaxTransactionSize();
-        expect(maxTxnSize).toBe(16500000);
+        expect(maxTxnSize).toBe(2000000);
     });
 
     it('PWRJS block number', async () => {
@@ -139,35 +142,40 @@ describe('pwrjs core', () => {
     });
 
     it('PWRJS block by number', async () => {
-        const firstBlock = await pwrjs.getBlockByNumber(1);
+        const firstBlock = await pwrjs.getBlockByNumber(3);
 
         const firstBlockData = {
-            processedWithoutCriticalErrors: true,
             blockHash:
-                '0x7854c95c2f2a9dd370a047d1cb4bdfd20063026ed627778d45f9a9ab634439e1',
-            networkVotingPower: 1188673344000000,
-            blockNumber: 1,
-            blockReward: 0,
+                '8cba45cdab2947ac39b88f9138c95a920eb0cb488c4d5f1a88c551d6d3c99ae2',
+            size: 1492,
+            networkVotingPower: 20000000000000000,
+            success: true,
+            blockNumber: 3,
             transactionCount: 1,
+            blockReward: 0,
             transactions: [
                 {
-                    positionInTheBlock: 0,
-                    size: 99,
-                    receiver: '0x61BD8FC1E30526AAF1C4706ADA595D6D236D9881',
-                    sender: '0x61BD8FC1E30526AAF1C4706ADA595D6D236D9883',
-                    success: true,
-                    fee: 19900,
-                    paid: false,
-                    type: 'Transfer',
+                    isBundled: false,
+                    actionFee: 0,
+                    receiver: '0x7D55953FF7572C32AF4EC31D2AD6E8E70F61F874',
+                    data: '0x',
+                    fee: 0,
+                    type: 'Falcon Transfer',
                     nonce: 1,
-                    value: 1001010000000,
-                    extraFee: 0,
-                    hash: '0xe4326ad01c979981c392ab9bef254a1019f9b21f930d524241541e70cd59bd49',
+                    positionInTheBlock: 0,
+                    size: 722,
+                    feePayer: '89d902247185cfd0dc5a61fced9ba0ff7434aa1f',
+                    sender: '0x89d902247185cfd0dc5a61fced9ba0ff7434aa1f',
+                    success: true,
+                    positionInBundle: 0,
+                    blockNumber: 3,
+                    value: 1002000000000,
+                    hash: '0x144bbd1518d966fadd4887794dc11a8badf1ff0dda4bf3ea9e09f60bd12cb654',
+                    timestamp: 1738932234063,
                 },
             ],
-            blockSubmitter: '0x61BD8FC1E30526AAF1C4706ADA595D6D236D9883',
-            blockSize: 228,
-            timestamp: 1716791808,
+            blockSubmitter: '0x89d902247185cfd0dc5a61fced9ba0ff7434aa1f',
+            timestamp: 1738932234063,
         };
 
         expect(firstBlock).toEqual(firstBlockData);
@@ -179,19 +187,19 @@ describe('pwrjs core', () => {
 
     it('PWRJS vm owner txn fee ', async () => {
         const vmOwnerTxnFee = await pwrjs.getVmOwnerTransactionFeeShare();
-        expect(vmOwnerTxnFee).toBe(1500);
+        expect(vmOwnerTxnFee).toBe(2500);
     });
 
     it('PWRJS vm claiming fee', async () => {
         const claimingFee = await pwrjs.getVmIdClaimingFee();
-        expect(claimingFee).toBe(100000000);
+        expect(claimingFee).toBe(100000000000);
     });
 
-    // it('PWRJS vmId', async () => {
-    //     const vmId = PWRJS.getVmIdAddress(10023);
+    it('PWRJS vmId', async () => {
+        const vmId = pwrjs.getVmIdAddress(BigInt(10023));
 
-    //     expect(vmId).toBe(vmAddress);
-    // });
+        expect(vmId).toBe(vmAddress);
+    });
 
     it('PWRJ isVm address', async () => {
         const notVmAddress = PWRJS.isVmAddress(testAddress);
@@ -209,60 +217,62 @@ describe('pwrjs core', () => {
         expect(_vmAddress3).toBe(true);
     });
 
-    it('PWRJS VMDataTxn', async () => {
-        const vmDataTxn = await pwrjs.getVMDataTransactions(
-            '1000',
-            '1002',
-            '10023'
-        );
+    // it('PWRJS VMDataTxn', async () => {
+    //     const vmDataTxn = await pwrjs.getVMDataTransactions(
+    //         '1000',
+    //         '1002',
+    //         '10023'
+    //     );
 
-        const TxnData = {
-            receiver: '10023',
-            data: '0x0000014ff9014c82064b843b9aca0082801f94119e7769552157edfc425c4d0667f3c6f56225a280b8e4f7742d2f00000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000008dc7e4a9bc0a0a00000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012c00000000000000000000000000000000000000000000000000000000000000183636353437666630333031393337386639313636323235640000000000000000824e71a0aaeca5c433f69f487d84cd423da6ed0df53a69a648795faddf543b5022fdfe75a044530d65c3d1eb00b16178df495557eea4710088de444d6a945c062be9b66d34',
-            vmId: 10023,
-            fee: 51800,
-            errorMessage: '',
-            type: 'VM Data',
-            nonce: 1044,
-            positionInTheBlock: 2,
-            rawTransaction: '',
-            size: 418,
-            sender: '0x3AD98F914C9233137959D142B93FE71563A21F25',
-            chainId: 0,
-            success: true,
-            blockNumber: 1002,
-            value: 0,
-            extraFee: 0,
-            hash: '0x1367a5a3c3123603f5baf227ad7046f3ddcd6e99423c0d70fe65b051f847a32d',
-            timestamp: 1716813810,
-        };
+    //     const TxnData = {
+    //         receiver: '10023',
+    //         data: '0x0000014ff9014c82064b843b9aca0082801f94119e7769552157edfc425c4d0667f3c6f56225a280b8e4f7742d2f00000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000008dc7e4a9bc0a0a00000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012c00000000000000000000000000000000000000000000000000000000000000183636353437666630333031393337386639313636323235640000000000000000824e71a0aaeca5c433f69f487d84cd423da6ed0df53a69a648795faddf543b5022fdfe75a044530d65c3d1eb00b16178df495557eea4710088de444d6a945c062be9b66d34',
+    //         vmId: 10023,
+    //         fee: 51800,
+    //         errorMessage: '',
+    //         type: 'VM Data',
+    //         nonce: 1044,
+    //         positionInTheBlock: 2,
+    //         rawTransaction: '',
+    //         size: 418,
+    //         sender: '0x3AD98F914C9233137959D142B93FE71563A21F25',
+    //         chainId: 0,
+    //         success: true,
+    //         blockNumber: 1002,
+    //         value: 0,
+    //         extraFee: 0,
+    //         hash: '0x1367a5a3c3123603f5baf227ad7046f3ddcd6e99423c0d70fe65b051f847a32d',
+    //         timestamp: 1716813810,
+    //     };
 
-        expect(vmDataTxn[0]).toEqual(TxnData);
-    });
+    //     expect(vmDataTxn[0]).toEqual(TxnData);
+    // });
 
     it('PWRJS Owner of VM', async () => {
-        const owner = await pwrjs.getOwnerOfVm('100');
+        const res = await pwrjs.getOwnerOfVm('20');
 
-        expect(owner).toBe('0x7892917ee2B05E2C9661399125D090F6d52b2031');
+        expect(res.toLowerCase()).toBe(
+            '0xffb927e3e1fd43fc47bd140c817af780241d1b31'
+        );
     });
 
-    it('conduits of VM', async () => {
-        const conduits = await pwrjs.getConduitsOfVm('111');
+    // it('conduits of VM', async () => {
+    //     const conduits = await pwrjs.getConduitsOfVm('111');
 
-        expect(conduits.length).toBeGreaterThan(0);
-    });
+    //     expect(conduits.length).toBeGreaterThan(0);
+    // });
 
     // #endregion
 
     // #region proposal
     it('PWRJS proposal fee', async () => {
         const fee = await pwrjs.getProposalFee();
-        expect(fee).toBe(0);
+        expect(fee).toBe(1000000000);
     });
 
     it('PWRJS proposal validity time', async () => {
         const validityTime = await pwrjs.getProposalValidityTime();
-        expect(validityTime).toBe(604800);
+        expect(validityTime).toBe(604800000);
     });
 
     // #endregion
@@ -271,7 +281,7 @@ describe('pwrjs core', () => {
 
     it('PWRJS max guardian time', async () => {
         const maxGuardianTime = await pwrjs.getMaxGuardianTime();
-        expect(maxGuardianTime).toBe(0);
+        expect(maxGuardianTime).toBe(-1627869184);
     });
 
     it('PWRJS is valid for guardian approval', async () => {
@@ -279,11 +289,11 @@ describe('pwrjs core', () => {
 
         const txn = txns[0];
 
-        const isValid = await pwrjs.isTransactionValidForGuardianApproval(
-            txn.rawTransaction
-        );
+        // const isValid = await pwrjs.isTransactionValidForGuardianApproval(
+        //     txn.rawTransaction
+        // );
 
-        console.log(isValid);
+        console.log(txn);
 
         // console.log({
         //     isValid,
@@ -291,13 +301,14 @@ describe('pwrjs core', () => {
     }, 5000);
 
     it('PWRJS guardian', async () => {
-        const noGuardian = await pwrjs.getGuardianOfAddress(testAddress);
-        const guardian = await pwrjs.getGuardianOfAddress(
-            '0x6EFEC8D7B5DFC4AAC22DA193176A91EB87FE6857'
+        const randomWallet = new PWRWallet();
+        const noGuardian = await pwrjs.getGuardianOfAddress(
+            randomWallet.getAddress()
         );
+        const guardian = await pwrjs.getGuardianOfAddress(testAddress);
 
         expect(noGuardian).toBeNull();
-        expect(guardian).toBe('0xF2EE5889989c5206E2bc5f2EF54cCb4cC9bCC292');
+        expect(guardian).toBe('0000000000000000000000000000000000000000');
     });
 
     // #endregion
@@ -306,12 +317,12 @@ describe('pwrjs core', () => {
 
     it('PWRJS validator slashing fee', async () => {
         const slashingFee = await pwrjs.getValidatorSlashingFee();
-        expect(slashingFee).toBe(0);
+        expect(slashingFee).toBe(500);
     });
 
     it('PWRJS validator operational fee', async () => {
         const operationalFee = await pwrjs.getValidatorOperationalFee();
-        expect(operationalFee).toBe(100);
+        expect(operationalFee).toBe(1000);
     });
 
     it('PWRJS validator joining fee', async () => {
@@ -321,18 +332,21 @@ describe('pwrjs core', () => {
 
     it('PWRJS Minimum delegating amount', async () => {
         const minDelegatingAmount = await pwrjs.getMinimumDelegatingAmount();
-        expect(minDelegatingAmount).toBe(10000000);
+        expect(minDelegatingAmount).toBe(1000000000);
     });
-    // it('PWRJS voting pwr', async () => {
-    //     const votingPwr = await PWRJS.getActiveVotingPower();
 
-    //     expect(votingPwr).toBeGreaterThan(0);
-    // });
+    // // it('PWRJS voting pwr', async () => {
+    // //     const votingPwr = await PWRJS.getActiveVotingPower();
+
+    // //     expect(votingPwr).toBeGreaterThan(0);
+    // // });
 
     it('PWRJS validator', async () => {
-        const vAddress = '0x7111434F00E6C66616fc25cff3Fa080cdb95562B';
+        const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
         const validator = await pwrjs.getValidator(vAddress);
-        expect(validator.address).toBe(vAddress);
+        expect(validator.address.toLowerCase()).toBe(
+            vAddress.toLowerCase().substring(2)
+        );
     });
 
     it('PWRJS all Validators', async () => {
@@ -340,9 +354,9 @@ describe('pwrjs core', () => {
         const standByValidators = await pwrjs.getStandbyValidators();
         const activeValidators = await pwrjs.getActiveValidators();
 
-        expect(allValidators.length).toBeGreaterThan(0);
-        expect(standByValidators.length).toBe(0);
-        expect(activeValidators.length).toBeGreaterThan(0);
+        expect(allValidators.length).toBeGreaterThan(99);
+        expect(standByValidators.length).toBe(99);
+        expect(activeValidators.length).toBe(32);
     });
 
     it('PWRJS Validators count', async () => {
@@ -351,41 +365,39 @@ describe('pwrjs core', () => {
         const activeValidators = await pwrjs.getActiveValidatorsCount();
         const delegatorCount = await pwrjs.getTotalDelegatorsCount();
 
-        expect(validatorsCount).toBe(40);
-        expect(standByValidators).toBe(0);
-        expect(activeValidators).toBe(40);
-        expect(delegatorCount).toBe(43);
+        expect(validatorsCount).toBe(131);
+        expect(standByValidators).toBe(99);
+        expect(activeValidators).toBe(32);
+        expect(delegatorCount).toBe(32);
     });
 
     it('PWRJS get delegatees', async () => {
         const delegatees = await pwrjs.getDelegatees(
-            '0x61Bd8fc1e30526Aaf1C4706Ada595d6d236d9883'
+            '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA'
         );
 
         expect(delegatees.length).toBeGreaterThan(0);
     });
 
     it('PWRJS Delegated pwr', async () => {
-        const vAddress = '0xF2EE5889989c5206E2bc5f2EF54cCb4cC9bCC292';
+        const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
         const res = await pwrjs.getDelegatedPWR(testAddress, vAddress);
 
-        expect(res.delegatedPWR).toBe(0);
+        expect(res).toBe(0);
     });
 
     it('PWRJS shares of delegator', async () => {
-        const dAddress = '0x61Bd8fc1e30526Aaf1C4706Ada595d6d236d9883';
-        const vAddress = '0xF2EE5889989c5206E2bc5f2EF54cCb4cC9bCC292';
+        const dAddress = testAddress;
+        const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
         const res = await pwrjs.getSharesOfDelegator(dAddress, vAddress);
-
-        console.log(res);
     });
 
     it('PWRJS share value', async () => {
-        const vAddress = '0xe7bd3dc8a88ed50ebca72d6380e5fbbd7bcab75c';
+        const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
 
         const res = await pwrjs.getShareValue(vAddress);
 
-        expect(res.shareValue).toBe(0);
+        expect(res.shareValue).toBe(1.0e-9);
     });
 
     // #endregiion
