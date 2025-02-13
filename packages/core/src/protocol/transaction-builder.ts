@@ -67,13 +67,6 @@ export default class TransactionBuilder {
             nonce
         );
 
-        // const b_amount = BnToBytes(amountBN);
-        // const b_to = HexToBytes(to);
-
-        // const txnBytes = new Uint8Array([...base, ...b_amount, ...b_to]);
-
-        // console.log('---', bytesToHex(txnBytes));
-
         const buffer = new Uint8Array(base.length + 8 + 20);
 
         buffer.set(base, 0); // copy base
@@ -86,8 +79,6 @@ export default class TransactionBuilder {
 
         const toBytes = decodeHex(to.substring(2));
         buffer.set(toBytes, base.length + 8);
-
-        console.log('---', bytesToHex(buffer));
 
         return buffer;
     }
