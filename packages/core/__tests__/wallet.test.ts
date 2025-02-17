@@ -4,7 +4,7 @@ import { keccak256 } from 'js-sha3';
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import TransactionBuilder from '../src/protocol/transaction-builder';
-import { signTxn } from '../src/utils';
+import { bytesToHex, signTxn } from '../src/utils';
 
 function hashTxn(txnBytes: Uint8Array): ArrayBuffer {
     const hashedTxn = keccak256.arrayBuffer(txnBytes);
@@ -79,59 +79,59 @@ describe('wallet_core', () => {
 
     // #region transactions
 
-    // it('Wallet transfer', async () => {
-    //     const randomBal = Math.round(Math.random() * 10);
-    //     // console.log('randomBal', randomBal);
+    it('Wallet transfer', async () => {
+        const randomBal = Math.round(Math.random() * 10);
+        // console.log('randomBal', randomBal);
 
-    //     try {
-    //         const amount = BigInt(randomBal) * BigInt(10 ** 8);
-    //         const tx = await pwrWallet.transferPWR(
-    //             destinyAddress,
-    //             amount.toString()
-    //         );
+        try {
+            const amount = BigInt(randomBal) * BigInt(10 ** 8);
+            const tx = await pwrWallet.transferPWR(
+                destinyAddress,
+                amount.toString()
+            );
 
-    //         // console.log('transfer txn:', tx);
+            // console.log('transfer txn:', tx);
 
-    //         expect(tx.success).toBe(true);
-    //     } catch (error) {
-    //         console.log('transferpwr', error);
-    //         expect(false).toBe(true);
-    //     }
+            expect(tx.success).toBe(true);
+        } catch (error) {
+            console.log('transferpwr', error);
+            expect(false).toBe(true);
+        }
 
-    //     try {
-    //         const tx2 = await wallet0.transferPWR(
-    //             '0x0000000000000000000000000000000000000000',
-    //             '1'
-    //         );
+        try {
+            const tx2 = await wallet0.transferPWR(
+                '0x0000000000000000000000000000000000000000',
+                '1'
+            );
 
-    //         expect(tx2.success).toBe(false);
-    //     } catch (error) {
-    //         console.log('error transfer txn', error);
-    //         expect(false).toBe(true);
-    //     }
-    // });
-
-    it('txn fee', async () => {
-        const nonce = await pwrWallet.getNonce();
-
-        const txn = TransactionBuilder.getTransferPwrTransaction(
-            '0x0000000000000000000000000000000000000000',
-            '1000000000',
-            nonce,
-            chainId
-        );
-
-        const signature = signTxn(txn, pwrWallet.getPrivateKey());
-        const txnBytes = new Uint8Array([...txn, ...signature]);
-
-        const txnHex = Buffer.from(txnBytes).toString('hex');
-        // const hashedTxnFinal = hashTxn(txnBytes);
-        // const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
-
-        console.log({
-            txnHex,
-        });
+            expect(tx2.success).toBe(false);
+        } catch (error) {
+            console.log('error transfer txn', error);
+            expect(false).toBe(true);
+        }
     });
+
+    // it('txn fee', async () => {
+    //     const nonce = await pwrWallet.getNonce();
+
+    //     const txn = TransactionBuilder.getTransferPwrTransaction(
+    //         '0x0000000000000000000000000000000000000000',
+    //         '1000000000',
+    //         nonce,
+    //         chainId
+    //     );
+
+    //     const signature = signTxn(txn, pwrWallet.getPrivateKey());
+    //     const txnBytes = new Uint8Array([...txn, ...signature]);
+
+    //     const txnHex = Buffer.from(txnBytes).toString('hex');
+    //     // const hashedTxnFinal = hashTxn(txnBytes);
+    //     // const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+
+    //     console.log({
+    //         txnHex,
+    //     });
+    // });
 
     // it('successfully joins with an IP and nonce', async () => {
     //     // NOTE: THE TXN FAILS BECAUSE OF THE NEEDED AMOUNT TO JOIN
@@ -155,58 +155,58 @@ describe('wallet_core', () => {
     //     }
     // });
 
-    // it('sends VM data transaction', async () => {
-    //     const vmId = '100';
+    it('sends VM data transaction', async () => {
+        const vmId = '100';
 
-    //     const data = JSON.stringify({ setName: 'AhmadHassoun' });
+        const data = JSON.stringify({ setName: 'AhmadHassoun' });
 
-    //     try {
-    //         const tx = await pwrWallet.sendVMStringDataTxn(vmId, data);
-    //         // console.log('VM data txn:', tx);
-    //         expect(tx.success).toBe(true);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //         console.error('Error sending VM data transaction:', e.message);
-    //     }
-    // });
+        try {
+            const tx = await pwrWallet.sendVMStringDataTxn(vmId, data);
+            // console.log('VM data txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+            console.error('Error sending VM data transaction:', e.message);
+        }
+    });
 
-    // it('sends vm data bytes transaction', async () => {
-    //     const vmId = '100';
-    //     const data = {
-    //         setName: 'AhmadHassoun',
-    //     };
+    it('sends vm data bytes transaction', async () => {
+        const vmId = '100';
+        const data = {
+            setName: 'AhmadHassoun',
+        };
 
-    //     const dataBytes = new TextEncoder().encode(JSON.stringify(data));
+        const dataBytes = new TextEncoder().encode(JSON.stringify(data));
 
-    //     try {
-    //         const tx = await pwrWallet.sendVMDataTxn(vmId, dataBytes);
-    //         // console.log('VM data bytes txn  :', tx);
-    //         expect(tx.success).toBe(true);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //         // console.error('Error sending VM data transaction:', e.message);
-    //     }
-    // });
+        try {
+            const tx = await pwrWallet.sendVMDataTxn(vmId, dataBytes);
+            // console.log('VM data bytes txn  :', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+            // console.error('Error sending VM data transaction:', e.message);
+        }
+    });
 
-    // it('sends payable VM data  transaction', async () => {
-    //     const vmId = '100';
-    //     const data = 'test data';
+    it('sends payable VM data  transaction', async () => {
+        const vmId = '100';
+        const data = '（づ￣3￣）づ╭❤️～';
 
-    //     const dataBytes = new TextEncoder().encode(data);
+        const dataBytes = new TextEncoder().encode(data);
 
-    //     try {
-    //         const tx = await pwrWallet.sendPayableVmDataTransaction(
-    //             vmId,
-    //             '1',
-    //             dataBytes
-    //         );
-    //         // console.log('payable VM data txn:', tx);
-    //         expect(tx.success).toBe(true);
-    //     } catch (e) {
-    //         expect(false).toBe(true);
-    //         // console.error('Error sending VM data transaction:', e.message);
-    //     }
-    // });
+        try {
+            const tx = await pwrWallet.sendPayableVmDataTransaction(
+                vmId,
+                '1',
+                dataBytes
+            );
+            console.log('payable VM data txn:', tx);
+            expect(tx.success).toBe(true);
+        } catch (e) {
+            expect(false).toBe(true);
+            // console.error('Error sending VM data transaction:', e.message);
+        }
+    });
 
     // #endregion
 
@@ -583,5 +583,37 @@ describe('wallet_core', () => {
     //     }
     // });
 
-    // #endregion
+    // // #endregion
+
+    // #region export/import wallet
+
+    let encrypted;
+    const password = 'hellokitty';
+
+    it('exports a wallet', async () => {
+        const path = require('path');
+        const _p = path.resolve(__dirname, 'files');
+        const exportedWallet = pwrWallet.storeWallet(password, _p);
+
+        encrypted = exportedWallet;
+    });
+
+    it('imports a wallet', async () => {
+        const path = require('path');
+        const _p = path.resolve(__dirname, 'files');
+        const importedWallet = await pwrWallet.loadWallet(password, _p);
+
+        expect(importedWallet.getPrivateKeyHex()).toStrictEqual(
+            pwrWallet.getPrivateKeyHex()
+        );
+    });
+
+    afterAll(() => {
+        const fs = require('fs') as typeof import('fs');
+        const path = require('path');
+        const _p = path.resolve(__dirname, 'files', 'wallet.enc');
+        const exists = fs.existsSync(_p);
+
+        if (exists) fs.rmSync(_p);
+    });
 });

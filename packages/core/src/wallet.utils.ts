@@ -10,10 +10,15 @@ class WalletUtils {
     // 	return wallet;
     // }
 
-    static fromPrivateKey(privateKeyStr: string): EthereumWallet {
+    static fromHex(privateKeyStr: string): EthereumWallet {
         const privateKeyBytes = Buffer.from(privateKeyStr.slice(2), 'hex');
 
         const wallet = EthereumWallet.fromPrivateKey(privateKeyBytes);
+        return wallet;
+    }
+
+    static fromBytes(bytes: Uint8Array): EthereumWallet {
+        const wallet = EthereumWallet.fromPrivateKey(Buffer.from(bytes));
         return wallet;
     }
 

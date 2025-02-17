@@ -61,6 +61,8 @@ export default class TransactionBuilder {
          * address - 20
          * signature - 65*/
 
+        const toBytes = decodeHex(to.substring(2));
+
         const base = this.getTransactionBase(
             Transaction_ID.TRANSFER,
             chainId,
@@ -68,17 +70,17 @@ export default class TransactionBuilder {
         );
 
         const buffer = new Uint8Array(base.length + 8 + 20);
+        const dataView = new DataView(buffer.buffer);
+        let offset = 0;
 
-        buffer.set(base, 0); // copy base
+        buffer.set(base, offset);
+        offset += base.length;
 
-        //write the amount as a long 8 bytes
-        const amountBytes = new Uint8Array(8);
-        const dataView = new DataView(amountBytes.buffer);
-        dataView.setBigUint64(0, amountBigInt, false);
-        buffer.set(amountBytes, base.length);
+        dataView.setBigUint64(offset, amountBigInt, false);
+        offset += 8;
 
-        const toBytes = decodeHex(to.substring(2));
-        buffer.set(toBytes, base.length + 8);
+        buffer.set(toBytes, offset);
+        offset += 20;
 
         return buffer;
     }
@@ -213,6 +215,16 @@ export default class TransactionBuilder {
             throw new Error('Nonce cannot be negative');
         }
 
+        /**
+         * id - 4
+         * chain id - 1
+         * nonce - 4
+         * vm id - 8
+         * data length - 4
+         * data - x
+         * signature - 65
+         */
+
         const _vmId = BigInt(vmId);
 
         const base = this.getTransactionBase(
@@ -222,17 +234,21 @@ export default class TransactionBuilder {
         );
 
         const buffer = new Uint8Array(base.length + 8 + 4 + data.length);
-
         buffer.set(base, 0);
 
-        // write vmid
-        const vmIdBytes = new Uint8Array(8);
-        const vmIdDataView = new DataView(vmIdBytes.buffer);
-        vmIdDataView.setBigUint64(0, _vmId, false);
-        buffer.set(vmIdBytes, base.length);
+        const dataView = new DataView(buffer.buffer);
+        let offset = 0;
 
-        // write data length
-        buffer.set(data, base.length + 8 + 4);
+        buffer.set(base, offset);
+        offset += base.length;
+
+        dataView.setBigUint64(offset, _vmId, false);
+        offset += 8;
+
+        dataView.setInt32(offset, data.length, false);
+        offset += 4;
+
+        buffer.set(data, offset);
 
         return buffer;
     }
@@ -373,27 +389,24 @@ export default class TransactionBuilder {
             nonce
         );
 
-        const buffer = new Uint8Array(base.length + 16 + 4 + data.length);
+        const buffer = new Uint8Array(base.length + 8 + 4 + data.length + 8);
+        const dataView = new DataView(buffer.buffer);
+        let offset = 0;
 
-        buffer.set(base, 0);
+        buffer.set(base, offset);
+        offset += base.length;
 
-        const vmIdBytes = new Uint8Array(8);
-        const vmIdDataView = new DataView(vmIdBytes.buffer);
-        vmIdDataView.setBigUint64(0, BigInt(vmId), false);
-        buffer.set(vmIdBytes, base.length);
+        dataView.setBigUint64(offset, BigInt(vmId), false);
+        offset += 8;
 
-        // write data
-        const dataLengthBytes = new Uint8Array(4);
-        const dataLengthDataView = new DataView(dataLengthBytes.buffer);
-        dataLengthDataView.setInt32(0, data.length, false);
-        buffer.set(dataLengthBytes, base.length + 8);
+        dataView.setInt32(offset, data.length, false);
+        offset += 4;
 
-        buffer.set(data, base.length + 8 + 4);
+        buffer.set(data, offset);
+        offset += data.length;
 
-        const valueBytes = new Uint8Array(8);
-        const valueDataview = new DataView(valueBytes.buffer);
-        valueDataview.setBigUint64(0, BigInt(value), false);
-        buffer.set(valueBytes, base.length + 8 + 4 + data.length);
+        dataView.setBigUint64(offset, BigInt(value), false);
+        offset += 8;
 
         return buffer;
     }

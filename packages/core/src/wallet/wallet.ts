@@ -4,10 +4,13 @@ import WalletUtils from '../wallet.utils';
 import BigNumber from 'bignumber.js';
 import { BnToBytes, bytesToHex, decToBytes } from '../utils';
 import { keccak256 } from 'js-sha3';
+import EthereumWallet from 'ethereumjs-wallet';
 
 import * as secp256k1 from 'secp256k1';
 import TransactionBuilder from '../protocol/transaction-builder';
 import { Transaction_ID } from '../static/enums/transaction.enum';
+import { hexToBytes } from '@ethereumjs/util';
+import HttpService from '../services/http.service';
 
 const pwrnode = 'https://pwrrpc.pwrlabs.io';
 
@@ -96,16 +99,12 @@ type TxnRes = {
     message: string;
 };
 
-function signTxn(txnBytes: Uint8Array, privateKey: string) {
+function signTxn(txnBytes: Uint8Array, privateKey: Uint8Array) {
     const hashedBytes = keccak256.arrayBuffer(txnBytes);
-
-    const privateKeyBytes = new Uint8Array(
-        Buffer.from(privateKey.slice(2), 'hex')
-    );
 
     const signObj = secp256k1.ecdsaSign(
         new Uint8Array(hashedBytes),
-        privateKeyBytes
+        privateKey
     );
 
     const signature = Buffer.concat([
@@ -153,26 +152,31 @@ async function sendTxn(txnHex: string, txnHash: string): Promise<TxnRes> {
 export default class PWRWallet {
     private address: string;
     private privateKey: string;
+    private _privateKey: Uint8Array;
     private chainId: number = 0;
 
-    constructor(privateKey?: string) {
-        let wallet;
+    private s_httpSvc = new HttpService('https://pwrrpc.pwrlabs.io');
 
-        if (privateKey) {
-            wallet = WalletUtils.fromPrivateKey(privateKey);
+    constructor(privateKey?: string | Uint8Array) {
+        let wallet: EthereumWallet;
+
+        if (typeof privateKey === 'string') {
+            wallet = WalletUtils.fromHex(privateKey);
+        } else if (privateKey instanceof Uint8Array) {
+            wallet = WalletUtils.fromBytes(privateKey);
         } else {
             wallet = WalletUtils.getRandomWallet();
         }
 
-        // this.#_address = wallet.getAddressString();
         this.privateKey = wallet.getPrivateKeyString();
         this.address = wallet.getAddressString();
+        this._privateKey = wallet.getPrivateKey();
     }
 
     // *~~*~~*~~ GETTERS *~~*~~*~~ //
 
     getPublicKey() {
-        const wallet = WalletUtils.fromPrivateKey(this.privateKey);
+        const wallet = WalletUtils.fromHex(this.privateKey);
 
         const publicKey = wallet.getPublicKeyString();
 
@@ -180,7 +184,7 @@ export default class PWRWallet {
     }
 
     getAddress() {
-        const wallet = WalletUtils.fromPrivateKey(this.privateKey);
+        const wallet = WalletUtils.fromHex(this.privateKey);
 
         const address = wallet.getAddressString();
 
@@ -188,26 +192,45 @@ export default class PWRWallet {
     }
 
     async getBalance() {
-        const rawRes = await fetch(
-            `${pwrnode}/balanceOf/?userAddress=${this.address}`
+        // const rawRes = await fetch(
+        //     `${pwrnode}/balanceOf/?userAddress=${this.address}`
+        // );
+
+        const res = await this.s_httpSvc.get<{ balance: bigint }>(
+            `/balanceOf/?userAddress=${this.address}`
         );
-        const res = await rawRes.json();
+
+        // const res = await rawRes.json();
 
         return res.balance;
     }
 
     async getNonce() {
-        const rawRes = await fetch(
-            `${pwrnode}/nonceOfUser/?userAddress=${this.address}`
+        const res = await this.s_httpSvc.get<{ nonce: number }>(
+            `/nonceOfUser/?userAddress=${this.address}`
         );
-
-        const res = await rawRes.json();
 
         return res.nonce;
     }
 
+    /**
+     *
+     * returns the private key as a string
+     *
+     * @deprecated getPriavteKey will be removed in future versions, use getPrivateKeyHex or getPrivateKeyBytes instead
+     *
+     * @returns {string} the private key in hexadecimal format
+     */
     getPrivateKey(): string {
         return this.privateKey;
+    }
+
+    getPrivateKeyHex(): string {
+        return this.privateKey;
+    }
+
+    getPrivateKeyBytes(): Uint8Array {
+        return this._privateKey;
     }
 
     calculateTransactionFee(txnBytes: Uint8Array): BigNumber {
@@ -264,7 +287,7 @@ export default class PWRWallet {
                 return new BigNumber(0);
         }
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const signedTxnBytes = signTxn(txnDataBytes, this._privateKey);
         txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
         return this.calculateTransactionFee(txnBytes);
     }
@@ -347,6 +370,7 @@ export default class PWRWallet {
             _nonce,
             _chainId
         );
+
 
         const res = await this.signAndSend(txnDataBytes);
         return res;
@@ -557,7 +581,7 @@ export default class PWRWallet {
             conduitsHex
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const signedTxnBytes = signTxn(txnDataBytes, this._privateKey);
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
 
         const txnHex = Buffer.from(txnBytes).toString('hex');
@@ -587,7 +611,7 @@ export default class PWRWallet {
             txnHex1
         );
 
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
+        const signedTxnBytes = signTxn(txnDataBytes, this._privateKey);
         const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
 
         const txnHex = Buffer.from(txnBytes).toString('hex');
@@ -866,9 +890,296 @@ export default class PWRWallet {
 
     // #endregion
 
+    // #region save and load
+    /**
+     * Browser implementation using Web Crypto API.
+     * Encrypts privateKeyBytes (Uint8Array) using AES-GCM with a key derived via PBKDF2.
+     *
+     * @param {Uint8Array} privateKeyBytes - The private key as a byte array.
+     * @param {string} password - The password used for key derivation.
+     * @returns {Promise<Uint8Array>} A promise that resolves to the encrypted data.
+     */
+    async encryptPrivateKeyBrowser(password: string): Promise<any> {
+        const privateKeyBytes = hexToBytes(this.privateKey);
+        const passwordBytes = new TextEncoder().encode(password);
+
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12)); // Recommended 12-byte IV for AES-GCM
+
+        // Import the password as key material.
+        const keyMaterial = await window.crypto.subtle.importKey(
+            'raw',
+            passwordBytes,
+            { name: 'PBKDF2' },
+            false,
+            ['deriveKey']
+        );
+
+        const derivedKey = await crypto.subtle.deriveKey(
+            {
+                name: 'PBKDF2',
+                hash: 'SHA-256',
+                salt: salt,
+                iterations: 100000,
+            },
+            keyMaterial,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['encrypt']
+        );
+
+        const encryptedBuffer = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv: iv },
+            derivedKey,
+            privateKeyBytes
+        );
+
+        // Combine salt + iv + ciphertext for storage/transport.
+        const encryptedBytes = new Uint8Array(
+            salt.byteLength + iv.byteLength + encryptedBuffer.byteLength
+        );
+        encryptedBytes.set(salt, 0);
+        encryptedBytes.set(iv, salt.byteLength);
+        encryptedBytes.set(
+            new Uint8Array(encryptedBuffer),
+            salt.byteLength + iv.byteLength
+        );
+
+        return encryptedBytes;
+    }
+
+    /**
+     * Node.js implementation using Node's crypto module.
+     * Encrypts privateKeyBytes (Buffer or Uint8Array) using AES-256-GCM with a key derived via PBKDF2.
+     *
+     * @param {Uint8Array} privateKeyBytes - The private key as a byte array.
+     * @param {string} password - The password used for key derivation.
+     * @returns {Uint8Array} The encrypted data.
+     */
+    encryptPrivateKeyNode(password) {
+        const crypto = require('crypto') as typeof import('crypto');
+
+        // Generate random salt and IV.
+        const salt = crypto.randomBytes(16);
+        const iv = crypto.randomBytes(12);
+
+        // Derive a 32-byte key using PBKDF2.
+        const key = crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');
+
+        // Create cipher.
+        const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+        const encrypted = Buffer.concat([
+            cipher.update(this._privateKey),
+            cipher.final(),
+        ]);
+        const authTag = cipher.getAuthTag();
+
+        // Combine salt + iv + authTag + ciphertext.
+        return Buffer.concat([salt, iv, authTag, encrypted]);
+    }
+
+    /**
+     * Browser decryption implementation using the Web Crypto API.
+     * Assumes the input is formatted as: salt (16 bytes) | iv (12 bytes) | ciphertext (includes auth tag).
+     *
+     * @param {Uint8Array} encryptedBytes - The encrypted data.
+     * @param {string} password - The password used for key derivation.
+     * @returns {Promise<Uint8Array>} A promise resolving to the decrypted private key bytes.
+     */
+    async decryptPrivateKeyBrowser(
+        encryptedBytes: Uint8Array,
+        password: string
+    ): Promise<Uint8Array> {
+        const encoder = new TextEncoder();
+
+        // Extract salt and iv from the encrypted data.
+        const salt = encryptedBytes.slice(0, 16);
+        const iv = encryptedBytes.slice(16, 28);
+        const ciphertext = encryptedBytes.slice(28);
+
+        // Import the password as key material.
+        const keyMaterial = await window.crypto.subtle.importKey(
+            'raw',
+            encoder.encode(password),
+            { name: 'PBKDF2' },
+            false,
+            ['deriveKey']
+        );
+
+        // Derive the AES-GCM key.
+        const key = await window.crypto.subtle.deriveKey(
+            {
+                name: 'PBKDF2',
+                salt: salt,
+                iterations: 100000,
+                hash: 'SHA-256',
+            },
+            keyMaterial,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['decrypt']
+        );
+
+        // Decrypt the ciphertext.
+        const decryptedBuffer = await window.crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: iv },
+            key,
+            ciphertext
+        );
+
+        return new Uint8Array(decryptedBuffer);
+    }
+
+    /**
+     * Node.js decryption implementation using the built-in crypto module.
+     * Assumes the input is formatted as: salt (16 bytes) | iv (12 bytes) | authTag (16 bytes) | ciphertext.
+     *
+     * @param {Uint8Array|Buffer} encryptedBytes - The encrypted data.
+     * @param {string} password - The password used for key derivation.
+     * @returns {Uint8Array} The decrypted private key bytes.
+     */
+    decryptPrivateKeyNode(
+        encryptedBytes: Uint8Array,
+        password: string
+    ): Uint8Array {
+        const crypto = require('crypto') as typeof import('crypto');
+
+        // Extract the parts.
+        const salt = encryptedBytes.slice(0, 16);
+        const iv = encryptedBytes.slice(16, 28);
+        const authTag = encryptedBytes.slice(28, 44);
+        const ciphertext = encryptedBytes.slice(44);
+
+        // Derive the key.
+        const key = crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');
+
+        // Create a decipher and set the authentication tag.
+        const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+        decipher.setAuthTag(authTag);
+
+        // Decrypt the data.
+        const decrypted = Buffer.concat([
+            decipher.update(ciphertext),
+            decipher.final(),
+        ]);
+        return new Uint8Array(decrypted);
+    }
+
+    /**
+     * Encrypts the wallet's private key and saves it to a file with .enc extension.
+     *
+     * @param password a string to encrypt the wallet
+     * @param filePath if executing in node, the path to save the wallet
+     */
+    async storeWallet(password: string, filePath?: string) {
+        // Check for browser environment by testing if 'window' and 'crypto.subtle' are available.
+        const isBrowser =
+            typeof window !== 'undefined' &&
+            window.crypto &&
+            window.crypto.subtle;
+
+        if (isBrowser) {
+            // Browser: Encrypt and then trigger a file download.
+            const encryptedData = await this.encryptPrivateKeyBrowser(password);
+
+            // Create a Blob from the encrypted data.
+            const blob = new Blob([encryptedData], {
+                type: 'application/octet-stream',
+            });
+            // Create a temporary URL for the Blob.
+            const url = window.URL.createObjectURL(blob);
+            // Create an invisible anchor element and trigger the download.
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'wallet.enc'; // Specify the file name.
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } else {
+            if (!filePath)
+                throw new Error('filePath is required in Node.js environment');
+
+            // Node.js: Encrypt and then save the file to disk.
+            const encryptedData = this.encryptPrivateKeyNode(password);
+            // Import the Node.js file system module.
+            const fs = require('fs') as typeof import('fs');
+            const path = require('path') as typeof import('path');
+            // Define the path where you want to save the wallet.
+            const name = 'wallet.enc';
+
+            const _p = path.join(filePath, name);
+            // Write the encrypted data to the file.
+            fs.writeFileSync(_p, encryptedData);
+        }
+    }
+
+    async loadWallet(password: string, filepath?: string): Promise<PWRWallet> {
+        // Detect whether we're in the browser.
+        const isBrowser =
+            typeof window !== 'undefined' &&
+            window.crypto &&
+            window.crypto.subtle;
+
+        if (isBrowser) {
+            // In the browser: Prompt the user to select a file and then read it.
+            // return new Promise<Uint8Array>((resolve, reject) => {
+            //     // Create an invisible file input element.
+            //     const input = document.createElement('input');
+            //     input.type = 'file';
+            //     input.accept = '.enc'; // accept only files with .enc extension (adjust if needed)
+            //     // When a file is selected, read it.
+            //     input.onchange = async () => {
+            //         try {
+            //             if (!input.files || input.files.length === 0) {
+            //                 return reject(new Error('No file selected'));
+            //             }
+            //             const file = input.files[0];
+            //             // Convert the file to an ArrayBuffer.
+            //             const arrayBuffer = await file.arrayBuffer();
+            //             const encryptedData = new Uint8Array(arrayBuffer);
+            //             // Decrypt the wallet using the browser-specific decryption function.
+            //             const decryptedData =
+            //                 await this.decryptPrivateKeyBrowser(
+            //                     encryptedData,
+            //                     password
+            //                 );
+            //             resolve(decryptedData);
+            //         } catch (error) {
+            //             reject(error);
+            //         }
+            //     };
+            //     // Programmatically trigger the file selection dialog.
+            //     input.click();
+            // });
+        } else {
+            // In Node.js: Read the file from disk.
+            const fs = require('fs');
+            const path = require('path');
+
+            // Adjust the file path as needed.
+            const filePath = path.join(filepath, 'wallet.enc');
+
+            // Read the file synchronously (you can use async version if you prefer).
+            const encryptedData = fs.readFileSync(filePath);
+            // Decrypt using the Node.js decryption function.
+            const privateKeyBytes = this.decryptPrivateKeyNode(
+                encryptedData,
+                password
+            );
+
+            return new PWRWallet(privateKeyBytes);
+        }
+    }
+
+    // #endregion
+
+    // #region utils
+
     private async signAndSend(txnDataBytes: Uint8Array): Promise<TxnRes> {
-        const signedTxnBytes = signTxn(txnDataBytes, this.privateKey);
-        const txnBytes = new Uint8Array([...txnDataBytes, ...signedTxnBytes]);
+        // const pkbytes = hexToBytes(this.privateKey);
+        const signature = signTxn(txnDataBytes, this._privateKey);
+        const txnBytes = new Uint8Array([...txnDataBytes, ...signature]);
 
         const txnHex = Buffer.from(txnBytes).toString('hex');
         const hashedTxnFinal = hashTxn(txnBytes);
@@ -878,4 +1189,6 @@ export default class PWRWallet {
 
         return res;
     }
+
+    // #endregion
 }

@@ -109,3 +109,15 @@ export function signTxn(txnBytes: Uint8Array, privateKey: string) {
 
     return signature;
 }
+
+// function hexToString(hex) {
+//     const bytes = new Uint8Array(hex.length / 2); // 2 hex chars per byte
+//     for (let i = 0; i < hex.length; i += 2) {
+//       bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+//     }
+//     return new TextDecoder().decode(bytes);
+//   }
+
+function isBrowser() {
+    return typeof window !== 'undefined';
+}
