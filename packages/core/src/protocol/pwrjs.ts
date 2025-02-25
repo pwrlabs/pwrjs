@@ -40,6 +40,7 @@ import {
     vmClaimingFeeRes,
     vmOwnerTransactionFeeShareRes,
 } from '../services/responses';
+import { IvaTransactionHandler, IvaTransactionSubscription } from './iva';
 
 export default class PWRJS {
     // private ecdsaVerificationFee: number = 10000;
@@ -651,6 +652,26 @@ export default class PWRJS {
         return null;
     }
 
+    // #endregion
+
+    // #region iva
+    subscribeToIvaTransactions(
+        pwrj: PWRJS,
+        vmId: bigint,
+        startingBlock: bigint,
+        handler: IvaTransactionHandler,
+        pollInterval: number = 100
+    ): IvaTransactionSubscription {
+        const subscription = new IvaTransactionSubscription(
+            pwrj,
+            vmId,
+            startingBlock,
+            handler,
+            pollInterval
+        );
+        subscription.start(); // Start the subscription asynchronously
+        return subscription;
+    }
     // #endregion
 
     public async broadcastTxn(txnBytes: Uint8Array): Promise<any[]> {
