@@ -611,7 +611,7 @@ describe('wallet_core', () => {
     afterAll(() => {
         const fs = require('fs') as typeof import('fs');
         const path = require('path');
-        const _p = path.resolve(__dirname, 'files', 'wallet.enc');
+        const _p = path.resolve(__dirname, 'files', 'wallet.dat');
         const exists = fs.existsSync(_p);
 
         if (exists) fs.rmSync(_p);
