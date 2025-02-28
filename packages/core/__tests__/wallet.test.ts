@@ -90,7 +90,7 @@ describe('wallet_core', () => {
                 amount.toString()
             );
 
-            // console.log('transfer txn:', tx);
+            console.log('transfer txn:', tx);
 
             expect(tx.success).toBe(true);
         } catch (error) {
@@ -200,7 +200,7 @@ describe('wallet_core', () => {
                 '1',
                 dataBytes
             );
-            console.log('payable VM data txn:', tx);
+            // console.log('payable VM data txn:', tx);
             expect(tx.success).toBe(true);
         } catch (e) {
             expect(false).toBe(true);
