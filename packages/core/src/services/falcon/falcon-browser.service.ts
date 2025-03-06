@@ -5,13 +5,14 @@ import {
     FalconPrivateKey,
     FalconPublicKey,
     IFalconService,
-} from './falcon/c';
+    SignatureResponse,
+} from './c';
 
 // Falcon service uses a jar file to interact with the falcon algorithm
 // this should be refactored and use a nativa javascript implementation
 // this class asumes that cheerpj is already installed and is available in
 // window.cheerpj
-export class FalconService implements IFalconService {
+export class FalconServiceBrowser implements IFalconService {
     constructor(private readonly jar: FalconJar) {}
 
     async generateKeyPair(): Promise<FalconKeyPair> {
@@ -35,7 +36,17 @@ export class FalconService implements IFalconService {
         pk: FalconPublicKey,
         sk: FalconPrivateKey
     ): Promise<string> {
-        throw new Error('Method not implemented.');
+        const res = await this.jar.processCommand(
+            COMMAND.SIGN,
+            `"${message}"`,
+            sk.f,
+            sk.F,
+            sk.G,
+            pk.H
+        );
+
+        const { signature } = JSON.parse(res) as SignatureResponse;
+        return signature;
     }
 
     async verify(
@@ -43,41 +54,15 @@ export class FalconService implements IFalconService {
         pk: FalconPublicKey,
         signature: string
     ): Promise<boolean> {
-        throw new Error('Method not implemented.');
+        const res = await this.jar.processCommand(
+            COMMAND.VERIFY,
+            `"${message}"`,
+            pk.H,
+            signature
+        );
+
+        const { valid } = JSON.parse(res) as { valid: boolean };
+
+        return valid;
     }
-
-    // async sign(
-    //     message: string,
-    //     pk: FalconPublicKey,
-    //     sk: FalconKeyPair
-    // ): Promise<string> {
-    //     const httpSvc = new HttpService(this.endUrl);
-
-    //     const res = await httpSvc.post<{ signature: string }>('/falcon/sign', {
-    //         message,
-    //         pk,
-    //         sk,
-    //     });
-
-    //     return res.signature;
-    // }
-
-    // async verify(
-    //     message: string,
-    //     signature: string,
-    //     pk: FalconPublicKey
-    // ): Promise<boolean> {
-    //     const httpSvc = new HttpService(this.endUrl);
-
-    //     const body = {
-    //         H: pk.H,
-    //     };
-
-    //     const res = await httpSvc.post<{ valid: boolean }>(
-    //         '/falcon/verify',
-    //         body
-    //     );
-
-    //     return res.valid;
-    // }
 }
