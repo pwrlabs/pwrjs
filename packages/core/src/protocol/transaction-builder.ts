@@ -2,7 +2,6 @@ import BigNumber from 'bignumber.js';
 import {
     BnToBytes,
     HexToBytes,
-    bytesToHex,
     decToBytes,
     decToBytes2,
     decodeHex,
@@ -967,6 +966,87 @@ export default class TransactionBuilder {
         ]);
 
         return txnBytes;
+    }
+
+    // #endregion
+
+    // #region - falcon transactions
+
+    private static getFalconTransactionBase(
+        id: Transaction_ID,
+        nonce: number,
+        chainId: number,
+        feePerByte: bigint,
+        sender: Uint8Array
+    ) {
+        const buffer = new ArrayBuffer(37);
+        const view = new DataView(buffer);
+
+        view.setInt32(0, id);
+        view.setUint8(4, chainId);
+        view.setInt32(5, nonce);
+        view.setBigUint64(9, feePerByte);
+        new Uint8Array(buffer, 17, sender.length).set(sender);
+
+        return new Uint8Array(buffer);
+    }
+
+    public static getSetPublicKeyTransaction(
+        feePerByte: bigint,
+        publickey: Uint8Array,
+        sender: Uint8Array,
+        nonce: number,
+        chainId: number
+    ): Uint8Array {
+        const base = this.getFalconTransactionBase(
+            Transaction_ID.SET_PUBLIC_KEY_TRANSACTION,
+            nonce,
+            chainId,
+            feePerByte,
+            sender
+        );
+
+        const buffer = new ArrayBuffer(base.length + 2 + publickey.length);
+        const view = new DataView(buffer);
+
+        new Uint8Array(buffer).set(base);
+
+        // copy base length
+        view.setInt16(base.length, publickey.length);
+
+        // copy public pubkey
+        new Uint8Array(buffer, base.length + 2, publickey.length).set(
+            publickey
+        );
+
+        return new Uint8Array(buffer);
+    }
+
+    public static getFalconTransferTransaction(
+        feePerByte: bigint,
+        sender: Uint8Array,
+        receiver: Uint8Array,
+        amount: bigint,
+        nonce: number,
+        chainId: number
+    ) {
+        const base = this.getFalconTransactionBase(
+            Transaction_ID.TRANSFER,
+            nonce,
+            chainId,
+            feePerByte,
+            sender
+        );
+
+        const buffer = new ArrayBuffer(base.length + 20 + 8);
+        const view = new DataView(buffer);
+
+        new Uint8Array(buffer).set(base);
+        new Uint8Array(buffer, base.length).set(receiver);
+
+        view.setBigUint64(base.length + 20, amount);
+
+        return new Uint8Array(buffer);
     }
 
     // #endregion

@@ -30,4 +30,7 @@ export enum Transaction_ID {
     CHANGE_VM_OWNER_TXN_FEE_SHARE_PROPOSAL = 26,
     OTHER_PROPOSAL_TXN = 27,
     VOTE_ON_PROPOSAL_TXN = 28,
+
+    // Falcon
+    SET_PUBLIC_KEY_TRANSACTION = 1001,
 }

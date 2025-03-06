@@ -16,3 +16,7 @@
 # local env files
 .env*.local
 .env
+
+
+
+packages\core\__tests__\falcon.js

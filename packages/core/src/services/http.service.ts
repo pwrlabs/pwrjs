@@ -1,3 +1,5 @@
+import { TransactionResponse } from '../wallet/wallet.types';
+
 class HttpService {
     constructor(private baseUrl: string) {}
 
@@ -34,6 +36,44 @@ class HttpService {
         }
 
         return response.json() as Promise<T>;
+    }
+
+    async broadcastTxn(
+        rpc: string,
+        txnHex: string,
+        txnHash: string
+    ): Promise<TransactionResponse> {
+        const url = `${rpc}/broadcast/`;
+
+        try {
+            const raw = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    txn: txnHex,
+                }),
+            });
+
+            const res = await raw.json();
+
+            if (!raw.ok) {
+                return {
+                    success: false,
+                    transactionHash: '0x' + txnHash,
+                    message: res.message,
+                };
+            }
+
+            return {
+                success: true,
+                transactionHash: '0x' + txnHash,
+                message: null,
+            };
+        } catch (err) {
+            throw err;
+        }
     }
 
     // Additional methods for PUT, DELETE, etc. can be added here using similar patterns

@@ -13,6 +13,9 @@ import { hexToBytes } from '@ethereumjs/util';
 import HttpService from '../services/http.service';
 import CryptoService from '../services/crypto.service';
 import { StorageService } from '../services/storage.service';
+import './wallet.types';
+import { TransactionResponse } from './wallet.types';
+import HashService from '../services/hash.service';
 
 const pwrnode = 'https://pwrrpc.pwrlabs.io';
 
@@ -95,12 +98,6 @@ function hashTxn(txnBytes: Uint8Array): ArrayBuffer {
     return hashedTxn;
 }
 
-type TxnRes = {
-    success: boolean;
-    transactionHash: string;
-    message: string;
-};
-
 function signTxn(txnBytes: Uint8Array, privateKey: Uint8Array) {
     const hashedBytes = keccak256.arrayBuffer(txnBytes);
 
@@ -115,40 +112,6 @@ function signTxn(txnBytes: Uint8Array, privateKey: Uint8Array) {
     ]);
 
     return signature;
-}
-
-async function sendTxn(txnHex: string, txnHash: string): Promise<TxnRes> {
-    const url = `${pwrnode}/broadcast/`;
-
-    try {
-        const raw = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                txn: txnHex,
-            }),
-        });
-
-        const res = await raw.json();
-
-        if (!raw.ok) {
-            return {
-                success: false,
-                transactionHash: '0x' + txnHash,
-                message: res.message,
-            };
-        }
-
-        return {
-            success: true,
-            transactionHash: '0x' + txnHash,
-            message: null,
-        };
-    } catch (err) {
-        throw err;
-    }
 }
 
 export default class PWRWallet {
@@ -295,6 +258,7 @@ export default class PWRWallet {
     }
 
     // *~~*~~*~~ TRANSACTIONS *~~*~~*~~ //
+    // #region basic transactions
     getChainId() {
         return this.chainId;
     }
@@ -302,11 +266,11 @@ export default class PWRWallet {
         this.chainId = chainId;
     }
 
-    async transferPWR(to: string, amount: string): Promise<TxnRes>;
+    async transferPWR(to: string, amount: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWR(to: string, amount: string, nonce: number): Promise<TxnRes>;
+    async transferPWR(to: string, amount: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWR(to: string, amount: string, nonce?: number): Promise<TxnRes> {
+    async transferPWR(to: string, amount: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce ?? (await this.getNonce());
 
         const _chainId = this.getChainId();
@@ -321,9 +285,9 @@ export default class PWRWallet {
         return res;
     }
 
-    async join(ip: string): Promise<TxnRes>;
-    async join(ip: string, nonce: number): Promise<TxnRes>;
-    async join(ip: string, nonce?: number): Promise<TxnRes> {
+    async join(ip: string): Promise<TransactionResponse>;
+    async join(ip: string, nonce: number): Promise<TransactionResponse>;
+    async join(ip: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -338,9 +302,9 @@ export default class PWRWallet {
         return res;
     }
 
-    async claimActiveNodeSpot(): Promise<TxnRes>;
-    async claimActiveNodeSpot(nonce: number): Promise<TxnRes>;
-    async claimActiveNodeSpot(nonce?: number): Promise<TxnRes> {
+    async claimActiveNodeSpot(): Promise<TransactionResponse>;
+    async claimActiveNodeSpot(nonce: number): Promise<TransactionResponse>;
+    async claimActiveNodeSpot(nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -354,11 +318,14 @@ export default class PWRWallet {
         return res;
     }
 
-    async sendVMStringDataTxn(vmId: string, data: string): Promise<TxnRes>;
+    async sendVMStringDataTxn(
+        vmId: string,
+        data: string
+    ): Promise<TransactionResponse>;
     //prettier-ignore
-    async sendVMStringDataTxn(vmId: string, data: string, nonce: number): Promise<TxnRes>;
+    async sendVMStringDataTxn(vmId: string, data: string, nonce: number): Promise<TransactionResponse>;
     //prettier-ignore
-    async sendVMStringDataTxn(vmId: string, data: string, nonce?: number): Promise<TxnRes> {
+    async sendVMStringDataTxn(vmId: string, data: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
@@ -379,11 +346,14 @@ export default class PWRWallet {
      
     }
 
-    async sendVMDataTxn(vmId: string, data: Uint8Array): Promise<TxnRes>;
+    async sendVMDataTxn(
+        vmId: string,
+        data: Uint8Array
+    ): Promise<TransactionResponse>;
     // prettier-ignore
-    async sendVMDataTxn(vmId: string, data: Uint8Array, nonce: number): Promise<TxnRes>;
+    async sendVMDataTxn(vmId: string, data: Uint8Array, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async sendVMDataTxn(vmId: string, data: Uint8Array, nonce?: number): Promise<TxnRes> {
+    async sendVMDataTxn(vmId: string, data: Uint8Array, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
@@ -402,11 +372,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async sendPayableVmDataTransaction(vmId: string, value: string, data: Uint8Array): Promise<TxnRes>;
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: Uint8Array): Promise<TransactionResponse>;
     // prettier-ignore
-    async sendPayableVmDataTransaction(vmId: string, value: string, data: Uint8Array, nonce: number): Promise<TxnRes>;
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: Uint8Array, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async sendPayableVmDataTransaction(vmId: string, value: string, data: Uint8Array, nonce?: number): Promise<TxnRes> {
+    async sendPayableVmDataTransaction(vmId: string, value: string, data: Uint8Array, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
 
         const _vmId = vmId;
@@ -426,10 +396,12 @@ export default class PWRWallet {
         return res;
     }
 
+    // #endregion
+
     // #region validators
 
-    async claimVmId(vmId: string): Promise<TxnRes>;
-    async claimVmId(vmId: string, nonce: number): Promise<TxnRes>;
+    async claimVmId(vmId: string): Promise<TransactionResponse>;
+    async claimVmId(vmId: string, nonce: number): Promise<TransactionResponse>;
     async claimVmId(vmId: string, nonce?: number) {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
@@ -444,10 +416,14 @@ export default class PWRWallet {
         return res;
     }
 
-    async delegate(to: string, amount: string): Promise<TxnRes>;
-    async delegate(to: string, amount: string, nonce: number): Promise<TxnRes>;
+    async delegate(to: string, amount: string): Promise<TransactionResponse>;
+    async delegate(
+        to: string,
+        amount: string,
+        nonce: number
+    ): Promise<TransactionResponse>;
     // prettier-ignore
-    async delegate(to: string, amount: string, nonce?: number): Promise<TxnRes> {
+    async delegate(to: string, amount: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -462,13 +438,20 @@ export default class PWRWallet {
         return res;
     }
 
-    async withdraw(from: string, sharesAmount: string): Promise<TxnRes>;
-    async withdraw(from: string, sharesAmount: string, nonce): Promise<TxnRes>;
+    async withdraw(
+        from: string,
+        sharesAmount: string
+    ): Promise<TransactionResponse>;
+    async withdraw(
+        from: string,
+        sharesAmount: string,
+        nonce
+    ): Promise<TransactionResponse>;
     async withdraw(
         from: string,
         sharesAmount: string,
         nonce?: number
-    ): Promise<TxnRes> {
+    ): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -484,11 +467,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async moveStake(shareAmount: string, fromValidator: string, toValidator: string): Promise<TxnRes>;
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, nonce: number): Promise<TxnRes>;
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, nonce?: number): Promise<TxnRes> {
+    async moveStake(shareAmount: string, fromValidator: string, toValidator: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -509,11 +492,11 @@ export default class PWRWallet {
     // #region guardians
 
     // prettier-ignore
-    async setGuardian(guardian: string, expiryDate: EpochTimeStamp): Promise<TxnRes>;
+    async setGuardian(guardian: string, expiryDate: EpochTimeStamp): Promise<TransactionResponse>;
     // prettier-ignore
-    async setGuardian(guardian: string, expiryDate: EpochTimeStamp, nonce: number): Promise<TxnRes>;
+    async setGuardian(guardian: string, expiryDate: EpochTimeStamp, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async setGuardian(guardian: string, expiryDate: EpochTimeStamp, nonce?: number): Promise<TxnRes> {
+    async setGuardian(guardian: string, expiryDate: EpochTimeStamp, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -529,11 +512,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async sendGuardianApprovalTransaction(transactions: Uint8Array[]): Promise<TxnRes>;
+    async sendGuardianApprovalTransaction(transactions: Uint8Array[]): Promise<TransactionResponse>;
     // prettier-ignore
-    async sendGuardianApprovalTransaction(transactions: Uint8Array[], nonce: number): Promise<TxnRes>;
+    async sendGuardianApprovalTransaction(transactions: Uint8Array[], nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async sendGuardianApprovalTransaction(transactions: Uint8Array[], nonce?: number): Promise<TxnRes> {
+    async sendGuardianApprovalTransaction(transactions: Uint8Array[], nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -547,9 +530,9 @@ export default class PWRWallet {
         return res;
     }
 
-    async removeGuardian(): Promise<TxnRes>;
-    async removeGuardian(nonce: number): Promise<TxnRes>;
-    async removeGuardian(nonce?: number): Promise<TxnRes> {
+    async removeGuardian(): Promise<TransactionResponse>;
+    async removeGuardian(nonce: number): Promise<TransactionResponse>;
+    async removeGuardian(nonce?: number): Promise<TransactionResponse> {
         const _chainId = this.getChainId();
         const _nonce = nonce || (await this.getNonce());
 
@@ -590,7 +573,11 @@ export default class PWRWallet {
         const hashedTxnFinal = hashTxn(txnBytes);
         const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.s_httpSvc.broadcastTxn(
+            'ht',
+            txnHex,
+            hashedTxnStr
+        );
         return res;
     }
 
@@ -620,7 +607,11 @@ export default class PWRWallet {
         const hashedTxnFinal = hashTxn(txnBytes);
         const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
 
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.s_httpSvc.broadcastTxn(
+            'ht',
+            txnHex,
+            hashedTxnStr
+        );
         return res;
     }
 
@@ -628,11 +619,11 @@ export default class PWRWallet {
 
     // #region proposals
     // prettier-ignore
-    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string): Promise<TxnRes>;
+    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string, nonce: number): Promise<TxnRes>;
+    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string, nonce?: number): Promise<TxnRes> {
+    async createProposal_ChangeEarlyWithdrawalPenalty(withdrawlPenaltyTime: string, withdrawalPenalty: number, title: string, description: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -651,11 +642,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string): Promise<TxnRes>;
+    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string,  nonce: number): Promise<TxnRes>;
+    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string,  nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string,  nonce?: number): Promise<TxnRes> {
+    async createProposal_ChangeFeePerByte(feePerByte: string, title: string, description: string,  nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -673,11 +664,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string): Promise<TxnRes>;
+    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, nonce: number): Promise<TxnRes>;
+    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, nonce?: number): Promise<TxnRes> {
+    async createProposal_ChangeMaxBlockSize(maxBlockSize: number, title: string, description: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -695,11 +686,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string, nonce: number): Promise<TxnRes>;
+    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string): Promise<TxnRes>;
+    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string, nonce?: number): Promise<TxnRes> {
+    async createProposal_ChangeMaxTxnSizeSize( maxTxnSize: number,  title: string,  description: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -717,11 +708,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string, nonce: number): Promise<TxnRes>;
+    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string): Promise<TxnRes>;
+    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string, nonce?: number): Promise<TxnRes> {
+    async createProposal_ChangeOverallBurnPercentage( burnPercentage: number,  title: string,  description: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -739,11 +730,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string,  nonce: number): Promise<TxnRes>;
+    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string,  nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string): Promise<TxnRes>;
+    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string, nonce?: number): Promise<TxnRes> {
+    async createProposal_ChangeRewardPerYear(rewardPerYear: string, title: string,  description: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -761,11 +752,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string,  nonce: number): Promise<TxnRes>;
+    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string,  nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string): Promise<TxnRes>;
+    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string, nonce?: number): Promise<TxnRes> {
+    async createProposal_ChangeValidatorCountLimit(validatorCountLimit: number, title: string,  description: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -783,11 +774,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string): Promise<TxnRes>;
+    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string,  nonce: number): Promise<TxnRes>;
+    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string,  nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string,  nonce?: number): Promise<TxnRes> {
+    async createProposal_ChangeValidatorJoiningFee( joiningFee: string,  title: string,  description: string,  nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -805,11 +796,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string): Promise<TxnRes>;
+    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, nonce: number): Promise<TxnRes>;
+    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, nonce?: number): Promise<TxnRes> {
+    async createProposal_ChangeVmIdClaimingFee(claimingFee: string , title: string, description: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -827,11 +818,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string): Promise<TxnRes>;
+    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string,  nonce: number): Promise<TxnRes>;
+    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string,  nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string,  nonce?: number): Promise<TxnRes> {
+    async createProposal_ChangeVmOwnerTxnFeeShare( feeShare: number,  title: string,  description: string,  nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -849,11 +840,11 @@ export default class PWRWallet {
     }
 
     // prettier-ignore
-    async createProposal_OtherProposal( title: string,  description: string): Promise<TxnRes>;
+    async createProposal_OtherProposal( title: string,  description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_OtherProposal( title: string,  description: string,  nonce: number): Promise<TxnRes>;
+    async createProposal_OtherProposal( title: string,  description: string,  nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async createProposal_OtherProposal( title: string,  description: string,  nonce?: number): Promise<TxnRes> {
+    async createProposal_OtherProposal( title: string,  description: string,  nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -870,11 +861,11 @@ export default class PWRWallet {
     }
 
     //prettier-ignore
-    async voteProposal( proposalHash: string,  vote: number): Promise<TxnRes>;
+    async voteProposal( proposalHash: string,  vote: number): Promise<TransactionResponse>;
     //prettier-ignore
-    async voteProposal( proposalHash: string,  vote: number,  nonce: number): Promise<TxnRes>;
+    async voteProposal( proposalHash: string,  vote: number,  nonce: number): Promise<TransactionResponse>;
     //prettier-ignore
-    async voteProposal( proposalHash: string,  vote: number,  nonce?: number): Promise<TxnRes> {
+    async voteProposal( proposalHash: string,  vote: number,  nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce || (await this.getNonce());
         const _chainId = this.getChainId();
 
@@ -994,16 +985,23 @@ export default class PWRWallet {
 
     // #region utils
 
-    private async signAndSend(txnDataBytes: Uint8Array): Promise<TxnRes> {
+    private async signAndSend(
+        txnDataBytes: Uint8Array
+    ): Promise<TransactionResponse> {
         // const pkbytes = hexToBytes(this.privateKey);
         const signature = signTxn(txnDataBytes, this._privateKey);
         const txnBytes = new Uint8Array([...txnDataBytes, ...signature]);
 
         const txnHex = Buffer.from(txnBytes).toString('hex');
-        const hashedTxnFinal = hashTxn(txnBytes);
-        const hashedTxnStr = Buffer.from(hashedTxnFinal).toString('hex');
+        const txnHash = Buffer.from(
+            HashService.hashTransaction(txnBytes)
+        ).toString('hex');
 
-        const res = await sendTxn(txnHex, hashedTxnStr);
+        const res = await this.s_httpSvc.broadcastTxn(
+            'https://pwrrpc.pwrlabs.io',
+            txnHex,
+            txnHash
+        );
 
         return res;
     }
