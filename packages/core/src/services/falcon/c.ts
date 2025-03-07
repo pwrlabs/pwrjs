@@ -5,7 +5,7 @@ export enum COMMAND {
 }
 
 export type FalconJar = {
-    processCommand: (...args: string[]) => Promise<string>;
+    processCommand: (args: string[]) => Promise<string>;
 };
 
 export type FalconPublicKey = {
@@ -43,27 +43,27 @@ export interface IFalconService {
 
     /**
      * Sign a message
-     * @param {string} message
+     * @param {Uint8Array} message
      * @param {FalconPublicKey} pk
      * @param {FalconPrivateKey} sk
      * @returns {Promise<string>} signature
      *
      */
     sign(
-        message: string,
+        message: Uint8Array,
         pk: FalconPublicKey,
         sk: FalconPrivateKey
     ): Promise<string>;
 
     /**
      * Verify a signature
-     * @param {string} message
+     * @param {Uint8Array} string
      * @param {string} signature
      * @param {FalconPublicKey} pk
      * @returns {Promise<boolean>} valid
      */
     verify(
-        message: string,
+        message: Uint8Array,
         pk: FalconPublicKey,
         signature: string
     ): Promise<boolean>;

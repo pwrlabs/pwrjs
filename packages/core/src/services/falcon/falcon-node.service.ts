@@ -19,7 +19,7 @@ import {
 // Falcon service uses a jar file to interact with the falcon algorithm
 // this should be refactored and use a nativa javascript implementation
 
-export class FalconServiceNode implements IFalconService {
+export default class FalconServiceNode implements IFalconService {
     private PATH = path.join(__dirname, 'falcon.jar');
 
     async generateKeyPair(): Promise<FalconKeyPair> {
@@ -36,24 +36,26 @@ export class FalconServiceNode implements IFalconService {
     }
 
     async sign(
-        message: string,
+        message: Uint8Array,
         pk: FalconPublicKey,
         sk: FalconPrivateKey
     ): Promise<string> {
+        const msg = Buffer.from(message).toString('hex');
         const res = await execPromise(
-            `java -jar ${this.PATH} ${COMMAND.SIGN} "${message}" ${sk.f} ${sk.F} ${sk.G} ${pk.H}`
+            `java -jar ${this.PATH} ${COMMAND.SIGN} ${msg} ${sk.f} ${sk.F} ${sk.G} ${pk.H}`
         );
         const { signature } = JSON.parse(res.stdout) as SignatureResponse;
         return signature;
     }
 
     async verify(
-        message: string,
+        message: Uint8Array,
         pk: FalconPublicKey,
         signature: string
     ): Promise<boolean> {
+        const msg = Buffer.from(message).toString('hex');
         const res = await execPromise(
-            `java -jar ${this.PATH} ${COMMAND.VERIFY} "${message}" ${pk.H} ${signature}`
+            `java -jar ${this.PATH} ${COMMAND.VERIFY} ${msg} ${pk.H} ${signature}`
         );
 
         const { valid } = JSON.parse(res.stdout) as { valid: boolean };

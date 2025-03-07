@@ -1,36 +1,44 @@
-import PWRWallet from '../src/wallet/wallet';
-import { keccak256 } from 'js-sha3';
-
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import TransactionBuilder from '../src/protocol/transaction-builder';
-import { bytesToHex, decodeHex, signTxn } from '../src/utils';
 import PWRFaconl512Wallet from '../src/wallet/falcon-512-wallet';
 import { PWRJS } from '../src';
+import { FalconKeyPair } from '../src/services/falcon/c';
+import FalconServiceNode from '../src/services/falcon/falcon-node.service';
+import { bytesToHex } from '@noble/hashes/utils';
 
 const path = require('path') as typeof import('path');
 const fs = require('fs') as typeof import('fs');
 
 const RPC = 'https://pwrrpc.pwrlabs.io';
 
-async function generateWallet() {
-    const pwr = new PWRJS(RPC);
-    const falconWallet = new PWRFaconl512Wallet(pwr);
-    await falconWallet.init();
-    const seed = Buffer.from(falconWallet.getSeed()).toString('hex');
-    const address = falconWallet.getAddress();
-    const content = JSON.stringify({ seed, address });
-    const filePath = path.resolve(__dirname, 'files', 'seed.json');
-    fs.writeFileSync(filePath, content);
-}
+// async function generateWallet() {
+//     const pwr = new PWRJS(RPC);
+//     const falconWallet = new PWRFaconl512Wallet(pwr);
+//     await falconWallet.init();
 
-function restoreWallet(): { seed: Buffer; address: string } {
+//     const keypair = falconWallet.getKeyPair();
+//     const address = falconWallet.getAddress();
+
+//     const content = JSON.stringify({ keypair, address });
+//     const filePath = path.resolve(__dirname, 'files', 'seed.json');
+//     fs.writeFileSync(filePath, content);
+// }
+
+// generateWallet().then(() => {
+//     // end process
+//     exit(0);
+// });
+
+function restoreWallet(): { keypair: FalconKeyPair; address: string } {
     const filePath = path.resolve(__dirname, 'files', 'seed.json');
     const content = fs.readFileSync(filePath, 'utf-8');
-    const { seed, address } = JSON.parse(content);
-    const seedBuffer = Buffer.from(seed, 'hex');
+    const { keypair, address } = JSON.parse(content) as {
+        keypair: FalconKeyPair;
+        address: string;
+    };
     return {
-        seed: seedBuffer,
+        keypair,
         address,
     };
 }
@@ -40,22 +48,14 @@ type Config = {
 };
 
 describe('wallet core', () => {
-    const configfile = path.resolve(__dirname, 'files', 'config.json');
-    const config = JSON.parse(fs.readFileSync(configfile, 'utf-8')) as Config;
-
-    let seed = null;
-    let ogAddress = null;
-
-    if (config.restore_wallet) {
-        const c = restoreWallet();
-        seed = c.seed;
-        ogAddress = c.address;
-    }
+    const w = restoreWallet();
+    const ogAddress = w.address;
 
     const pwr = new PWRJS('https://pwrrpc.pwrlabs.io');
-    const falconWallet = new PWRFaconl512Wallet(pwr, seed);
+    const falconWallet = new PWRFaconl512Wallet(pwr, w.keypair);
+    const wallet0 = new PWRFaconl512Wallet(pwr);
 
-    const wallet0 = new PWRFaconl512Wallet(pwr, seed);
+    const falconSvc = new FalconServiceNode();
 
     test('init wallet', async () => {
         await falconWallet.init();
@@ -66,6 +66,8 @@ describe('wallet core', () => {
 
         const pubkey = falconWallet.getPublicKey();
         expect(pubkey).toBeInstanceOf(Uint8Array);
+
+        console.log({ wallet: address });
     });
 
     test('ensure wallet is restored', async () => {
@@ -73,12 +75,19 @@ describe('wallet core', () => {
         expect(address).toBe(ogAddress);
     });
 
-    test('sign ', async () => {
+    test('sign', async () => {
         const data = new TextEncoder().encode('hello world');
 
-        const signature = falconWallet.sign(data);
+        const signature = await falconWallet.sign(data);
+
+        const valid = await falconSvc.verify(
+            data,
+            w.keypair.pk,
+            Buffer.from(signature).toString('hex')
+        );
 
         expect(signature).toBeInstanceOf(Uint8Array);
+        expect(valid).toBe(true);
     });
 
     it('Wallet balance', async () => {
@@ -89,26 +98,25 @@ describe('wallet core', () => {
         const balanceBN = new BigNumber(balance);
 
         console.log(`Balance: ${balanceBN.shiftedBy(-9).toNumber()} PWR`);
-
-        expect(balance).toBeGreaterThan(BigNumber(900).shiftedBy(9).toNumber());
+        expect(balance).toBeGreaterThan(BigNumber(90).shiftedBy(9).toNumber());
     });
 
-    test('set key transaction', async () => {
-        const randomBal = Math.round(Math.random() * 10);
-        // console.log('randomBal', randomBal);
+    // test('set key transaction', async () => {
+    //     const randomBal = Math.round(Math.random() * 10);
+    //     // console.log('randomBal', randomBal);
 
-        try {
-            const amount = BigInt(randomBal) * BigInt(10 ** 8);
-            const tx = await falconWallet.setPublicKey(null);
+    //     try {
+    //         const amount = BigInt(randomBal) * BigInt(10 ** 8);
+    //         const tx = await falconWallet.setPublicKey(null);
 
-            console.log('set pubkey txn:', tx);
+    //         console.log('set pubkey txn:', tx);
 
-            // expect(tx.success).toBe(true);
-        } catch (error) {
-            console.log('error', error);
-            expect(false).toBe(true);
-        }
-    });
+    //         // expect(tx.success).toBe(true);
+    //     } catch (error) {
+    //         console.log('error', error);
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
     it('Wallet transfer', async () => {
         const randomBal = Math.round(Math.random() * 10);

@@ -2,19 +2,20 @@
 
 // protocol
 import PWRJS from '../protocol/pwrjs';
+import { hexToBytes } from '@noble/hashes/utils';
 
 // services
 import HttpService from '../services/http.service';
-import { FalconService } from '../services/falcon.service';
+import FalconServiceBrowser from '../services/falcon/falcon-browser.service';
+import FalconServiceNode from '../services/falcon/falcon-node.service';
 
 // utils
 import HashService from '../services/hash.service';
 import { bytesToHex, HexToBytes } from '../utils';
 import { TransactionResponse } from './wallet.types';
 import TransactionBuilder from '../protocol/transaction-builder';
-import { hexToBytes } from '@noble/hashes/utils';
+
 import { FalconKeyPair, IFalconService } from '../services/falcon/c';
-import { FalconServiceNode } from '../services/falcon/falcon-node.service';
 
 // not typed due to 3rd party library (algorythm is relatively new and doesn't have much documentation )
 export default class PWRFaconl512Wallet {
@@ -33,7 +34,7 @@ export default class PWRFaconl512Wallet {
 
     private falcon: IFalconService;
 
-    constructor(pwr: PWRJS, seed?: Uint8Array) {
+    constructor(pwr: PWRJS, keypair?: FalconKeyPair) {
         // this.keypair = Falcon512.genkey();
         // console.log('keypair', this.keypair);
         // const publickey = this.keypair.pk;
@@ -42,18 +43,18 @@ export default class PWRFaconl512Wallet {
         const isBrowser = typeof window !== 'undefined';
 
         this.falcon = isBrowser
-            ? new FalconService(null)
+            ? new FalconServiceBrowser(null)
             : new FalconServiceNode();
 
         this.pwr = pwr;
 
-        if (seed) this._seed = seed;
+        if (keypair) {
+            this.keypair = keypair;
+        }
     }
 
     async init() {
-        if (this._seed) {
-            // this.keypair = this.falcon.genkey(this._seed);
-        } else {
+        if (!this.keypair) {
             this.keypair = await this.falcon.generateKeyPair();
         }
 
@@ -73,8 +74,9 @@ export default class PWRFaconl512Wallet {
         return res.nonce;
     }
 
-    getSeed(): Uint8Array {
-        return new Uint8Array();
+    // remove
+    getKeyPair(): FalconKeyPair {
+        return this.keypair;
     }
 
     getAddress(): string {
@@ -82,17 +84,20 @@ export default class PWRFaconl512Wallet {
     }
 
     getPublicKey(): Uint8Array {
-        return Buffer.from(this.keypair.pk.H, 'hex');
+        return hexToBytes(this.keypair.pk.H);
     }
 
-    sign(data: Uint8Array): Uint8Array {
-        return new Uint8Array();
+    async sign(data: Uint8Array): Promise<Uint8Array> {
+        const signature = await this.falcon.sign(
+            data,
+            this.keypair.pk,
+            this.keypair.sk
+        );
+        return hexToBytes(signature);
     }
 
-    getSignedTransaction(transaction: Uint8Array): Uint8Array {
-        const signature = this.sign(transaction);
-
-        console.log('signature length', signature.length);
+    async getSignedTransaction(transaction: Uint8Array): Promise<Uint8Array> {
+        const signature = await this.sign(transaction);
 
         const buffer = new ArrayBuffer(
             2 + signature.length + transaction.length
@@ -148,9 +153,8 @@ export default class PWRFaconl512Wallet {
 
     // prettier-ignore
     async transferPWR(receiver: Uint8Array, amount: string,  feePerByte?: string): Promise<TransactionResponse>{
-
+        await this.verifyPublicKeyIsSet();
    
-
         let _feePerByte: bigint;
 
         if(!feePerByte){
@@ -182,13 +186,24 @@ export default class PWRFaconl512Wallet {
 
     // #endregion
 
+    // #region verifies
+
+    private async verifyPublicKeyIsSet(): Promise<void> {
+        const res = await this.pwr.getNonceOfAddress(this._addressHex);
+        if (res === '0') {
+            throw new Error('Public key is not set');
+        }
+    }
+
+    // #endregion
+
     // #region utils
 
     private async signAndSend(
         transaction: Uint8Array
     ): Promise<TransactionResponse> {
         // const pkbytes = hexToBytes(this.privateKey);
-        const signedTransaction = this.getSignedTransaction(transaction);
+        const signedTransaction = await this.getSignedTransaction(transaction);
 
         const txnHex = Buffer.from(signedTransaction).toString('hex');
         const txnHash = Buffer.from(
