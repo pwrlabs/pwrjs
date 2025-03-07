@@ -6,11 +6,11 @@ PWRJS is a JavaScript library for interacting with the PWR blobkchain. It provid
 <!-- markdownlint-restore -->
 
 [![Pull Requests welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg?style=flat-square)](https://github.com/pwrlabs/pwrjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
-<a href="https://www.npmjs.com/package/@pwrjs/core">
-  <img src='https://img.shields.io/npm/v/@pwrjs/core' />
+<a href="https://www.npmjs.com/package/pwrjs">
+  <img src='https://img.shields.io/npm/v/pwrjs' />
 </a>
-<a href="https://www.npmjs.com/package/@pwrjs/core">
-  <img src='https://img.shields.io/npm/dt/@pwrjs/core?color=blueviolet' />
+<a href="https://www.npmjs.com/package/pwrjs">
+  <img src='https://img.shields.io/npm/dt/pwrjs?color=blueviolet' />
 </a>
 <a href="https://github.com/pwrlabs/pwrjs/blob/main/LICENSE/">
   <img src="https://img.shields.io/badge/license-MIT-black">
@@ -34,13 +34,13 @@ PWRJS is a JavaScript library for interacting with the PWR blobkchain. It provid
 
 ```bash
 # latest official release (main branch)
-$ npm install @pwrjs/core
+$ npm install pwrjs
 
 # or for latest pre-release version (develop branch)
-$ npm install @pwrjs/core@next
+$ npm install pwrjs@next
 
 # or for latest beta release version (beta branch)
-$ npm install @pwrjs/core@beta
+$ npm install pwrjs@beta
 ```
 
 ## 🌐 Documentation
@@ -54,9 +54,9 @@ Play with [Code Examples](https://github.com/keep-pwr-strong/pwr-examples/) 🎮
 **Import the library:**
 
 ```ts
-import { PWRJS, PWRWallet } from '@pwrjs/core';
+import { PWRJS, PWRWallet } from 'pwrjs';
 // or
-const { PWRJS, PWRWallet } = require('@pwrjs/core');
+const { PWRJS, PWRWallet } = require('pwrjs');
 ```
 
 **Create a new instance**

@@ -117,7 +117,7 @@ function signTxn(txnBytes: Uint8Array, privateKey: Uint8Array) {
     return signature;
 }
 
-async function sendTxn(txnHex: string, txnHash: string): Promise<TxnRes> {
+export async function sendTxn(txnHex: string, txnHash: string): Promise<TxnRes> {
     const url = `${pwrnode}/broadcast/`;
 
     try {
