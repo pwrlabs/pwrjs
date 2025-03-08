@@ -35,6 +35,43 @@ export default class TransactionBuilder {
         return byteArray;
     }
 
+    private static getFalconTransactionBase(
+        id: Transaction_ID,
+        chainId: number,
+        nonce: number,
+        address: Uint8Array,
+        feePerByte: string
+    ) {
+        // const buffer = new ArrayBuffer(37);
+        // const view = new DataView(buffer);
+        const buffer = new Uint8Array(37);
+        const view = new DataView(buffer.buffer);
+
+        // const addressBytes = decodeHex(address.substring(2));
+        const feePerByteBigInt = BigInt(feePerByte);
+        const feePerByteBN = BigNumber(feePerByte);
+
+        if (feePerByteBN.comparedTo(0) < 0) {
+            throw new Error('Fee cannot be negative');
+        }
+
+        let offset = 0;
+        view.setInt32(offset, id);
+        offset += 4;
+        view.setUint8(offset, chainId);
+        offset += 1;
+        view.setInt32(offset, nonce);
+        offset += 4;
+        view.setBigUint64(offset, feePerByteBigInt, false);
+        offset += 8;
+        buffer.set(address, offset);
+        offset += 20;
+
+        const byteArray = new Uint8Array(buffer);
+
+        return byteArray;
+    }
+
     static getTransferPwrTransaction(
         to: string,
         amount: string,
@@ -967,6 +1004,212 @@ export default class TransactionBuilder {
         ]);
 
         return txnBytes;
+    }
+
+    // Falcon transactions bytes
+    static getFalconSetPublicKeyTransaction(
+        publicKey: Uint8Array,
+        nonce: number,
+        chainId: number,
+        address: Uint8Array,
+        feePerByte: string,
+    ): Uint8Array {
+        const base = this.getFalconTransactionBase(
+            Transaction_ID.FALCON_SET_PUBLIC, chainId,
+            nonce, address, feePerByte
+        );
+
+        const publicKeyLength = decToBytes(publicKey.length, 2);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...publicKeyLength,
+            ...publicKey,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getFalconJoinAsValidatorTransaction(
+        ip: string,
+        nonce: number,
+        chainId: number,
+        address: Uint8Array,
+        feePerByte: string,
+    ): Uint8Array {
+        const base = this.getFalconTransactionBase(
+            Transaction_ID.FALCON_JOIN_AS_VALIDATOR, chainId,
+            nonce, address, feePerByte
+        );
+
+        const ipBytes = new Uint8Array(Buffer.from(ip, "utf-8"))
+        const ipBytesLength = decToBytes(ipBytes.length, 2);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...ipBytesLength,
+            ...ipBytes,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getFalconDelegateTransaction(
+        validator: string,
+        amount: string,
+        nonce: number,
+        chainId: number,
+        address: Uint8Array,
+        feePerByte: string,
+    ): Uint8Array {
+        assetAddressValidity(validator);
+
+        const amountBigInt = BigInt(amount);
+        const amountBN = BigNumber(amount);
+
+        if (amountBN.comparedTo(0) < 0) {
+            throw new Error('Amount cannot be negative');
+        }
+        if (nonce < 0) {
+            throw new Error('Nonce cannot be negative');
+        }
+
+        const validatorBytes = decodeHex(validator.substring(2));
+
+        const base = this.getFalconTransactionBase(
+            Transaction_ID.FALCON_DELEGATE, chainId,
+            nonce, address, feePerByte
+        );
+
+        const buffer = new Uint8Array(base.length + 20 + 8);
+        const dataView = new DataView(buffer.buffer);
+        let offset = 0;
+        buffer.set(base, offset);
+        offset += base.length;
+        buffer.set(validatorBytes, offset);
+        offset += 20;
+        dataView.setBigUint64(offset, amountBigInt, false);
+        offset += 8;
+
+        return buffer;
+    }
+
+    static getFalconChangeIpTransaction(
+        newIp: string,
+        nonce: number,
+        chainId: number,
+        address: Uint8Array,
+        feePerByte: string,
+    ): Uint8Array {
+        const base = this.getFalconTransactionBase(
+            Transaction_ID.FALCON_CHANGE_IP, chainId,
+            nonce, address, feePerByte
+        );
+
+        const newIpBytes = new Uint8Array(Buffer.from(newIp, "utf-8"));
+        const newIpBytesLength = decToBytes(newIpBytes.length, 2);
+
+        const txnBytes = new Uint8Array([
+            ...base,
+            ...newIpBytesLength,
+            ...newIpBytes,
+        ]);
+
+        return txnBytes;
+    }
+    
+    static getFalconClaimActiveNodeSpotTransaction(
+        nonce: number,
+        chainId: number,
+        address: Uint8Array,
+        feePerByte: string,
+    ): Uint8Array {
+        const base = this.getFalconTransactionBase(
+            Transaction_ID.FALCON_ACTIVE_NODE_SPOT, chainId,
+            nonce, address, feePerByte
+        );
+
+        const txnBytes = new Uint8Array([
+            ...base,
+        ]);
+
+        return txnBytes;
+    }
+
+    static getFalconTransferPwrTransaction(
+        to: string,
+        amount: string,
+        nonce: number,
+        chainId: number,
+        address: Uint8Array,
+        feePerByte: string,
+    ): Uint8Array {
+        assetAddressValidity(to);
+
+        const amountBigInt = BigInt(amount);
+        const amountBN = BigNumber(amount);
+
+        if (amountBN.comparedTo(0) < 0) {
+            throw new Error('Amount cannot be negative');
+        }
+        if (nonce < 0) {
+            throw new Error('Nonce cannot be negative');
+        }
+
+        const toBytes = decodeHex(to.substring(2));
+
+        const base = this.getFalconTransactionBase(
+            Transaction_ID.FALCON_TRANSFER_PWR, chainId,
+            nonce, address, feePerByte
+        );
+
+        const buffer = new Uint8Array(base.length + 20 + 8);
+        const dataView = new DataView(buffer.buffer);
+        let offset = 0;
+        buffer.set(base, offset);
+        offset += base.length;
+        buffer.set(toBytes, offset);
+        offset += 20;
+        dataView.setBigUint64(offset, amountBigInt, false);
+        offset += 8;
+
+        return buffer;
+    }
+
+    static getFalconVmBytesDataTransaction(
+        vmId: string,
+        data: Uint8Array,
+        nonce: number,
+        chainId: number,
+        address: Uint8Array,
+        feePerByte: string,
+    ): Uint8Array {
+        if (nonce < 0) {
+            throw new Error('Nonce cannot be negative');
+        }
+
+        const _vmId = BigInt(vmId);
+
+        const base = this.getFalconTransactionBase(
+            Transaction_ID.FALCON_VM_DATA, chainId,
+            nonce, address, feePerByte
+        );
+
+        const buffer = new Uint8Array(base.length + 8 + 4 + data.length);
+        buffer.set(base, 0);
+
+        const dataView = new DataView(buffer.buffer);
+        let offset = 0;
+
+        buffer.set(base, offset);
+        offset += base.length;
+        dataView.setBigUint64(offset, _vmId, false);
+        offset += 8;
+        dataView.setInt32(offset, data.length, false);
+        offset += 4;
+        buffer.set(data, offset);
+
+        return buffer;
     }
 
     // #endregion

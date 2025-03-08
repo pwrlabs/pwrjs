@@ -90,12 +90,12 @@ function generateTxnBytes(
     return txnBytes;
 }
 
-function hashTxn(txnBytes: Uint8Array): ArrayBuffer {
+export function hashTxn(txnBytes: Uint8Array): ArrayBuffer {
     const hashedTxn = keccak256.arrayBuffer(txnBytes);
     return hashedTxn;
 }
 
-type TxnRes = {
+export type TxnRes = {
     success: boolean;
     transactionHash: string;
     message: string;
