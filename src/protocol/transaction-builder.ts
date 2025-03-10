@@ -42,12 +42,9 @@ export default class TransactionBuilder {
         address: Uint8Array,
         feePerByte: string
     ) {
-        // const buffer = new ArrayBuffer(37);
-        // const view = new DataView(buffer);
         const buffer = new Uint8Array(37);
         const view = new DataView(buffer.buffer);
 
-        // const addressBytes = decodeHex(address.substring(2));
         const feePerByteBigInt = BigInt(feePerByte);
         const feePerByteBN = BigNumber(feePerByte);
 
@@ -1176,7 +1173,7 @@ export default class TransactionBuilder {
         return buffer;
     }
 
-    static getFalconVmBytesDataTransaction(
+    static getFalconVmDataTransaction(
         vmId: string,
         data: Uint8Array,
         nonce: number,
