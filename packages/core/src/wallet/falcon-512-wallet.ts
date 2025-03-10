@@ -60,7 +60,7 @@ export default class PWRFaconl512Wallet {
 
         const pubk = this.keypair.pk.H;
 
-        const hash = await HashService.hash224(Buffer.from(pubk, 'hex'));
+        const hash = await HashService.pwrAddress(Buffer.from(pubk, 'hex'));
 
         this._addressBytes = hash.slice(0, 20);
         this._addressHex = '0x' + bytesToHex(this._addressBytes);

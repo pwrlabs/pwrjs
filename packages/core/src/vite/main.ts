@@ -1,3 +1,4 @@
+import { bytesToHex } from '@noble/hashes/utils';
 import FalconServiceBrowser from '../services/falcon/falcon-browser.service';
 
 // cheerpjInit();
@@ -104,8 +105,19 @@ async function init() {
 
     window.dispatchEvent(new Event('initCompleted'));
 }
-init();
-// .then(() => {
-//     window.svc.generateKeyPair();
-// })
-// .catch(console.error);
+init()
+    .then(async () => {
+        const keypair = await window.svc.generateKeyPair();
+
+        const message = 'PWR Hello from Loque';
+        const msg = new TextEncoder().encode(message);
+        const signature = await window.svc.sign(msg, keypair.pk, keypair.sk);
+
+        console.log({
+            message,
+            msgHex: bytesToHex(msg),
+            signature,
+            publicKey: keypair.pk.H,
+        });
+    })
+    .catch(console.error);

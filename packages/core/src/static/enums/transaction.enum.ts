@@ -33,4 +33,5 @@ export enum Transaction_ID {
 
     // Falcon
     SET_PUBLIC_KEY_TRANSACTION = 1001,
+    FALCON_TRANSFER_TRANSACTION = 1006,
 }

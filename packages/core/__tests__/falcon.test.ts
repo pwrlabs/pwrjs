@@ -101,22 +101,22 @@ describe('wallet core', () => {
         expect(balance).toBeGreaterThan(BigNumber(90).shiftedBy(9).toNumber());
     });
 
-    // test('set key transaction', async () => {
-    //     const randomBal = Math.round(Math.random() * 10);
-    //     // console.log('randomBal', randomBal);
+    test('set key transaction', async () => {
+        const randomBal = Math.round(Math.random() * 10);
+        // console.log('randomBal', randomBal);
 
-    //     try {
-    //         const amount = BigInt(randomBal) * BigInt(10 ** 8);
-    //         const tx = await falconWallet.setPublicKey(null);
+        try {
+            const amount = BigInt(randomBal) * BigInt(10 ** 8);
+            const tx = await falconWallet.setPublicKey(null);
 
-    //         console.log('set pubkey txn:', tx);
+            console.log('set pubkey txn:', tx);
 
-    //         // expect(tx.success).toBe(true);
-    //     } catch (error) {
-    //         console.log('error', error);
-    //         expect(false).toBe(true);
-    //     }
-    // });
+            // expect(tx.success).toBe(true);
+        } catch (error) {
+            console.log('error', error);
+            expect(false).toBe(true);
+        }
+    });
 
     it('Wallet transfer', async () => {
         const randomBal = Math.round(Math.random() * 10);

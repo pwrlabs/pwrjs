@@ -1031,7 +1031,7 @@ export default class TransactionBuilder {
         chainId: number
     ) {
         const base = this.getFalconTransactionBase(
-            Transaction_ID.TRANSFER,
+            Transaction_ID.FALCON_TRANSFER_TRANSACTION,
             nonce,
             chainId,
             feePerByte,
