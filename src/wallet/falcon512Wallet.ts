@@ -280,7 +280,7 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = this.getChainId();
-        const txn = TransactionBuilder.getFalconVmBytesDataTransaction(
+        const txn = TransactionBuilder.getFalconVmDataTransaction(
             vmId,
             data,
             _nonce,
