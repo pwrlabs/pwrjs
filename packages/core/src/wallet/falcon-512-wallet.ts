@@ -6,8 +6,6 @@ import { bytesToHex } from '@noble/hashes/utils';
 
 // services
 import HttpService from '../services/http.service';
-import FalconServiceNode from '../services/falcon/falcon-node.service';
-// import FalconServiceBrowser from '../services/falcon/falcon-browser.service';
 
 // utils
 import HashService from '../services/hash.service';
@@ -48,9 +46,12 @@ export default class PWRFaconl512Wallet {
 
     static async new(pwr: PWRJS): Promise<PWRFaconl512Wallet> {
         if (typeof window === 'undefined') {
-            const { pk, sk } = await FalconServiceNode.generateKeyPair();
+            // node
+            const m = await import('../services/falcon/falcon-node.service');
+            const { pk, sk } = await m.default.generateKeyPair();
             return new PWRFaconl512Wallet(pwr, pk, sk);
         } else {
+            // browser
             const m = await import('../services/falcon/falcon-browser.service');
             const { pk, sk } = await m.default.generateKeyPair();
             return new PWRFaconl512Wallet(pwr, pk, sk);
@@ -99,8 +100,11 @@ export default class PWRFaconl512Wallet {
 
     async sign(data: Uint8Array): Promise<Uint8Array> {
         if (typeof window === 'undefined') {
-            return FalconServiceNode.sign(data, this._privateKey);
+            // node
+            const m = await import('../services/falcon/falcon-node.service');
+            return m.default.sign(data, this._privateKey);
         } else {
+            // browser
             const m = await import('../services/falcon/falcon-browser.service');
             return m.default.sign(data, this._privateKey);
         }

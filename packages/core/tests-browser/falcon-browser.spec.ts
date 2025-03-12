@@ -2,8 +2,6 @@ import { test, expect, BrowserContext, chromium, Page } from '@playwright/test';
 
 import FalconServiceBrowser from '../src/services/falcon/falcon-browser.service';
 import PWRFaconl512Wallet from '../src/wallet/falcon-512-wallet';
-import PWRJS from '../src/protocol/pwrjs';
-import { HexToBytes } from '../src/utils';
 import BigNumber from 'bignumber.js';
 import { TransactionResponse } from '../src/wallet/wallet.types';
 
@@ -36,10 +34,6 @@ test.describe.configure({
     mode: 'serial',
 });
 
-let wallet: PWRFaconl512Wallet;
-let pwr: PWRJS;
-let defWallet: { pk: string; sk: string; address: string };
-
 test.beforeAll(async () => {
     ctx = await chromium.launchPersistentContext('', {
         headless: true,
@@ -48,20 +42,19 @@ test.beforeAll(async () => {
     page = await ctx.newPage();
     await page.goto(url);
 
-    (await page.evaluate(() => {
+    await page.evaluate(() => {
         return new Promise((resolve, reject) => {
             // Set up a timeout to fail if the event doesn't fire within 5 seconds.
-            const timeout = setTimeout(() => {
+            setTimeout(() => {
                 reject(new Error('initCompleted timeout'));
             }, 10000);
 
             // Add an event listener for the custom event.
             window.addEventListener('initCompleted', () => {
-                clearTimeout(timeout);
-                resolve(window.defWallet);
+                resolve(null);
             });
         });
-    })) as { pk: string; sk: string; address: string };
+    });
 });
 
 test('generate keypair', async () => {
