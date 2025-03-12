@@ -1,45 +1,16 @@
-export enum COMMAND {
-    GENKEY = 'gen',
-    SIGN = 'sign',
-    VERIFY = 'verify',
-}
-
-export type FalconJar = {
-    processCommand: (args: string[]) => Promise<string>;
-};
-
-export type FalconPublicKey = {
-    H: string;
-};
-
-export type FalconPrivateKey = {
-    f: string;
-    F: string;
-    G: string;
-};
-
 export type FalconKeyPair = {
-    pk: FalconPublicKey;
-    sk: FalconPrivateKey;
+    pk: Uint8Array;
+    sk: Uint8Array;
 };
 
-export type KeyPairResponse = {
-    f: string;
-    F: string;
-    G: string;
-    H: string;
-};
-
-export type SignatureResponse = {
-    signature: string;
-};
-
-export interface IFalconService {
+export abstract class FalconService {
     /**
      * Generate a new key pair
      * @returns {Promise<FalconKeyPair>}
      */
-    generateKeyPair(): Promise<FalconKeyPair>;
+    public static generateKeyPair(): Promise<FalconKeyPair> {
+        throw new Error('Method should be override in subclass.');
+    }
 
     /**
      * Sign a message
@@ -49,11 +20,10 @@ export interface IFalconService {
      * @returns {Promise<string>} signature
      *
      */
-    sign(
-        message: Uint8Array,
-        pk: FalconPublicKey,
-        sk: FalconPrivateKey
-    ): Promise<string>;
+    // prettier-ignore
+    public static sign(message: Uint8Array, sk: Uint8Array): Promise<Uint8Array> {
+        throw new Error('Method should be override in subclass');
+    }
 
     /**
      * Verify a signature
@@ -62,9 +32,8 @@ export interface IFalconService {
      * @param {FalconPublicKey} pk
      * @returns {Promise<boolean>} valid
      */
-    verify(
-        message: Uint8Array,
-        pk: FalconPublicKey,
-        signature: string
-    ): Promise<boolean>;
+    // prettier-ignore
+    public static verify(message: Uint8Array, pk: Uint8Array, signature: Uint8Array): Promise<boolean> {
+        throw new Error('Method should be override in subclass');
+    }
 }

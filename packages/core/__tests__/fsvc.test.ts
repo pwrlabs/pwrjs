@@ -1,13 +1,15 @@
 // 3rd party
-import * as fs from 'fs';
+import { describe, test, expect } from 'vitest';
 
-import { IFalconService } from '../src/services/falcon/c';
 import FalconServiceNode from '../src/services/falcon/falcon-node.service';
+import kemBuilder from '@dashlane/pqc-sign-falcon-512-node';
+import exp from 'constants';
 
 const path = require('path') as typeof import('path');
+const fs = require('fs') as typeof import('fs');
 
 describe('', () => {
-    const service: IFalconService = new FalconServiceNode();
+    // const service: IFalconService = new FalconServiceNode();
 
     const json = fs.readFileSync(
         path.resolve(__dirname, 'files', 'falconjava.json'),
@@ -23,167 +25,73 @@ describe('', () => {
     };
 
     test('test service itself', async () => {
-        const keypair = await service.generateKeyPair();
+        const keypair = await FalconServiceNode.generateKeyPair();
 
         const message = encoder.encode('hello');
 
-        const signature = await service.sign(message, keypair.pk, keypair.sk);
+        const signature = await FalconServiceNode.sign(message, keypair.sk);
 
-        const valid = await service.verify(message, keypair.pk, signature);
+        const valid = await FalconServiceNode.verify(
+            message,
+            keypair.pk,
+            signature
+        );
 
         expect(keypair).toHaveProperty('pk');
         expect(keypair).toHaveProperty('sk');
+        expect(keypair.pk).toBeInstanceOf(Uint8Array);
+        expect(keypair.sk).toBeInstanceOf(Uint8Array);
         expect(signature).toBeDefined();
+        expect(signature).toBeInstanceOf(Uint8Array);
         expect(valid).toBe(true);
     });
 
     test('test signature from remote end', async () => {
-        const valid = await service.verify(
-            encoder.encode(javaSign.message),
-            { H: javaSign.pubkey },
-            javaSign.signature
-        );
+        const msg = encoder.encode(javaSign.message);
+        const pubkey = Buffer.from(javaSign.pubkey, 'hex');
+        const sign = Buffer.from(javaSign.signature, 'hex');
 
-        console.log('java sign', { valid });
+        const prefixByte = 0xb8;
+        const output = new Uint8Array(pubkey.length + 1);
+        output[0] = prefixByte; // set the prefix byte
+        output.set(pubkey, 1);
+
+        console.log(pubkey.length);
+
+        const valid = await FalconServiceNode.verify(msg, sign, output);
 
         expect(valid).toBe(true);
     });
 
     test('test signature altered', async () => {
-        const valid = await service.verify(
-            encoder.encode(javaSign.message),
-            { H: 'fake' },
-            javaSign.signature
+        const pubkey = Buffer.from(javaSign.pubkey, 'hex');
+        const sign = Buffer.from(javaSign.signature, 'hex');
+
+        const valid = await FalconServiceNode.verify(
+            encoder.encode('altered msg'),
+            sign,
+            pubkey
         );
 
         expect(valid).toBe(false);
     });
 
     test('test fail', async () => {
-        const keypair = await service.generateKeyPair();
+        const keypair = await FalconServiceNode.generateKeyPair();
 
-        const fakepk = {
-            H: 'fakepk',
-        };
+        const fakepk = new Uint8Array(2);
 
         const message = encoder.encode('hello');
 
-        const signature = await service.sign(message, fakepk, keypair.sk);
-    });
+        // const signature = await FalconServiceNode.sign(message, fakepk);
 
-    // test('export signature', async () => {
-    //     const falcon: Falcon512 = await getKernel('falcon512_n3_v1');
-    //     const keypair: FalconKeyPair = falcon.genkey();
-    //     const message = new TextEncoder().encode('hello');
-    //     const signature = falcon.sign(message, keypair.sk);
-    //     const pubkey = keypair.pk;
-    //     const content = JSON.stringify({
-    //         message: Buffer.from(message).toString('base64'),
-    //         signature: Buffer.from(signature).toString('base64'),
-    //         pubkey: Buffer.from(pubkey).toString('base64'),
-    //     });
-    //     const filePath = path.resolve(__dirname, 'files', 'falconsign.json');
-    //     fs.writeFileSync(filePath, content);
-    // });
-    // it('from b64 to hex', () => {
-    //     const filePath = path.resolve(__dirname, 'files', 'falconb64.json');
-    //     const content = fs.readFileSync(filePath, 'utf-8');
-    //     const { message, signature, pubkey } = JSON.parse(content);
-    //     // base64 to buffer
-    //     const messageBuffer = Uint8Array.from(Buffer.from(message, 'base64'));
-    //     const messageStr = new TextDecoder().decode(messageBuffer);
-    //     const signatureBuffer = Uint8Array.from(
-    //         Buffer.from(signature, 'base64')
-    //     );
-    //     const pubkeyBuffer = Uint8Array.from(Buffer.from(pubkey, 'base64'));
-    //     expect(messageStr).toBe('hello');
-    //     const messageHex = Buffer.from(messageBuffer).toString('hex');
-    //     const signatureHex = Buffer.from(signatureBuffer).toString('hex');
-    //     const pubkeyHex = Buffer.from(pubkeyBuffer).toString('hex');
-    //     const path2 = path.resolve(__dirname, 'files', 'falconhex.json');
-    //     const content2 = JSON.stringify({
-    //         message: messageHex,
-    //         signature: signatureHex,
-    //         pubkey: pubkeyHex,
-    //     });
-    //     fs.writeFileSync(path2, content2);
-    // });
-    // test('verify signature', async () => {
-    //     const falcon: Falcon512 = await getKernel('falcon512_n3_v1');
-    //     const keypair = falcon.genkey();
-    //     const filePath = path.resolve(__dirname, 'files', 'falconpy.json');
-    //     const content = fs.readFileSync(filePath, 'utf-8');
-    //     const { message, signature, pubkey } = JSON.parse(content);
-    //     console.log({ message, signature, pubkey });
-    //     // base64 to buffer
-    //     const messageBuffer = Uint8Array.from(Buffer.from(message, 'hex'));
-    //     const messageStr = new TextDecoder().decode(messageBuffer);
-    //     const signatureBuffer = Uint8Array.from(Buffer.from(signature, 'hex'));
-    //     const pubkeyBuffer = Uint8Array.from(Buffer.from(pubkey, 'hex'));
-    //     expect(messageStr).toBe('hello');
-    //     const verified = falcon.verify(
-    //         signatureBuffer,
-    //         messageBuffer,
-    //         keypair.pk
-    //     );
-    //     expect(verified).toBe(true);
-    // });
-    // test('verify java signature', async () => {
-    //     const f = await falcon.keyPair();
-    //     const filePath = path.resolve(__dirname, 'files', 'falconjava.json');
-    //     const content = fs.readFileSync(filePath, 'utf-8');
-    //     const { message, signature, pubkey } = JSON.parse(content);
-    //     // base64 to buffer
-    //     const messageBuffer = new TextEncoder().encode(message);
-    //     const signatureBuffer = Uint8Array.from(Buffer.from(signature, 'hex'));
-    //     const pubkeyBuffer = Uint8Array.from(Buffer.from(pubkey, 'hex'));
-    //     console.log({
-    //         pubkeylen: pubkeyBuffer.length,
-    //         signaturelen: signatureBuffer.length,
-    //         messagelen: messageBuffer.length,
-    //     });
-    //     const verified = falcon.open(signatureBuffer, pubkeyBuffer);
-    //     // expect(verified).toBe(true);
-    // });
-    // test('verify py signature', async () => {
-    //     const falcon: Falcon512 = await getKernel('falcon512_n3_v1');
-    //     //     const f = await falcon.keyPair();
-    //     const filePath = path.resolve(__dirname, 'files', 'falconpy.json');
-    //     const content = fs.readFileSync(filePath, 'utf-8');
-    //     const { message, signature, pubkey } = JSON.parse(content);
-    //     // base64 to buffer
-    //     const messageBuffer = new TextEncoder().encode(message);
-    //     const signatureBuffer = Uint8Array.from(Buffer.from(signature, 'hex'));
-    //     const pubkeyBuffer = Uint8Array.from(Buffer.from(pubkey, 'hex'));
-    //     console.log({
-    //         pubkeylen: pubkeyBuffer.length,
-    //         signaturelen: signatureBuffer.length,
-    //         messagelen: messageBuffer.length,
-    //     });
-    //     const verified = falcon.verify(
-    //         signatureBuffer,
-    //         messageBuffer,
-    //         pubkeyBuffer
-    //     );
-    //     expect(verified).toBe(true);
-    // });
-    // test('library 3', async () => {
-    //     const keyPair = await falcon.keyPair();
-    //     const message = new TextEncoder().encode('hello');
-    //     const signature = await falcon.signDetached(
-    //         message,
-    //         keyPair.privateKey
-    //     );
-    //     const isValid = await falcon.verifyDetached(
-    //         signature,
-    //         message,
-    //         keyPair.publicKey
-    //     );
-    //     console.log({
-    //         keyPair,
-    //         message,
-    //         signature,
-    //         isValid,
-    //     });
-    // });
+        try {
+            await FalconServiceNode.sign(message, fakepk);
+            expect(true).toBe(false);
+        } catch (err) {
+            expect(err).toBeDefined();
+        }
+
+        // test throw
+    });
 });

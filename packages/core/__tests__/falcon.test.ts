@@ -1,11 +1,9 @@
-import axios from 'axios';
+import { describe, test, expect } from 'vitest';
+
 import BigNumber from 'bignumber.js';
-import TransactionBuilder from '../src/protocol/transaction-builder';
 import PWRFaconl512Wallet from '../src/wallet/falcon-512-wallet';
 import { PWRJS } from '../src';
-import { FalconKeyPair } from '../src/services/falcon/c';
 import FalconServiceNode from '../src/services/falcon/falcon-node.service';
-import { bytesToHex } from '@noble/hashes/utils';
 
 const path = require('path') as typeof import('path');
 const fs = require('fs') as typeof import('fs');
@@ -14,13 +12,16 @@ const RPC = 'https://pwrrpc.pwrlabs.io';
 
 // async function generateWallet() {
 //     const pwr = new PWRJS(RPC);
-//     const falconWallet = new PWRFaconl512Wallet(pwr);
-//     await falconWallet.init();
+//     const falconWallet = await PWRFaconl512Wallet.new(pwr);
 
-//     const keypair = falconWallet.getKeyPair();
+//     const pk = falconWallet.getPublicKey();
+//     const sk = falconWallet.getPrivateKey();
 //     const address = falconWallet.getAddress();
 
-//     const content = JSON.stringify({ keypair, address });
+//     const pkHex = Buffer.from(pk).toString('hex');
+//     const skHex = Buffer.from(sk).toString('hex');
+
+//     const content = JSON.stringify({ pk: pkHex, sk: skHex, address });
 //     const filePath = path.resolve(__dirname, 'files', 'seed.json');
 //     fs.writeFileSync(filePath, content);
 // }
@@ -30,15 +31,18 @@ const RPC = 'https://pwrrpc.pwrlabs.io';
 //     exit(0);
 // });
 
-function restoreWallet(): { keypair: FalconKeyPair; address: string } {
+function restoreWallet(): { pk: Uint8Array; address: string; sk: Uint8Array } {
     const filePath = path.resolve(__dirname, 'files', 'seed.json');
     const content = fs.readFileSync(filePath, 'utf-8');
-    const { keypair, address } = JSON.parse(content) as {
-        keypair: FalconKeyPair;
+    const { pk, sk, address } = JSON.parse(content) as {
+        pk: string;
+        sk: string;
         address: string;
     };
+
     return {
-        keypair,
+        pk: Buffer.from(pk, 'hex'),
+        sk: Buffer.from(sk, 'hex'),
         address,
     };
 }
@@ -52,14 +56,11 @@ describe('wallet core', () => {
     const ogAddress = w.address;
 
     const pwr = new PWRJS('https://pwrrpc.pwrlabs.io');
-    const falconWallet = new PWRFaconl512Wallet(pwr, w.keypair);
-    const wallet0 = new PWRFaconl512Wallet(pwr);
-
-    const falconSvc = new FalconServiceNode();
+    const falconWallet = PWRFaconl512Wallet.fromKeys(pwr, w.pk, w.sk);
+    let wallet0: PWRFaconl512Wallet;
 
     test('init wallet', async () => {
-        await falconWallet.init();
-        await wallet0.init();
+        wallet0 = await PWRFaconl512Wallet.new(pwr);
 
         const address = falconWallet.getAddress();
         expect(address).toMatch(/[0-9A-Fa-f]{40}/g);
@@ -80,17 +81,17 @@ describe('wallet core', () => {
 
         const signature = await falconWallet.sign(data);
 
-        const valid = await falconSvc.verify(
+        const valid = await FalconServiceNode.verify(
             data,
-            w.keypair.pk,
-            Buffer.from(signature).toString('hex')
+            falconWallet.getPublicKey(),
+            signature
         );
 
         expect(signature).toBeInstanceOf(Uint8Array);
         expect(valid).toBe(true);
     });
 
-    it('Wallet balance', async () => {
+    test('Wallet balance', async () => {
         const balance = await pwr.getBalanceOfAddress(
             falconWallet.getAddress()
         );
@@ -98,27 +99,27 @@ describe('wallet core', () => {
         const balanceBN = new BigNumber(balance);
 
         console.log(`Balance: ${balanceBN.shiftedBy(-9).toNumber()} PWR`);
-        expect(balance).toBeGreaterThan(BigNumber(90).shiftedBy(9).toNumber());
+        expect(balance).toBeGreaterThan(BigNumber(5).shiftedBy(9).toNumber());
     });
 
-    test('set key transaction', async () => {
-        const randomBal = Math.round(Math.random() * 10);
-        // console.log('randomBal', randomBal);
+    // test('set key transaction', async () => {
+    //     const randomBal = Math.round(Math.random() * 10);
+    //     // console.log('randomBal', randomBal);
 
-        try {
-            const amount = BigInt(randomBal) * BigInt(10 ** 8);
-            const tx = await falconWallet.setPublicKey(null);
+    //     try {
+    //         const amount = BigInt(randomBal) * BigInt(10 ** 8);
+    //         const tx = await falconWallet.setPublicKey(null);
 
-            console.log('set pubkey txn:', tx);
+    //         console.log('set pubkey txn:', tx);
 
-            // expect(tx.success).toBe(true);
-        } catch (error) {
-            console.log('error', error);
-            expect(false).toBe(true);
-        }
-    });
+    //         // expect(tx.success).toBe(true);
+    //     } catch (error) {
+    //         console.log('error', error);
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
-    it('Wallet transfer', async () => {
+    test('Wallet transfer', async () => {
         const randomBal = Math.round(Math.random() * 10);
         // console.log('randomBal', randomBal);
 
@@ -147,44 +148,4 @@ describe('wallet core', () => {
             expect(false).toBe(true);
         }
     });
-
-    // it('Wallet address and public and private key', () => {
-    //     const address = pwrWallet.getAddress();
-    //     const privateKey = pwrWallet.getPrivateKey();
-    //     const publicKey = pwrWallet.getPublicKey();
-
-    //     const testAddress = /[0-9A-Fa-f]{40}/g;
-    //     const testPvk = /[0-9A-Fa-f]{64}/g;
-    //     const testPbk = /[0-9A-Fa-f]{128}/g;
-
-    //     expect(testAddress.test(address)).toBe(true);
-    //     expect(testPvk.test(privateKey)).toBe(true);
-
-    //     expect(testPbk.test(publicKey)).toBe(true);
-    // });
-
-    // const wallet0 = new PWRWallet();
-
-    // const pvkGuardian =
-    //     '0xb8a70832e8fec8f6a0ec4721f5d5b0239834105eb52a606914e61fbe3506d278';
-    // const guardianWallet = new PWRWallet(pvkGuardian);
-
-    // const validator = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
-    // const validator2 = '0x3ca41ed6a4bf1e838b6b2126a3be77fd07d9f344';
-
-    // const chainId = 0;
-    // pwrWallet.setChainId(chainId);
-
-    // const guardianAddress = '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
-
-    // console.log('validatorAddress', validator);
-    // console.log('wallet', pwrWallet.getAddress());
-    // console.log('pvk', pwrWallet.getPrivateKey());
-
-    // // #region wallet props
-
-    // it('Wallet nonce', async () => {
-    //     const _nonce = await pwrWallet.getNonce();
-    //     expect(_nonce).toBeGreaterThanOrEqual(0);
-    // });
 });

@@ -1,3 +1,4 @@
+import { test, describe, beforeAll, afterAll, expect, vi } from 'vitest';
 import {
     IvaTransactionSubscription,
     IvaTransactionHandler,
@@ -7,14 +8,14 @@ import { PWRJS } from '../src';
 
 describe('IvaTransactionSubscription Unit Test (with mocks)', () => {
     beforeAll(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
     });
 
     afterAll(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
-    it('should process transactions without error and call the handler', async () => {
+    test('should process transactions without error and call the handler', async () => {
         // Dummy transaction for the test.
         // mocked
         const txn: VmDataTransaction = {
@@ -43,16 +44,14 @@ describe('IvaTransactionSubscription Unit Test (with mocks)', () => {
         const mockTransactions: VmDataTransaction[] = [txn];
 
         const pwrjs: PWRJS = {
-            getLatestBlockNumber: jest.fn().mockResolvedValue(mockLatestBlock),
-            getVMDataTransactions: jest
-                .fn()
-                .mockResolvedValue(mockTransactions),
+            getLatestBlockNumber: vi.fn().mockResolvedValue(mockLatestBlock),
+            getVMDataTransactions: vi.fn().mockResolvedValue(mockTransactions),
         } as unknown as PWRJS;
 
         // Create a handler mock to track calls.
         // const processIvaTransactionsMock = jest.fn();
         const handler: IvaTransactionHandler = {
-            processIvaTransactions: jest.fn(),
+            processIvaTransactions: vi.fn(),
         };
 
         const vmId = BigInt(705);
@@ -71,7 +70,7 @@ describe('IvaTransactionSubscription Unit Test (with mocks)', () => {
         const startPromise = subscription.start();
 
         // Advance timers to let one poll cycle execute.
-        jest.advanceTimersByTime(pollInterval * 2);
+        vi.advanceTimersByTime(pollInterval * 2);
 
         // Let pending promises resolve.
         await Promise.resolve();
@@ -80,7 +79,7 @@ describe('IvaTransactionSubscription Unit Test (with mocks)', () => {
         subscription.stop();
 
         // Advance time to allow the loop to exit gracefully.
-        await jest.advanceTimersByTimeAsync(pollInterval);
+        await vi.advanceTimersByTimeAsync(pollInterval);
 
         // Await the subscription loop termination.
         await startPromise;

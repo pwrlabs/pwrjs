@@ -1,7 +1,7 @@
 import { keccak_256, keccak_224 } from '@noble/hashes/sha3';
 
 export default class HashService {
-    static async pwrAddress(input: Uint8Array): Promise<Uint8Array> {
+    static kekak224(input: Uint8Array): Uint8Array {
         return keccak_224(input);
     }
 

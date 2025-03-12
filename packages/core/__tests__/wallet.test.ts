@@ -1,3 +1,4 @@
+import { describe, test, it, expect, beforeAll, afterAll } from 'vitest';
 import PWRWallet from '../src/wallet/wallet';
 import { keccak256 } from 'js-sha3';
 

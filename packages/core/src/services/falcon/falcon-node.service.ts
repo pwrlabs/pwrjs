@@ -1,65 +1,27 @@
-// node modules
-import path = require('path');
-import { promisify } from 'util';
-import { exec } from 'child_process';
+import { FalconKeyPair, FalconService } from './c';
+import kemBuilder from '@dashlane/pqc-sign-falcon-512-node';
 
-const execPromise = promisify(exec);
-
-// services
-import {
-    COMMAND,
-    FalconKeyPair,
-    FalconPrivateKey,
-    FalconPublicKey,
-    IFalconService,
-    KeyPairResponse,
-    SignatureResponse,
-} from './c';
-
-// Falcon service uses a jar file to interact with the falcon algorithm
-// this should be refactored and use a nativa javascript implementation
-
-export default class FalconServiceNode implements IFalconService {
-    private PATH = path.join(__dirname, 'falcon.jar');
-
-    async generateKeyPair(): Promise<FalconKeyPair> {
-        const res = await execPromise(
-            `java -jar ${this.PATH} ${COMMAND.GENKEY}`
-        );
-
-        const { f, F, G, H } = JSON.parse(res.stdout) as KeyPairResponse;
-
-        return {
-            pk: { H: H },
-            sk: { f: f, F: F, G: G },
-        };
+export default class FalconServiceNode extends FalconService {
+    private static async getFalcon512() {
+        return kemBuilder();
     }
 
-    async sign(
-        message: Uint8Array,
-        pk: FalconPublicKey,
-        sk: FalconPrivateKey
-    ): Promise<string> {
-        const msg = Buffer.from(message).toString('hex');
-        const res = await execPromise(
-            `java -jar ${this.PATH} ${COMMAND.SIGN} ${msg} ${sk.f} ${sk.F} ${sk.G} ${pk.H}`
-        );
-        const { signature } = JSON.parse(res.stdout) as SignatureResponse;
+    static async generateKeyPair(): Promise<FalconKeyPair> {
+        const falcon = await FalconServiceNode.getFalcon512();
+        const { publicKey: pk, privateKey: sk } = await falcon.keypair();
+        return { pk, sk };
+    }
+
+    // prettier-ignore
+    static async sign(message: Uint8Array, sk: Uint8Array): Promise<Uint8Array> {
+        const falcon = await FalconServiceNode.getFalcon512();
+        const { signature } = await falcon.sign(message, sk);
         return signature;
     }
 
-    async verify(
-        message: Uint8Array,
-        pk: FalconPublicKey,
-        signature: string
-    ): Promise<boolean> {
-        const msg = Buffer.from(message).toString('hex');
-        const res = await execPromise(
-            `java -jar ${this.PATH} ${COMMAND.VERIFY} ${msg} ${pk.H} ${signature}`
-        );
-
-        const { valid } = JSON.parse(res.stdout) as { valid: boolean };
-
-        return valid;
+    // prettier-ignore
+    static async verify(message: Uint8Array, pk: Uint8Array, signature: Uint8Array): Promise<boolean> {
+        const falcon = await FalconServiceNode.getFalcon512();
+        return falcon.verify(signature, message, pk);;
     }
 }

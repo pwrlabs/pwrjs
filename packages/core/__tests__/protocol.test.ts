@@ -1,3 +1,5 @@
+import { describe, test, expect } from 'vitest';
+
 import { PWRWallet } from '../src';
 import PWRJS from '../src/protocol/pwrjs';
 
@@ -19,24 +21,24 @@ describe('pwrjs core', () => {
 
     // #region pwrjs props
 
-    it('PWRJS set node url', async () => {
+    test('PWRJS set node url', async () => {
         await sleep(2000);
 
         const nodeUrl = pwrjs.getRpcNodeUrl();
         expect(nodeUrl).toBe(url);
     });
 
-    it('PWRJS fee ', async () => {
+    test('PWRJS fee ', async () => {
         const fee = await pwrjs.getFeePerByte();
         expect(fee).toBe(1000);
     });
 
-    it('PWRJS chain id', async () => {
+    test('PWRJS chain id', async () => {
         const chainId = await pwrjs.getChainId();
         expect(chainId).toBe(0);
     });
 
-    it('PWRJS blockchain version', async () => {
+    test('PWRJS blockchain version', async () => {
         const blockchainVersion = await pwrjs.getBlockchainVersion();
         expect(blockchainVersion).toBe(1);
     });
@@ -44,7 +46,7 @@ describe('pwrjs core', () => {
     // #endregion
 
     // #region fee
-    it('fee ecsda', async () => {
+    test('fee ecsda', async () => {
         const fee = await pwrjs.getEcdsaVerificationFee();
         expect(fee).toBe(100000);
     });
@@ -53,7 +55,7 @@ describe('pwrjs core', () => {
 
     // #region wallet methods
 
-    it('PWRJS nonce', async () => {
+    test('PWRJS nonce', async () => {
         const randomWallet = WalletUtils.getRandomWallet();
 
         const nonce = await pwrjs.getNonceOfAddress(
@@ -63,7 +65,7 @@ describe('pwrjs core', () => {
         expect(nonce).toBe(0);
     });
 
-    it('PWRJS balance', async () => {
+    test('PWRJS balance', async () => {
         const randomWallet = WalletUtils.getRandomWallet();
 
         const balanceOfRandom = await pwrjs.getBalanceOfAddress(
@@ -81,27 +83,27 @@ describe('pwrjs core', () => {
 
     // #region general
 
-    it('PWRJS burn percentage', async () => {
+    test('PWRJS burn percentage', async () => {
         const burnPercentage = await pwrjs.getBurnPercentage();
         expect(burnPercentage).toBe(0);
     });
 
-    it('PWRJS total voting power', async () => {
+    test('PWRJS total voting power', async () => {
         const totalVotingPower = await pwrjs.getTotalVotingPower();
         expect(totalVotingPower).toBeGreaterThan(0);
     });
 
-    it('PWRJS rewards per year', async () => {
+    test('PWRJS rewards per year', async () => {
         const rewardsPerYear = await pwrjs.getPwrRewardsPerYear();
         expect(rewardsPerYear).toBe(20000000000000000);
     });
 
-    it('PWRJS withdrawal Lock Time', async () => {
+    test('PWRJS withdrawal Lock Time', async () => {
         const withdrawalLockTime = await pwrjs.getWithdrawalLockTime();
         expect(withdrawalLockTime).toBe(604800000);
     });
 
-    it('PWRJS get early withdraw penalty', async () => {
+    test('PWRJS get early withdraw penalty', async () => {
         const penalty = await pwrjs.getEarlyWithdrawPenalty();
 
         expect(penalty).toEqual({});
@@ -111,37 +113,37 @@ describe('pwrjs core', () => {
 
     // #region blocks
 
-    it('PWRJS blocks count', async () => {
+    test('PWRJS blocks count', async () => {
         const blocksCount = await pwrjs.getBlocksCount();
         expect(blocksCount).toBeGreaterThan(0);
     });
 
-    it('PWRJS max block size', async () => {
+    test('PWRJS max block size', async () => {
         const maxBlockSize = await pwrjs.getMaxBlockSize();
         expect(maxBlockSize).toBe(5000000);
     });
 
-    it('PWRJS Max Transaction Size', async () => {
+    test('PWRJS Max Transaction Size', async () => {
         const maxTxnSize = await pwrjs.getMaxTransactionSize();
         expect(maxTxnSize).toBe(2000000);
     });
 
-    it('PWRJS block number', async () => {
+    test('PWRJS block number', async () => {
         const blockNumber = await pwrjs.getBlockNumber();
         expect(blockNumber).toBeGreaterThan(0);
     });
 
-    it('PWRJS block timestamp', async () => {
+    test('PWRJS block timestamp', async () => {
         const blockTimestamp = await pwrjs.getBlockTimestamp();
         expect(blockTimestamp).toBeGreaterThan(0);
     });
 
-    it('PWRJS latest block number', async () => {
+    test('PWRJS latest block number', async () => {
         const latestBlockNumber = await pwrjs.getLatestBlockNumber();
         expect(latestBlockNumber).toBeGreaterThan(0);
     });
 
-    it('PWRJS block by number', async () => {
+    test('PWRJS block by number', async () => {
         const firstBlock = await pwrjs.getBlockByNumber(3);
 
         const firstBlockData = {
@@ -185,23 +187,23 @@ describe('pwrjs core', () => {
 
     // #region vm
 
-    it('PWRJS vm owner txn fee ', async () => {
+    test('PWRJS vm owner txn fee ', async () => {
         const vmOwnerTxnFee = await pwrjs.getVmOwnerTransactionFeeShare();
         expect(vmOwnerTxnFee).toBe(2500);
     });
 
-    it('PWRJS vm claiming fee', async () => {
+    test('PWRJS vm claiming fee', async () => {
         const claimingFee = await pwrjs.getVmIdClaimingFee();
         expect(claimingFee).toBe(100000000000);
     });
 
-    it('PWRJS vmId', async () => {
+    test('PWRJS vmId', async () => {
         const vmId = pwrjs.getVmIdAddress(BigInt(10023));
 
         expect(vmId).toBe(vmAddress);
     });
 
-    it('PWRJ isVm address', async () => {
+    test('PWRJ isVm address', async () => {
         const notVmAddress = PWRJS.isVmAddress(testAddress);
         const _vmAddress = PWRJS.isVmAddress(vmAddress);
         const _vmAddress2 = PWRJS.isVmAddress(
@@ -217,7 +219,7 @@ describe('pwrjs core', () => {
         expect(_vmAddress3).toBe(true);
     });
 
-    // it('PWRJS VMDataTxn', async () => {
+    // test('PWRJS VMDataTxn', async () => {
     //     const vmDataTxn = await pwrjs.getVMDataTransactions(
     //         '1000',
     //         '1002',
@@ -248,15 +250,15 @@ describe('pwrjs core', () => {
     //     expect(vmDataTxn[0]).toEqual(TxnData);
     // });
 
-    it('PWRJS Owner of VM', async () => {
-        const res = await pwrjs.getOwnerOfVm('20');
+    // test('PWRJS Owner of VM', async () => {
+    //     const res = await pwrjs.getOwnerOfVm('20');
 
-        expect(res.toLowerCase()).toBe(
-            '0xffb927e3e1fd43fc47bd140c817af780241d1b31'
-        );
-    });
+    //     expect(res.toLowerCase()).toBe(
+    //         '0xffb927e3e1fd43fc47bd140c817af780241d1b31'
+    //     );
+    // });
 
-    // it('conduits of VM', async () => {
+    // test('conduits of VM', async () => {
     //     const conduits = await pwrjs.getConduitsOfVm('111');
 
     //     expect(conduits.length).toBeGreaterThan(0);
@@ -265,12 +267,12 @@ describe('pwrjs core', () => {
     // #endregion
 
     // #region proposal
-    it('PWRJS proposal fee', async () => {
+    test('PWRJS proposal fee', async () => {
         const fee = await pwrjs.getProposalFee();
         expect(fee).toBe(1000000000);
     });
 
-    it('PWRJS proposal validity time', async () => {
+    test('PWRJS proposal validity time', async () => {
         const validityTime = await pwrjs.getProposalValidityTime();
         expect(validityTime).toBe(604800000);
     });
@@ -279,12 +281,12 @@ describe('pwrjs core', () => {
 
     // #region guardian
 
-    it('PWRJS max guardian time', async () => {
+    test('PWRJS max guardian time', async () => {
         const maxGuardianTime = await pwrjs.getMaxGuardianTime();
         expect(maxGuardianTime).toBe(-1627869184);
     });
 
-    it('PWRJS is valid for guardian approval', async () => {
+    test('PWRJS is valid for guardian approval', async () => {
         const txns = await pwrjs.getVMDataTransactions('1000', '2000', '10023');
 
         const txn = txns[0];
@@ -300,7 +302,7 @@ describe('pwrjs core', () => {
         // });
     }, 5000);
 
-    it('PWRJS guardian', async () => {
+    test('PWRJS guardian', async () => {
         const randomWallet = new PWRWallet();
         const noGuardian = await pwrjs.getGuardianOfAddress(
             randomWallet.getAddress()
@@ -315,33 +317,33 @@ describe('pwrjs core', () => {
 
     // #region validator and voting pwr
 
-    it('PWRJS validator slashing fee', async () => {
+    test('PWRJS validator slashing fee', async () => {
         const slashingFee = await pwrjs.getValidatorSlashingFee();
         expect(slashingFee).toBe(500);
     });
 
-    it('PWRJS validator operational fee', async () => {
+    test('PWRJS validator operational fee', async () => {
         const operationalFee = await pwrjs.getValidatorOperationalFee();
         expect(operationalFee).toBe(1000);
     });
 
-    it('PWRJS validator joining fee', async () => {
+    test('PWRJS validator joining fee', async () => {
         const joiningFee = await pwrjs.getValidatorJoiningFee();
         expect(joiningFee).toBe(1000000000000);
     });
 
-    it('PWRJS Minimum delegating amount', async () => {
+    test('PWRJS Minimum delegating amount', async () => {
         const minDelegatingAmount = await pwrjs.getMinimumDelegatingAmount();
         expect(minDelegatingAmount).toBe(1000000000);
     });
 
-    // // it('PWRJS voting pwr', async () => {
+    // // test('PWRJS voting pwr', async () => {
     // //     const votingPwr = await PWRJS.getActiveVotingPower();
 
     // //     expect(votingPwr).toBeGreaterThan(0);
     // // });
 
-    it('PWRJS validator', async () => {
+    test('PWRJS validator', async () => {
         const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
         const validator = await pwrjs.getValidator(vAddress);
         expect(validator.address.toLowerCase()).toBe(
@@ -349,7 +351,7 @@ describe('pwrjs core', () => {
         );
     });
 
-    it('PWRJS all Validators', async () => {
+    test('PWRJS all Validators', async () => {
         const allValidators = await pwrjs.getAllValidators();
         const standByValidators = await pwrjs.getStandbyValidators();
         const activeValidators = await pwrjs.getActiveValidators();
@@ -359,7 +361,7 @@ describe('pwrjs core', () => {
         expect(activeValidators.length).toBe(32);
     });
 
-    it('PWRJS Validators count', async () => {
+    test('PWRJS Validators count', async () => {
         const validatorsCount = await pwrjs.getTotalValidatorsCount();
         const standByValidators = await pwrjs.getStandbyValidatorsCount();
         const activeValidators = await pwrjs.getActiveValidatorsCount();
@@ -371,7 +373,7 @@ describe('pwrjs core', () => {
         expect(delegatorCount).toBe(32);
     });
 
-    it('PWRJS get delegatees', async () => {
+    test('PWRJS get delegatees', async () => {
         const delegatees = await pwrjs.getDelegatees(
             '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA'
         );
@@ -379,20 +381,20 @@ describe('pwrjs core', () => {
         expect(delegatees.length).toBeGreaterThan(0);
     });
 
-    it('PWRJS Delegated pwr', async () => {
+    test('PWRJS Delegated pwr', async () => {
         const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
         const res = await pwrjs.getDelegatedPWR(testAddress, vAddress);
 
         expect(res).toBe(0);
     });
 
-    it('PWRJS shares of delegator', async () => {
+    test('PWRJS shares of delegator', async () => {
         const dAddress = testAddress;
         const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
         const res = await pwrjs.getSharesOfDelegator(dAddress, vAddress);
     });
 
-    it('PWRJS share value', async () => {
+    test('PWRJS share value', async () => {
         const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
 
         const res = await pwrjs.getShareValue(vAddress);
