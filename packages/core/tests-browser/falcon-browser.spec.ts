@@ -1,14 +1,19 @@
 import { test, expect, BrowserContext, chromium, Page } from '@playwright/test';
 
 import FalconServiceBrowser from '../src/services/falcon/falcon-browser.service';
-import PWRFaconl512Wallet from '../src/wallet/falcon-512-wallet';
+import PWRFalconl512Wallet from '../src/wallet/falcon-512-wallet';
 import BigNumber from 'bignumber.js';
 import { TransactionResponse } from '../src/wallet/wallet.types';
+
+import path from 'path';
+import fs from 'fs';
+import { PWRJS } from '../src';
 
 const url = 'http://localhost:5173';
 
 declare global {
     interface Window {
+        _pwr: PWRJS;
         svc: typeof FalconServiceBrowser;
         javaSign: {
             message: string;
@@ -21,8 +26,8 @@ declare global {
             address: string;
         };
         hexToBytes: (hex: string) => Uint8Array;
-        PWRFaconl512Wallet: typeof PWRFaconl512Wallet;
-        wallet: PWRFaconl512Wallet;
+        PWRFaconl512Wallet: typeof PWRFalconl512Wallet;
+        wallet: PWRFalconl512Wallet;
     }
 }
 
@@ -207,7 +212,7 @@ test('Wallet transfer', async () => {
                 }, 10000);
 
                 const randomBal = Math.round(Math.random() * 10);
-                const amount = BigInt(randomBal) * BigInt(10 ** 8);
+                const amount = BigInt(randomBal) * BigInt(10 ** 7); //0.0X PWR
 
                 let to = '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
 
@@ -225,4 +230,100 @@ test('Wallet transfer', async () => {
         console.log('transferpwr', error);
         expect(false).toBe(true);
     }
+});
+
+test('export wallet', async () => {
+    try {
+        const downloadPromise = page.waitForEvent('download');
+
+        await page.evaluate(() => {
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('initCompleted timeout'));
+                }, 10000);
+
+                const element = document.createElement('input');
+                element.id = 'falcon-picker';
+                element.type = 'file';
+                element.accept = '.dat';
+                document.body.appendChild(element);
+
+                window.wallet.storeWallet('hellokitty');
+                resolve(null);
+            });
+        });
+
+        const download = await downloadPromise;
+
+        const _p = path.resolve(__dirname, 'wallet.dat');
+        await download.saveAs(_p);
+        expect(fs.existsSync(_p)).toBe(true);
+
+        // pick the file
+        await page.setInputFiles('#falcon-picker', _p);
+
+        type waRes = {
+            address: string;
+            pk: Uint8Array;
+            sk: Uint8Array;
+        };
+
+        const { ogW, newW } = (await page.evaluate(() => {
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('initCompleted timeout'));
+                }, 10000);
+
+                const elmnt = document.querySelector(
+                    '#falcon-picker'
+                ) as HTMLInputElement;
+                const file: File = elmnt.files![0];
+
+                console.log('file', file);
+
+                const pwr = window._pwr;
+
+                window.PWRFaconl512Wallet.loadWalletBrowser(
+                    pwr,
+                    'hellokitty',
+                    file
+                ).then((res) => {
+                    console.log('res', res);
+                    resolve({
+                        ogW: {
+                            address: window.wallet.getAddress(),
+                            pk: window.wallet.getPublicKey(),
+                            sk: window.wallet.getPrivateKey(),
+                        },
+                        newW: {
+                            address: res.getAddress(),
+                            pk: res.getPublicKey(),
+                            sk: res.getPrivateKey(),
+                        },
+                    });
+                });
+            });
+        })) as { ogW: waRes; newW: waRes };
+
+        expect(ogW).toBeDefined();
+        expect(newW).toBeDefined();
+        expect(ogW.address).toBe(newW.address);
+        expect(typeof ogW.pk).toBe(typeof newW.pk);
+        expect(newW.pk.length).toBe(ogW.pk.length);
+        expect(newW.pk).toStrictEqual(ogW.pk);
+        expect(typeof ogW.sk).toBe(typeof newW.sk);
+        expect(newW.sk.length).toBe(ogW.sk.length);
+        expect(newW.sk).toStrictEqual(ogW.sk);
+
+        // expect(newW.getAddress()).toBe(ogW.getAddress());
+    } catch (error) {
+        console.log('transferpwr', error);
+        expect(false).toBe(true);
+    }
+});
+
+test.afterAll(async () => {
+    const _p = path.resolve(__dirname, 'wallet.dat');
+    const exists = fs.existsSync(_p);
+    if (exists) fs.rmSync(_p);
 });

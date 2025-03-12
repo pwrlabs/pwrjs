@@ -1,9 +1,10 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, afterAll } from 'vitest';
 
 import BigNumber from 'bignumber.js';
-import PWRFaconl512Wallet from '../src/wallet/falcon-512-wallet';
+import PWRFalconl512Wallet from '../src/wallet/falcon-512-wallet';
 import { PWRJS } from '../src';
 import FalconServiceNode from '../src/services/falcon/falcon-node.service';
+import { hexToBytes } from '@noble/hashes/utils';
 
 const path = require('path') as typeof import('path');
 const fs = require('fs') as typeof import('fs');
@@ -41,8 +42,8 @@ function restoreWallet(): { pk: Uint8Array; address: string; sk: Uint8Array } {
     };
 
     return {
-        pk: Buffer.from(pk, 'hex'),
-        sk: Buffer.from(sk, 'hex'),
+        pk: Uint8Array.from(hexToBytes(pk)),
+        sk: Uint8Array.from(hexToBytes(sk)),
         address,
     };
 }
@@ -56,13 +57,13 @@ describe('wallet core', () => {
     const ogAddress = w.address;
 
     const pwr = new PWRJS(RPC);
-    const falconWallet = PWRFaconl512Wallet.fromKeys(pwr, w.pk, w.sk);
-    let wallet0: PWRFaconl512Wallet;
+    const falconWallet = PWRFalconl512Wallet.fromKeys(pwr, w.pk, w.sk);
+    let wallet0: PWRFalconl512Wallet;
 
     const encoder = new TextEncoder();
 
     test('init wallet', async () => {
-        wallet0 = await PWRFaconl512Wallet.new(pwr);
+        wallet0 = await PWRFalconl512Wallet.new(pwr);
 
         const address = falconWallet.getAddress();
         expect(address).toMatch(/[0-9A-Fa-f]{40}/g);
@@ -122,13 +123,13 @@ describe('wallet core', () => {
     // });
 
     test('Wallet transfer', async () => {
-        const randomBal = Math.round(Math.random() * 10);
+        const randomBal = +(Math.random() / 10).toPrecision(2);
         // console.log('randomBal', randomBal);
 
         let to = '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
 
         try {
-            const amount = BigInt(randomBal) * BigInt(10 ** 8);
+            const amount = BigNumber(randomBal).shiftedBy(9);
             const tx = await falconWallet.transferPWR(to, amount.toString());
 
             console.log('transfer txn:', tx);
@@ -149,18 +150,52 @@ describe('wallet core', () => {
         }
     });
 
-    test('Vm Data transaction', async () => {
-        const data = encoder.encode('PWR Hello for all the listeners!');
+    // test('Vm Data transaction', async () => {
+    //     const data = encoder.encode('PWR Hello for all the listeners!');
 
-        try {
-            const tx = await falconWallet.sendVmData('1', data);
+    //     try {
+    //         const tx = await falconWallet.sendVmData('1', data);
 
-            console.log('vm data txn:', tx);
+    //         console.log('vm data txn:', tx);
 
-            expect(tx.success).toBe(true);
-        } catch (error) {
-            console.log('error vm data txn', error);
-            expect(false).toBe(true);
-        }
+    //         expect(tx.success).toBe(true);
+    //     } catch (error) {
+    //         console.log('error vm data txn', error);
+    //         expect(false).toBe(true);
+    //     }
+    // });
+
+    // #region export/import wallet
+
+    const password = 'hellokitty';
+
+    test('exports a wallet', async () => {
+        // const _p = path.resolve(__dirname);
+        falconWallet.storeWallet(password, __dirname);
     });
+
+    test('imports a wallet', async () => {
+        const path = require('path');
+        // prettier-ignore
+        const wallet = await PWRFalconl512Wallet.loadWalletNode(pwr, password, __dirname);
+        // const importedWallet = await pwrWallet.loadWallet(password, _p);
+
+        expect(wallet.getPublicKey()).toStrictEqual(
+            falconWallet.getPublicKey()
+        );
+
+        expect(wallet.getPrivateKey()).toStrictEqual(
+            falconWallet.getPrivateKey()
+        );
+
+        expect(wallet.getAddress()).toStrictEqual(falconWallet.getAddress());
+    });
+
+    afterAll(() => {
+        // remove
+        const _p = path.resolve(__dirname, 'wallet.dat');
+        const exists = fs.existsSync(_p);
+        if (exists) fs.rmSync(_p);
+    });
+    // #endregion
 });

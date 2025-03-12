@@ -12,7 +12,7 @@ import { Transaction_ID } from '../static/enums/transaction.enum';
 import { hexToBytes } from '@ethereumjs/util';
 import HttpService from '../services/http.service';
 import CryptoService from '../services/crypto.service';
-import { StorageService } from '../services/storage.service';
+import StorageService from '../services/storage.service';
 import './wallet.types';
 import { TransactionResponse } from './wallet.types';
 import HashService from '../services/hash.service';

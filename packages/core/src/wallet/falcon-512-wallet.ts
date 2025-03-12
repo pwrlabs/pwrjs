@@ -7,14 +7,16 @@ import PWRJS from '../protocol/pwrjs';
 // services
 import HttpService from '../services/http.service';
 import HashService from '../services/hash.service';
+import StorageService from '../services/storage.service';
 
 // utils
 import { TransactionResponse } from './wallet.types';
 import TransactionBuilder from '../protocol/transaction-builder';
 import { FalconKeyPair } from '../services/falcon/c';
+import BytesService from '../services/bytes.service';
+import CryptoService from '../services/crypto.service';
 
-// not typed due to 3rd party library (algorythm is relatively new and doesn't have much documentation )
-export default class PWRFaconl512Wallet {
+export default class PWRFalconl512Wallet {
     public _addressHex: string;
     private _addressBytes: Uint8Array;
     private _publicKey: Uint8Array;
@@ -45,17 +47,17 @@ export default class PWRFaconl512Wallet {
         this.chainId = this.pwr.getChainId();
     }
 
-    static async new(pwr: PWRJS): Promise<PWRFaconl512Wallet> {
+    static async new(pwr: PWRJS): Promise<PWRFalconl512Wallet> {
         if (typeof window === 'undefined') {
             // node
             const m = await import('../services/falcon/falcon-node.service');
             const { pk, sk } = await m.default.generateKeyPair();
-            return new PWRFaconl512Wallet(pwr, pk, sk);
+            return new PWRFalconl512Wallet(pwr, pk, sk);
         } else {
             // browser
             const m = await import('../services/falcon/falcon-browser.service');
             const { pk, sk } = await m.default.generateKeyPair();
-            return new PWRFaconl512Wallet(pwr, pk, sk);
+            return new PWRFalconl512Wallet(pwr, pk, sk);
         }
     }
 
@@ -63,8 +65,8 @@ export default class PWRFaconl512Wallet {
         pwr: PWRJS,
         publicKey: Uint8Array,
         privateKey: Uint8Array
-    ): PWRFaconl512Wallet {
-        return new PWRFaconl512Wallet(pwr, publicKey, privateKey);
+    ): PWRFalconl512Wallet {
+        return new PWRFalconl512Wallet(pwr, publicKey, privateKey);
     }
 
     // #endregion
@@ -209,6 +211,101 @@ export default class PWRFaconl512Wallet {
     // #endregion
 
     // #region wallet export / import
+    /**
+     * Encrypts the wallet's public and private key and saves it to a file with .dat extension.
+     *
+     * @param password a string to encrypt the wallet
+     * @param filePath if executing in node, the path to save the wallet
+     */
+    async storeWallet(password: string, filePath?: string) {
+        const bytes = BytesService.keypairToArrayBuffer({
+            pk: this._publicKey,
+            sk: this._privateKey,
+        });
+
+        // Check for browser environment by testing if 'window' and 'crypto.subtle' are available.
+        const isBrowser =
+            typeof window !== 'undefined' &&
+            window.crypto &&
+            window.crypto.subtle;
+
+        if (isBrowser) {
+            // Browser: Encrypt and then trigger a file download.
+            const encryptedData = await CryptoService.encryptBrowser(
+                bytes,
+                password
+            );
+
+            StorageService.saveBrowser(encryptedData);
+        } else {
+            if (!filePath)
+                throw new Error('filePath is required in Node.js environment');
+
+            const encryptedData = CryptoService.encryptNode(bytes, password);
+
+            StorageService.saveNode(encryptedData, filePath);
+        }
+    }
+
+    /**
+     * Decrypts the wallet's private key from a file with .dat extension.
+     *
+     * @param password
+     * @param filepath
+     * @returns
+     */
+    static async loadWalletNode(
+        pwr: PWRJS,
+        password: string,
+        filepath?: string
+    ): Promise<PWRFalconl512Wallet> {
+        // Detect whether we're in the browser.
+        const isBrowser =
+            typeof window !== 'undefined' &&
+            window.crypto &&
+            window.crypto.subtle;
+
+        if (isBrowser)
+            throw new Error(
+                'This method is meant for Node.js environment, please use loadWalletBrowser instead'
+            );
+
+        if (!filepath)
+            throw new Error('filePath is required in Node.js environment');
+
+        const bytes = Uint8Array.from(StorageService.loadNode(filepath));
+
+        const encrypted: Uint8Array = CryptoService.decryptPrivateKeyNode(
+            bytes,
+            password
+        );
+
+        const { pk, sk } = BytesService.arrayBufferToKeypair(encrypted);
+
+        return new PWRFalconl512Wallet(pwr, pk, sk);
+    }
+
+    static async loadWalletBrowser(pwr: PWRJS, password: string, file: File) {
+        if (typeof window === 'undefined') {
+            throw new Error(
+                'This method is meant for browser environment, please use loadWallet instead'
+            );
+        }
+
+        try {
+            const bytes = await StorageService.loadBrowser(file);
+
+            const decrypted: Uint8Array =
+                await CryptoService.decryptPrivateKeyBrowser(bytes, password);
+
+            const { pk, sk } = BytesService.arrayBufferToKeypair(decrypted);
+
+            return new PWRFalconl512Wallet(pwr, pk, sk);
+        } catch (e) {
+            console.error(e);
+            throw new Error('Failed to load wallet');
+        }
+    }
 
     // #endregion
 

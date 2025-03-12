@@ -1,24 +1,36 @@
 import { expect, test, describe } from 'vitest';
-import kemBuilder from '@dashlane/pqc-sign-falcon-512-node';
+
+import BytesService from '../src/services/bytes.service';
+import FalconServiceNode from '../src/services/falcon/falcon-node.service';
 
 const path = require('path') as typeof import('path');
 const fs = require('fs') as typeof import('fs');
 
+/**
+ * This file is for temporary tests for services, we don't add this tests
+ * since those files are straightforward and don't need to be tested.
+ *
+ */
+
 describe('', () => {
     test('test service itself', async () => {
-        const falcon = await kemBuilder();
-        const keypair = await falcon.keypair();
+        const keypair = await FalconServiceNode.generateKeyPair();
 
-        const message = Buffer.from('hello');
-        const { signature: s } = await falcon.sign(message, keypair.privateKey);
-        const valid = await falcon.verify(s, message, keypair.publicKey);
+        const bytes = BytesService.keypairToArrayBuffer(keypair);
 
-        expect(keypair).toHaveProperty('publicKey');
-        expect(keypair).toHaveProperty('privateKey');
-        expect(keypair.publicKey).toBeInstanceOf(Uint8Array);
-        expect(keypair.privateKey).toBeInstanceOf(Uint8Array);
-        expect(s).toBeDefined();
-        expect(s).toBeInstanceOf(Uint8Array);
-        expect(valid).toBe(true);
+        const keypairrestored = BytesService.arrayBufferToKeypair(bytes);
+
+        const ogpk = keypair.pk;
+        const ogsk = keypair.sk;
+
+        const { pk, sk } = keypairrestored;
+
+        console.log({
+            ogpk,
+            pk,
+        });
+
+        expect(pk).toStrictEqual(ogpk);
+        expect(sk).toStrictEqual(ogsk);
     });
 });

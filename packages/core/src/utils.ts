@@ -90,34 +90,22 @@ export function timestampToDate(timestamp) {
     return `${month} ${day}, ${year} at ${hour}:${minute} ${ampm}`;
 }
 
-export function signTxn(txnBytes: Uint8Array, privateKey: string) {
-    const hashedBytes = keccak256.arrayBuffer(txnBytes);
+// export function signTxn(txnBytes: Uint8Array, privateKey: string) {
+//     const hashedBytes = keccak256.arrayBuffer(txnBytes);
 
-    const privateKeyBytes = new Uint8Array(
-        Buffer.from(privateKey.slice(2), 'hex')
-    );
+//     const privateKeyBytes = new Uint8Array(
+//         Buffer.from(privateKey.slice(2), 'hex')
+//     );
 
-    const signObj = secp256k1.ecdsaSign(
-        new Uint8Array(hashedBytes),
-        privateKeyBytes
-    );
+//     const signObj = secp256k1.ecdsaSign(
+//         new Uint8Array(hashedBytes),
+//         privateKeyBytes
+//     );
 
-    const signature = Buffer.concat([
-        signObj.signature,
-        Buffer.from([signObj.recid + 27]),
-    ]);
+//     const signature = Buffer.concat([
+//         signObj.signature,
+//         Buffer.from([signObj.recid + 27]),
+//     ]);
 
-    return signature;
-}
-
-// function hexToString(hex) {
-//     const bytes = new Uint8Array(hex.length / 2); // 2 hex chars per byte
-//     for (let i = 0; i < hex.length; i += 2) {
-//       bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
-//     }
-//     return new TextDecoder().decode(bytes);
-//   }
-
-function isBrowser() {
-    return typeof window !== 'undefined';
-}
+//     return signature;
+// }

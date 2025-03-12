@@ -19,6 +19,7 @@ const defWallet = {
 
 declare global {
     interface Window {
+        _pwr: PWRJS;
         svc: typeof FalconServiceBrowser;
         javaSign: typeof javaSign;
         hexToBytes: typeof hexToBytes;
@@ -105,6 +106,7 @@ async function init() {
     window.javaSign.pubkey = window.javaSign.pubkey;
 
     const pwr = new PWRJS('https://pwrrpc.pwrlabs.io');
+    window._pwr = pwr;
 
     const pk = hexToBytes(defWallet.pk);
     const sk = hexToBytes(defWallet.sk);

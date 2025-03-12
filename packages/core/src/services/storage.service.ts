@@ -6,7 +6,7 @@
  * StorageService is a service that provides methods to export and import data.
  *
  */
-export class StorageService {
+export default class StorageService {
     /**
      * download the data bytes as a .dat file.
      * @param data - the byte array.
