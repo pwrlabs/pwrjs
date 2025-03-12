@@ -209,10 +209,7 @@ test('Wallet transfer', async () => {
                 const randomBal = Math.round(Math.random() * 10);
                 const amount = BigInt(randomBal) * BigInt(10 ** 8);
 
-                let destinyAddress =
-                    '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
-
-                const to = window.hexToBytes(destinyAddress.slice(2));
+                let to = '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
 
                 window.wallet
                     .transferPWR(to, amount.toString())

@@ -1,17 +1,16 @@
 // 3rd party
+import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 
 // protocol
 import PWRJS from '../protocol/pwrjs';
-import { bytesToHex } from '@noble/hashes/utils';
 
 // services
 import HttpService from '../services/http.service';
+import HashService from '../services/hash.service';
 
 // utils
-import HashService from '../services/hash.service';
 import { TransactionResponse } from './wallet.types';
 import TransactionBuilder from '../protocol/transaction-builder';
-
 import { FalconKeyPair } from '../services/falcon/c';
 
 // not typed due to 3rd party library (algorythm is relatively new and doesn't have much documentation )
@@ -21,7 +20,7 @@ export default class PWRFaconl512Wallet {
     private _publicKey: Uint8Array;
     private _privateKey: Uint8Array;
 
-    private chainId: number = 0;
+    private chainId: number;
 
     private keypair: FalconKeyPair;
 
@@ -42,6 +41,8 @@ export default class PWRFaconl512Wallet {
         const address = hash.slice(0, 20);
         this._addressBytes = address;
         this._addressHex = '0x' + bytesToHex(address);
+
+        this.chainId = this.pwr.getChainId();
     }
 
     static async new(pwr: PWRJS): Promise<PWRFaconl512Wallet> {
@@ -136,63 +137,73 @@ export default class PWRFaconl512Wallet {
     //     return this.falcon.verify(signature, message, publicKey);
     // }
 
-    // #region basic transactions
+    // #region base transactions
+    public async setPublicKey(): Promise<TransactionResponse>;
     // prettier-ignore
-    public async setPublicKey(feePerByte?: string): Promise<TransactionResponse> {
+    public async setPublicKey(nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    // prettier-ignore
+    public async setPublicKey(nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
 
-        let _feePerByte;
-
-        if(!feePerByte){
-            const res = await this.pwr.getFeePerByte();
-            _feePerByte = BigInt(res);
-        }else {
-            _feePerByte = BigInt(_feePerByte);
-        }
-
-        const nonce = await this.getNonce();
+        const _feePerByte = feePerByte ?? (await this.pwr.getFeePerByte());
+        const feePerByteBN = BigInt(_feePerByte);
+        const _nonce = nonce ?? (await this.getNonce());
 
         const raw_transaction = TransactionBuilder.getSetPublicKeyTransaction(
-            _feePerByte,
+            feePerByteBN,
             this._publicKey,
             this._addressBytes,
-            nonce,
+            _nonce,
             this.chainId
         );
 
-        const res = await this.signAndSend(raw_transaction);
-
-        return res;
-        
+        return this.signAndSend(raw_transaction);
     }
 
+    async transferPWR(to: string, amount: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWR(receiver: Uint8Array, amount: string,  feePerByte?: string): Promise<TransactionResponse>{
+    async transferPWR(to: string, amount: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    // prettier-ignore
+    async transferPWR(to: string, amount: string, nonce?: number,  feePerByte?: string): Promise<TransactionResponse>{
         await this.verifyPublicKeyIsSet();
 
-        let _feePerByte: bigint;
-
-        if(!feePerByte){
-            const res = await this.pwr.getFeePerByte();
-            _feePerByte = BigInt(res);
-        }else {
-            _feePerByte = BigInt(feePerByte);
-        }
-
-        const nonce = await this.getNonce();
-
+        const _nonce = nonce ?? (await this.getNonce());
+        let _feePerByte = (feePerByte) ?? (await this.pwr.getFeePerByte());
+        const feePerByteBN = BigInt(_feePerByte);
 
         const raw_transaction = TransactionBuilder.getFalconTransferTransaction(
-            _feePerByte,
+            feePerByteBN,
             this._addressBytes,
-            receiver,
+            hexToBytes(to.slice(2)),
             BigInt(amount),
-            nonce,
+            _nonce,
             this.chainId
         )
 
-        const res = await this.signAndSend(raw_transaction);
+        return this.signAndSend(raw_transaction);
+    }
 
-        return res;
+    // prettier-ignore
+    async sendVmData(vmId: string, data: Uint8Array): Promise<TransactionResponse>;
+    // prettier-ignore
+    async sendVmData(vmId: string, data: Uint8Array, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    // prettier-ignore
+    async sendVmData(vmId: string, data: Uint8Array, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+        await this.verifyPublicKeyIsSet();
+
+        const _nonce = nonce ?? (await this.getNonce());
+        const _feePerByte = feePerByte ?? (await this.pwr.getFeePerByte());
+        const feePerByteBN = BigInt(_feePerByte);
+
+        const txn = TransactionBuilder.getFalconVmDataTransaction(
+            feePerByteBN,
+            this._addressBytes,
+            BigInt(vmId),
+            data,
+            _nonce,
+            this.chainId,
+        );
+        
+        return this.signAndSend(txn);
     }
 
     // #endregion
@@ -206,7 +217,7 @@ export default class PWRFaconl512Wallet {
     private async verifyPublicKeyIsSet(): Promise<void> {
         const res = await this.pwr.getNonceOfAddress(this._addressHex);
         if (res === '0') {
-            throw new Error('Public key is not set');
+            await this.setPublicKey();
         }
     }
 
@@ -232,6 +243,5 @@ export default class PWRFaconl512Wallet {
 
         return res;
     }
-
     // #endregion
 }

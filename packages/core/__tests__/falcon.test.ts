@@ -55,9 +55,11 @@ describe('wallet core', () => {
     const w = restoreWallet();
     const ogAddress = w.address;
 
-    const pwr = new PWRJS('https://pwrrpc.pwrlabs.io');
+    const pwr = new PWRJS(RPC);
     const falconWallet = PWRFaconl512Wallet.fromKeys(pwr, w.pk, w.sk);
     let wallet0: PWRFaconl512Wallet;
+
+    const encoder = new TextEncoder();
 
     test('init wallet', async () => {
         wallet0 = await PWRFaconl512Wallet.new(pwr);
@@ -123,9 +125,7 @@ describe('wallet core', () => {
         const randomBal = Math.round(Math.random() * 10);
         // console.log('randomBal', randomBal);
 
-        let destinyAddress = '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
-
-        const to = Buffer.from(destinyAddress.slice(2), 'hex');
+        let to = '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
 
         try {
             const amount = BigInt(randomBal) * BigInt(10 ** 8);
@@ -145,6 +145,21 @@ describe('wallet core', () => {
             expect(tx2.success).toBe(false);
         } catch (error) {
             console.log('error transfer txn', error);
+            expect(false).toBe(true);
+        }
+    });
+
+    test('Vm Data transaction', async () => {
+        const data = encoder.encode('PWR Hello for all the listeners!');
+
+        try {
+            const tx = await falconWallet.sendVmData('1', data);
+
+            console.log('vm data txn:', tx);
+
+            expect(tx.success).toBe(true);
+        } catch (error) {
+            console.log('error vm data txn', error);
             expect(false).toBe(true);
         }
     });

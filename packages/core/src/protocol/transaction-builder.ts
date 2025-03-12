@@ -1049,5 +1049,44 @@ export default class TransactionBuilder {
         return new Uint8Array(buffer);
     }
 
+    static getFalconVmDataTransaction(
+        feePerByte: bigint,
+        sender: Uint8Array,
+        vmId: bigint,
+        data: Uint8Array,
+        nonce: number,
+        chainId: number
+    ): Uint8Array {
+        if (nonce < 0) {
+            throw new Error('Nonce cannot be negative');
+        }
+
+        const base = this.getFalconTransactionBase(
+            Transaction_ID.FACLON_VM_DATA_TRANSACTION,
+            nonce,
+            chainId,
+            feePerByte,
+            sender
+        );
+
+        const buffer = new Uint8Array(base.length + 8 + 4 + data.length);
+
+        const dataView = new DataView(buffer.buffer);
+        let offset = 0;
+
+        buffer.set(base, offset);
+        offset += base.length;
+
+        dataView.setBigUint64(offset, vmId);
+        offset += 8;
+
+        dataView.setInt32(offset, data.length);
+        offset += 4;
+
+        buffer.set(data, offset);
+
+        return buffer;
+    }
+
     // #endregion
 }

@@ -15,14 +15,12 @@
     ],
     "scripts": {
         "prepare": "npm run build",
-        "build:post": "node scripts/copy.js",
-        "build": "tsc && npm run build:post",
+        "build:post": "",
+        "build": "tsc",
         "dev": "tsc --watch",
-        "test2": "jest",
+        "dev:browser": "vite",
         "test": "vitest",
-        "test:watch": "jest --watch",
-        "test:browser": "npx playwright test ",
-        "dev:browser": "vite"
+        "test:browser": "npx playwright test"
     },
     "dependencies": {
         "@dashlane/pqc-sign-falcon-512-browser": "^1.0.0",
