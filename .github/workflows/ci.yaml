@@ -7,8 +7,30 @@ on:
             - develop
 
 jobs:
-    test:
+    test-node:
         runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20.11.0
+                  cache: 'npm'
+
+            - name: Install dependencies
+              run: npm install
+              working-directory: packages/core
+
+            - name: Run Node.js tests (allow failures)
+              run: npm run test
+              working-directory: packages/core
+              continue-on-error: true
+
+    test-browser:
+        runs-on: ubuntu-latest
+        needs: test-node
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -31,7 +53,7 @@ jobs:
               run: npm install
               working-directory: packages/core
 
-            - name: setup browser
+            - name: Setup Playwright for browser testing
               run: npx playwright install
               working-directory: packages/core
 
@@ -42,14 +64,8 @@ jobs:
               run: pm2 start npm --name "test-app" -- run test:browser
               working-directory: packages/core
 
-            - name: run test web
-              run: npm run dev:browser
-              working-directory: packages/core
-
-            - name: Run tests (allow failures)
-              run: npm run test
-              working-directory: packages/core
-              continue-on-error: true
+            - name: Wait for the application to start
+              run: sleep 3 # Adjust timing if needed
 
             - name: Run browser tests (allow failures)
               run: npm run test:browser
@@ -57,7 +73,7 @@ jobs:
               continue-on-error: true
 
             - name: Stop PM2 process after tests
-              run: pm2 stop test-browser
+              run: pm2 stop test-app
 
     build:
         runs-on: ubuntu-latest
