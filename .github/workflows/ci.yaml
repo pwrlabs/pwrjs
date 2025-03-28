@@ -97,7 +97,7 @@ jobs:
               working-directory: packages/core
 
             - name: Wait for the application to be ready
-              run: npx wait-on http://localhost:5173 --timeout 30000
+              run: pnpm exec wait-on http://localhost:5173 --timeout 60000 --delay 5000
               working-directory: packages/core
 
             - name: Run browser tests (allow failures)
