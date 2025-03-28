@@ -13,14 +13,12 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Set up Node.js
+            - name: Set up Node.js and pnpm
               uses: actions/setup-node@v4
               with:
                   node-version: 20.11.0
                   cache: 'pnpm'
-
-            - name: Install pnpm
-              run: npm install -g pnpm
+                  package-manager: 'pnpm'
 
             - name: Install dependencies
               run: pnpm install
@@ -38,11 +36,12 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Set up Node.js
+            - name: Set up Node.js and pnpm
               uses: actions/setup-node@v4
               with:
                   node-version: 20.11.0
                   cache: 'pnpm'
+                  package-manager: 'pnpm'
 
             - name: Cache dependencies
               uses: actions/cache@v3
@@ -86,11 +85,12 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Set up Node.js
+            - name: Set up Node.js and pnpm
               uses: actions/setup-node@v4
               with:
                   node-version: 20.11.0
                   cache: 'pnpm'
+                  package-manager: 'pnpm'
 
             - name: Cache dependencies
               uses: actions/cache@v3
