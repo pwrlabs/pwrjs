@@ -92,12 +92,18 @@ jobs:
               run: pm2 start pnpm --name "test-app" -- run dev:browser
               working-directory: packages/core
 
+            - name: Check if process is running
+              run: pm2 list
+
+            - name: Check process logs
+              run: pm2 logs test-app --lines 50 || true
+
             - name: Install wait-on
               run: pnpm add wait-on --save-dev
               working-directory: packages/core
 
-            - name: Wait for the application to be ready
-              run: pnpm exec wait-on http://localhost:5173 --timeout 30000
+            - name: Wait for the application to be ready (extended timeout)
+              run: pnpm exec wait-on http://localhost:5173 --timeout 60000 --delay 5000
               working-directory: packages/core
 
             - name: Run browser tests (allow failures)
