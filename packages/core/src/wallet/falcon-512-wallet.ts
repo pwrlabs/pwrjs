@@ -1,5 +1,5 @@
 // 3rd party
-import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
+import { bytesToHex } from '@noble/hashes/utils';
 
 // protocol
 import PWRJS from '../protocol/pwrjs';
@@ -15,24 +15,24 @@ import TransactionBuilder from '../protocol/transaction-builder';
 import { FalconKeyPair } from '../services/falcon/c';
 import BytesService from '../services/bytes.service';
 import CryptoService from '../services/crypto.service';
+import { Falcon } from '../services/falcon.service';
+import { readFile, writeFile } from "fs/promises";
 
-export default class PWRFalconl512Wallet {
+export default class Falcon512Wallet {
     public _addressHex: string;
     private _addressBytes: Uint8Array;
     private _publicKey: Uint8Array;
     private _privateKey: Uint8Array;
 
-    private chainId: number;
-
     private keypair: FalconKeyPair;
 
     // services and objects
     private s_httpSvc = new HttpService('https://pwrrpc.pwrlabs.io');
+    private pwrjs = new PWRJS('https://pwrrpc.pwrlabs.io');
 
     // #region instantiate
 
     constructor(
-        private pwr: PWRJS,
         publicKey: Uint8Array,
         privateKey: Uint8Array
     ) {
@@ -43,35 +43,35 @@ export default class PWRFalconl512Wallet {
         const address = hash.slice(0, 20);
         this._addressBytes = address;
         this._addressHex = '0x' + bytesToHex(address);
-
-        this.chainId = this.pwr.getChainId();
     }
 
-    static async new(pwr: PWRJS): Promise<PWRFalconl512Wallet> {
+    getChainId() {
+        return this.pwrjs.getChainId();
+    }
+
+    static async new(pwr: PWRJS): Promise<Falcon512Wallet> {
         if (typeof window === 'undefined') {
             // node
-            const m = await import('../services/falcon/falcon-node.service');
-            const { pk, sk } = await m.default.generateKeyPair();
-            return new PWRFalconl512Wallet(pwr, pk, sk);
+            const { pk, sk } = await Falcon.generateKeypair512();
+            return new Falcon512Wallet(pk, sk);
         } else {
             // browser
             const m = await import('../services/falcon/falcon-browser.service');
             const { pk, sk } = await m.default.generateKeyPair();
-            return new PWRFalconl512Wallet(pwr, pk, sk);
+            return new Falcon512Wallet(pk, sk);
         }
     }
 
     static fromKeys(
-        pwr: PWRJS,
         publicKey: Uint8Array,
         privateKey: Uint8Array
-    ): PWRFalconl512Wallet {
-        return new PWRFalconl512Wallet(pwr, publicKey, privateKey);
+    ): Falcon512Wallet {
+        return new Falcon512Wallet(publicKey, privateKey);
     }
 
     // #endregion
 
-    private async getNonce(): Promise<number> {
+    async getNonce(): Promise<number> {
         const res = await this.s_httpSvc.get<{ nonce: number }>(
             `/nonceOfUser/?userAddress=${this._addressHex}`
         );
@@ -97,15 +97,14 @@ export default class PWRFalconl512Wallet {
     }
 
     async getBalance(): Promise<string> {
-        const res = await this.pwr.getBalanceOfAddress(this._addressHex);
+        const res = await this.pwrjs.getBalanceOfAddress(this._addressHex);
         return res;
     }
 
     async sign(data: Uint8Array): Promise<Uint8Array> {
         if (typeof window === 'undefined') {
             // node
-            const m = await import('../services/falcon/falcon-node.service');
-            return m.default.sign(data, this._privateKey);
+            return await Falcon.sign512(data, this._privateKey);
         } else {
             // browser
             const m = await import('../services/falcon/falcon-browser.service');
@@ -131,158 +130,227 @@ export default class PWRFalconl512Wallet {
         return new Uint8Array(buffer);
     }
 
-    // verifySignature(
-    //     signature: Uint8Array,
-    //     message: Uint8Array,
-    //     publicKey: Uint8Array
-    // ): boolean {
-    //     return this.falcon.verify(signature, message, publicKey);
-    // }
+    async verifySignature(
+        message: Uint8Array,
+        signature: Uint8Array
+    ): Promise<boolean> {
+        return await Falcon.verify512(message, signature, this._publicKey);
+    }
 
-    // #region base transactions
-    public async setPublicKey(): Promise<TransactionResponse>;
+    async setPublicKey(publicKey: Uint8Array): Promise<TransactionResponse>;
     // prettier-ignore
-    public async setPublicKey(nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async setPublicKey(publicKey: Uint8Array, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    public async setPublicKey(nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
-
-        const _feePerByte = feePerByte ?? (await this.pwr.getFeePerByte());
-        const feePerByteBN = BigInt(_feePerByte);
+    async setPublicKey(publicKey: Uint8Array, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
         const _nonce = nonce ?? (await this.getNonce());
+        const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
-        const raw_transaction = TransactionBuilder.getSetPublicKeyTransaction(
-            feePerByteBN,
-            this._publicKey,
-            this._addressBytes,
+        const _chainId = this.getChainId();
+        const txn = TransactionBuilder.getFalconSetPublicKeyTransaction(
+            publicKey,
             _nonce,
-            this.chainId
+            _chainId,
+            this._addressBytes,
+            _feePerByte.toString()
         );
 
-        return this.signAndSend(raw_transaction);
+        const res = await this.signAndSend(txn);
+        return res;
+    }
+
+    async joinAsValidator(ip: string): Promise<TransactionResponse>;
+    // prettier-ignore
+    async joinAsValidator(ip: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    // prettier-ignore
+    async joinAsValidator(ip: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+        const response = await this.makeSurePublicKeyIsSet();
+        if (response != null && !response.success) { return response }
+
+        const _nonce = nonce ?? (await this.getNonce());
+        const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
+
+        const _chainId = this.getChainId();
+        const txn = TransactionBuilder.getFalconJoinAsValidatorTransaction(
+            ip,
+            _nonce,
+            _chainId,
+            this._addressBytes,
+            _feePerByte.toString()
+        );
+
+        const res = await this.signAndSend(txn);
+        return res;
+    }
+
+    async delegate(validator: string, pwrAmount: string): Promise<TransactionResponse>;
+    // prettier-ignore
+    async delegate(validator: string, pwrAmount: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    // prettier-ignore
+    async delegate(validator: string, pwrAmount: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+        const response = await this.makeSurePublicKeyIsSet();
+        if (response != null && !response.success) { return response }
+
+        const _nonce = nonce ?? (await this.getNonce());
+        const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
+
+        const _chainId = this.getChainId();
+        const txn = TransactionBuilder.getFalconDelegateTransaction(
+            validator,
+            pwrAmount,
+            _nonce,
+            _chainId,
+            this._addressBytes,
+            _feePerByte.toString()
+        );
+
+        const res = await this.signAndSend(txn);
+        return res;
+    }
+
+    async changeIp(newIp: string): Promise<TransactionResponse>;
+    // prettier-ignore
+    async changeIp(newIp: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    // prettier-ignore
+    async changeIp(newIp: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+        const response = await this.makeSurePublicKeyIsSet();
+        if (response != null && !response.success) { return response }
+
+        const _nonce = nonce ?? (await this.getNonce());
+        const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
+
+        const _chainId = this.getChainId();
+        const txn = TransactionBuilder.getFalconChangeIpTransaction(
+            newIp,
+            _nonce,
+            _chainId,
+            this._addressBytes,
+            _feePerByte.toString()
+        );
+
+        const res = await this.signAndSend(txn);
+        return res;
+    }
+
+    async claimActiveNodeSpot(): Promise<TransactionResponse>;
+    // prettier-ignore
+    async claimActiveNodeSpot(nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    // prettier-ignore
+    async claimActiveNodeSpot(nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+        const response = await this.makeSurePublicKeyIsSet();
+        if (response != null && !response.success) { return response }
+
+        const _nonce = nonce ?? (await this.getNonce());
+        const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
+
+        const _chainId = this.getChainId();
+        const txn = TransactionBuilder.getFalconClaimActiveNodeSpotTransaction(
+            _nonce,
+            _chainId,
+            this._addressBytes,
+            _feePerByte.toString()
+        );
+
+        const res = await this.signAndSend(txn);
+        return res;
     }
 
     async transferPWR(to: string, amount: string): Promise<TransactionResponse>;
     // prettier-ignore
     async transferPWR(to: string, amount: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWR(to: string, amount: string, nonce?: number,  feePerByte?: string): Promise<TransactionResponse>{
-        await this.verifyPublicKeyIsSet();
+    async transferPWR(to: string, amount: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+        const response = await this.makeSurePublicKeyIsSet();
+        if (response != null && !response.success) { return response }
 
         const _nonce = nonce ?? (await this.getNonce());
-        let _feePerByte = (feePerByte) ?? (await this.pwr.getFeePerByte());
-        const feePerByteBN = BigInt(_feePerByte);
+        const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
-        const raw_transaction = TransactionBuilder.getFalconTransferTransaction(
-            feePerByteBN,
-            this._addressBytes,
-            hexToBytes(to.slice(2)),
-            BigInt(amount),
+        const _chainId = this.getChainId();
+        const txn = TransactionBuilder.getFalconTransferPwrTransaction(
+            to,
+            amount,
             _nonce,
-            this.chainId
-        )
+            _chainId,
+            this._addressBytes,
+            _feePerByte.toString()
+        );
 
-        return this.signAndSend(raw_transaction);
+        const res = await this.signAndSend(txn);
+        return res;
     }
 
-    // prettier-ignore
     async sendVmData(vmId: string, data: Uint8Array): Promise<TransactionResponse>;
     // prettier-ignore
     async sendVmData(vmId: string, data: Uint8Array, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
     async sendVmData(vmId: string, data: Uint8Array, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
-        await this.verifyPublicKeyIsSet();
+        const response = await this.makeSurePublicKeyIsSet();
+        if (response != null && !response.success) { return response }
 
         const _nonce = nonce ?? (await this.getNonce());
-        const _feePerByte = feePerByte ?? (await this.pwr.getFeePerByte());
-        const feePerByteBN = BigInt(_feePerByte);
+        const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
+        const _chainId = this.getChainId();
         const txn = TransactionBuilder.getFalconVmDataTransaction(
-            feePerByteBN,
-            this._addressBytes,
-            BigInt(vmId),
+            vmId,
             data,
             _nonce,
-            this.chainId,
+            _chainId,
+            this._addressBytes,
+            _feePerByte.toString()
         );
-        
-        return this.signAndSend(txn);
+
+        const res = await this.signAndSend(txn);
+        return res;
     }
 
-    // #endregion
+    async storeWallet(filePath: string): Promise<boolean> {
+        try {
+            let buffer = Buffer.alloc(0);
 
-    // #region wallet export / import
-    /**
-     * Encrypts the wallet's public and private key and saves it to a file with .dat extension.
-     *
-     * @param password a string to encrypt the wallet
-     * @param filePath if executing in node, the path to save the wallet
-     */
-    async storeWallet(password: string, filePath?: string) {
-        const bytes = BytesService.keypairToArrayBuffer({
-            pk: this._publicKey,
-            sk: this._privateKey,
-        });
+            const pubLengthBuffer = Buffer.alloc(4);
+            pubLengthBuffer.writeUInt32BE(this._publicKey.length, 0);
+            buffer = Buffer.concat([buffer, pubLengthBuffer, Buffer.from(this._publicKey)]);
 
-        // Check for browser environment by testing if 'window' and 'crypto.subtle' are available.
-        const isBrowser =
-            typeof window !== 'undefined' &&
-            window.crypto &&
-            window.crypto.subtle;
+            const privLengthBuffer = Buffer.alloc(4);
+            privLengthBuffer.writeUInt32BE(this._privateKey.length, 0);
+            buffer = Buffer.concat([buffer, privLengthBuffer, Buffer.from(this._privateKey)]);
 
-        if (isBrowser) {
-            // Browser: Encrypt and then trigger a file download.
-            const encryptedData = await CryptoService.encryptBrowser(
-                bytes,
-                password
-            );
-
-            StorageService.saveBrowser(encryptedData);
-        } else {
-            if (!filePath)
-                throw new Error('filePath is required in Node.js environment');
-
-            const encryptedData = CryptoService.encryptNode(bytes, password);
-
-            StorageService.saveNode(encryptedData, filePath);
+            await writeFile(filePath, buffer);
+            return true;
+        } catch (error) {
+            throw new Error(`Failed to store wallet: ${error.message}`);
         }
     }
 
-    /**
-     * Decrypts the wallet's private key from a file with .dat extension.
-     *
-     * @param password
-     * @param filepath
-     * @returns
-     */
-    static async loadWalletNode(
-        pwr: PWRJS,
-        password: string,
-        filepath?: string
-    ): Promise<PWRFalconl512Wallet> {
-        // Detect whether we're in the browser.
-        const isBrowser =
-            typeof window !== 'undefined' &&
-            window.crypto &&
-            window.crypto.subtle;
+    static async loadWalletNode(filePath: string): Promise<Falcon512Wallet> {
+        try {
+            const data = await readFile(filePath);
+            if (data.length < 8) throw new Error(`File too small: ${data.length} bytes`);
 
-        if (isBrowser)
-            throw new Error(
-                'This method is meant for Node.js environment, please use loadWalletBrowser instead'
-            );
+            let offset = 0;
 
-        if (!filepath)
-            throw new Error('filePath is required in Node.js environment');
+            const pubLength = data.readUInt32BE(offset);
+            offset += 4;
+            if (pubLength === 0 || pubLength > 2048) throw new Error(`Invalid public key length: ${pubLength}`);
+            if (offset + pubLength > data.length) throw new Error(`File too small for public key of length ${pubLength}`);
 
-        const bytes = Uint8Array.from(StorageService.loadNode(filepath));
+            const publicKeyBytes = data.slice(offset, offset + pubLength);
+            offset += pubLength;
 
-        const encrypted: Uint8Array = CryptoService.decryptPrivateKeyNode(
-            bytes,
-            password
-        );
+            if (offset + 4 > data.length) throw new Error("File too small for secret key length");
 
-        const { pk, sk } = BytesService.arrayBufferToKeypair(encrypted);
+            const secLength = data.readUInt32BE(offset);
+            offset += 4;
+            if (secLength === 0 || secLength > 4096) throw new Error(`Invalid secret key length: ${secLength}`);
+            if (offset + secLength > data.length) throw new Error(`File too small for secret key of length ${secLength}`);
 
-        return new PWRFalconl512Wallet(pwr, pk, sk);
+            const privateKeyBytes = data.slice(offset, offset + secLength);
+
+            return Falcon512Wallet.fromKeys(publicKeyBytes, privateKeyBytes);
+        } catch (error) {
+            throw new Error(`Failed to load wallet: ${error.message}`);
+        }
     }
 
     static async loadWalletBrowser(pwr: PWRJS, password: string, file: File) {
@@ -300,7 +368,7 @@ export default class PWRFalconl512Wallet {
 
             const { pk, sk } = BytesService.arrayBufferToKeypair(decrypted);
 
-            return new PWRFalconl512Wallet(pwr, pk, sk);
+            return new Falcon512Wallet(pk, sk);
         } catch (e) {
             console.error(e);
             throw new Error('Failed to load wallet');
@@ -310,11 +378,14 @@ export default class PWRFalconl512Wallet {
     // #endregion
 
     // #region verifies
+    private async makeSurePublicKeyIsSet(): Promise<TransactionResponse | null> {
+        const nonce = await this.getNonce();
 
-    private async verifyPublicKeyIsSet(): Promise<void> {
-        const res = await this.pwr.getNonceOfAddress(this._addressHex);
-        if (res === '0') {
-            await this.setPublicKey();
+        if (nonce == 0) {
+            let tx = this.setPublicKey(this._publicKey);
+            return tx;
+        } else {
+            return null;
         }
     }
 
@@ -325,7 +396,6 @@ export default class PWRFalconl512Wallet {
     private async signAndSend(
         transaction: Uint8Array
     ): Promise<TransactionResponse> {
-        // const pkbytes = hexToBytes(this.privateKey);
         const signedTransaction = await this.getSignedTransaction(transaction);
         const txnHex = bytesToHex(signedTransaction);
         const txnHash = bytesToHex(
@@ -333,7 +403,7 @@ export default class PWRFalconl512Wallet {
         );
 
         const res = await this.s_httpSvc.broadcastTxn(
-            this.pwr.getRpcNodeUrl(),
+            this.pwrjs.getRpcNodeUrl(),
             txnHex,
             txnHash
         );
