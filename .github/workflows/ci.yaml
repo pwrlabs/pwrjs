@@ -21,7 +21,7 @@ jobs:
             - name: Setup PNPM
               uses: pnpm/action-setup@v2
               with:
-                  version: 8
+                  version: 9
 
             - name: Get pnpm store directory
               id: pnpm-cache
@@ -61,7 +61,7 @@ jobs:
             - name: Setup PNPM
               uses: pnpm/action-setup@v2
               with:
-                  version: 8
+                  version: 9
 
             - name: Get pnpm store directory
               id: pnpm-cache
@@ -85,28 +85,13 @@ jobs:
               run: pnpm exec playwright install
               working-directory: packages/core
 
-            - name: Install PM2 globally
-              run: pnpm add -g pm2
-
-            - name: Start application with PM2
-              run: pm2 start pnpm --name "test-app" -- run dev:browser
-              working-directory: packages/core
-
-            - name: Install wait-on
-              run: pnpm add wait-on --save-dev
-              working-directory: packages/core
-
-            - name: Wait for the application to be ready
-              run: pnpm exec wait-on http://localhost:5173 --timeout 60000 --delay 5000
-              working-directory: packages/core
-
-            - name: Run browser tests (allow failures)
+            # Option 1: Use Playwright's built-in server handling
+            - name: Run browser tests with Playwright's server handling
               run: pnpm run test:browser
               working-directory: packages/core
               continue-on-error: true
-
-            - name: Stop PM2 process after tests
-              run: pm2 stop test-app
+              env:
+                CI: true
 
     build:
         runs-on: ubuntu-latest
@@ -123,7 +108,7 @@ jobs:
             - name: Setup PNPM
               uses: pnpm/action-setup@v2
               with:
-                  version: 8
+                  version: 9
 
             - name: Get pnpm store directory
               id: pnpm-cache
