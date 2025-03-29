@@ -16,7 +16,6 @@ import { FalconKeyPair } from '../services/falcon/c';
 import BytesService from '../services/bytes.service';
 import CryptoService from '../services/crypto.service';
 import { Falcon } from '../services/falcon.service';
-import { readFile, writeFile } from "fs/promises";
 
 export default class Falcon512Wallet {
     public _addressHex: string;
@@ -306,18 +305,24 @@ export default class Falcon512Wallet {
 
     async storeWallet(filePath: string): Promise<boolean> {
         try {
-            let buffer = Buffer.alloc(0);
+            if (typeof window === 'undefined') {
+                let buffer = Buffer.alloc(0);
 
-            const pubLengthBuffer = Buffer.alloc(4);
-            pubLengthBuffer.writeUInt32BE(this._publicKey.length, 0);
-            buffer = Buffer.concat([buffer, pubLengthBuffer, Buffer.from(this._publicKey)]);
+                const pubLengthBuffer = Buffer.alloc(4);
+                pubLengthBuffer.writeUInt32BE(this._publicKey.length, 0);
+                buffer = Buffer.concat([buffer, pubLengthBuffer, Buffer.from(this._publicKey)]);
 
-            const privLengthBuffer = Buffer.alloc(4);
-            privLengthBuffer.writeUInt32BE(this._privateKey.length, 0);
-            buffer = Buffer.concat([buffer, privLengthBuffer, Buffer.from(this._privateKey)]);
+                const privLengthBuffer = Buffer.alloc(4);
+                privLengthBuffer.writeUInt32BE(this._privateKey.length, 0);
+                buffer = Buffer.concat([buffer, privLengthBuffer, Buffer.from(this._privateKey)]);
 
-            await writeFile(filePath, buffer);
-            return true;
+                const { writeFile } = require('fs') as typeof import('fs/promises');
+
+                await writeFile(filePath, buffer);
+                return true;
+            } else {
+                throw new Error('This method cannot be called on the client-side (browser)');
+            }
         } catch (error) {
             throw new Error(`Failed to store wallet: ${error.message}`);
         }
@@ -325,29 +330,36 @@ export default class Falcon512Wallet {
 
     static async loadWalletNode(filePath: string): Promise<Falcon512Wallet> {
         try {
-            const data = await readFile(filePath);
-            if (data.length < 8) throw new Error(`File too small: ${data.length} bytes`);
+            if (typeof window === 'undefined') {
+                const { readFile } = require('fs') as typeof import('fs/promises');
 
-            let offset = 0;
+                const data = await readFile(filePath);
 
-            const pubLength = data.readUInt32BE(offset);
-            offset += 4;
-            if (pubLength === 0 || pubLength > 2048) throw new Error(`Invalid public key length: ${pubLength}`);
-            if (offset + pubLength > data.length) throw new Error(`File too small for public key of length ${pubLength}`);
+                if (data.length < 8) throw new Error(`File too small: ${data.length} bytes`);
 
-            const publicKeyBytes = data.slice(offset, offset + pubLength);
-            offset += pubLength;
+                let offset = 0;
 
-            if (offset + 4 > data.length) throw new Error("File too small for secret key length");
+                const pubLength = data.readUInt32BE(offset);
+                offset += 4;
+                if (pubLength === 0 || pubLength > 2048) throw new Error(`Invalid public key length: ${pubLength}`);
+                if (offset + pubLength > data.length) throw new Error(`File too small for public key of length ${pubLength}`);
 
-            const secLength = data.readUInt32BE(offset);
-            offset += 4;
-            if (secLength === 0 || secLength > 4096) throw new Error(`Invalid secret key length: ${secLength}`);
-            if (offset + secLength > data.length) throw new Error(`File too small for secret key of length ${secLength}`);
+                const publicKeyBytes = data.slice(offset, offset + pubLength);
+                offset += pubLength;
 
-            const privateKeyBytes = data.slice(offset, offset + secLength);
+                if (offset + 4 > data.length) throw new Error("File too small for secret key length");
 
-            return Falcon512Wallet.fromKeys(publicKeyBytes, privateKeyBytes);
+                const secLength = data.readUInt32BE(offset);
+                offset += 4;
+                if (secLength === 0 || secLength > 4096) throw new Error(`Invalid secret key length: ${secLength}`);
+                if (offset + secLength > data.length) throw new Error(`File too small for secret key of length ${secLength}`);
+
+                const privateKeyBytes = data.slice(offset, offset + secLength);
+
+                return Falcon512Wallet.fromKeys(publicKeyBytes, privateKeyBytes);
+            } else {
+                throw new Error('This method cannot be called on the client-side (browser)');
+            }
         } catch (error) {
             throw new Error(`Failed to load wallet: ${error.message}`);
         }

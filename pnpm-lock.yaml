@@ -33,6 +33,22 @@ importers:
         specifier: ^5.2.2
         version: 5.8.2
 
+  packages/browser:
+    dependencies:
+      bignumber.js:
+        specifier: ^9.1.2
+        version: 9.1.2
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.51.0
+        version: 1.51.1
+      ts-jest:
+        specifier: ^29.1.1
+        version: 29.3.0(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(jest@29.7.0(@types/node@22.13.14))(typescript@5.8.2)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.8.2
+
   packages/core:
     dependencies:
       '@dashlane/pqc-sign-falcon-512-browser':
