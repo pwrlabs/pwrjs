@@ -8,16 +8,11 @@ import EthereumWallet from 'ethereumjs-wallet';
 
 import * as secp256k1 from 'secp256k1';
 import TransactionBuilder from '../protocol/transaction-builder';
-import { Transaction_ID } from '../static/enums/transaction.enum';
-import { hexToBytes } from '@ethereumjs/util';
 import HttpService from '../services/http.service';
-import CryptoService from '../services/crypto.service';
+import CryptoService from '../services/crypto.service'; 
 import StorageService from '../services/storage.service';
-import './wallet.types';
 import { TransactionResponse } from './wallet.types';
 import HashService from '../services/hash.service';
-
-const pwrnode = 'https://pwrrpc.pwrlabs.io';
 
 enum Transaction {
     TRANSFER = 0,
@@ -157,15 +152,9 @@ export default class PWRWallet {
     }
 
     async getBalance() {
-        // const rawRes = await fetch(
-        //     `${pwrnode}/balanceOf/?userAddress=${this.address}`
-        // );
-
         const res = await this.s_httpSvc.get<{ balance: bigint }>(
             `/balanceOf/?userAddress=${this.address}`
         );
-
-        // const res = await rawRes.json();
 
         return res.balance;
     }

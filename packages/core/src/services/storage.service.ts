@@ -40,16 +40,17 @@ export default class StorageService {
         if (!filePath)
             throw new Error('filePath is required in Node.js environment');
 
-        // Import the Node.js file system module.
-        const fs = require('fs') as typeof import('fs');
-        const path = require('path') as typeof import('path');
+        if (typeof window === 'undefined') {
+            const fs = require('fs') as typeof import('fs');
+            const path = require('path') as typeof import('path');
 
-        // Define the path where you want to save the wallet.
-        const name = 'wallet.dat';
+            const name = 'wallet.dat';
+            const _p = path.join(filePath, name);
 
-        const _p = path.join(filePath, name);
-        // Write the encrypted data to the file.
-        fs.writeFileSync(_p, data);
+            fs.writeFileSync(_p, data);
+        } else {
+            throw new Error('This method cannot be called on the client-side (browser)');
+        }
     }
 
     /**
@@ -85,15 +86,16 @@ export default class StorageService {
         if (!filePath)
             throw new Error('filePath is required in Node.js environment');
 
-        // Import the Node.js file system module.
-        const fs = require('fs') as typeof import('fs');
-        const path = require('path') as typeof import('path');
-
-        // Define the path where you want to save the wallet.
-        const name = 'wallet.dat';
-        const _p = path.join(filePath, name);
-
-        // Read the encrypted data from the file.
-        return fs.readFileSync(_p);
+        if (typeof window === 'undefined') {
+            const fs = require('fs') as typeof import('fs');
+            const path = require('path') as typeof import('path');
+    
+            const name = 'wallet.dat';
+            const _p = path.join(filePath, name);
+    
+            return fs.readFileSync(_p);
+        } else {
+            throw new Error('This method cannot be called on the client-side (browser)');
+        }
     }
 }
