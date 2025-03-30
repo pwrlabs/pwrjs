@@ -178,6 +178,6 @@ You can also join our dedicated channel for [pwrjs](https://discord.com/channels
 
 ## 📜 License
 
-Copyright (c) 2024 PWR Labs
+Copyright (c) 2025 PWR Labs
 
 Licensed under the [MIT license](https://github.com/pwrlabs/pwrjs/blob/main/LICENSE).
