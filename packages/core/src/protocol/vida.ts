@@ -1,16 +1,14 @@
 import { VmDataTransaction } from '../record/vmDataTransaction';
 import PWRJS from './pwrjs';
 
-export interface IvaTransactionHandler {
-    processIvaTransactions(transaction: VmDataTransaction): void;
-}
+export type ProcessVidaTransactions = (transaction: VmDataTransaction) => void;
 
-export class IvaTransactionSubscription {
+export class VidaTransactionSubscription {
     private pwrjs: PWRJS;
     private vmId: bigint;
     private startingBlock: bigint;
     private latestCheckedBlock: bigint;
-    private handler: IvaTransactionHandler;
+    private handler: ProcessVidaTransactions;
     private pollInterval: number;
 
     // Internal state flags
@@ -22,7 +20,7 @@ export class IvaTransactionSubscription {
         pwrj: PWRJS,
         vmId: bigint,
         startingBlock: bigint,
-        handler: IvaTransactionHandler,
+        handler: ProcessVidaTransactions,
         pollInterval: number = 100
     ) {
         this.pwrjs = pwrj;
@@ -35,7 +33,7 @@ export class IvaTransactionSubscription {
 
     public async start(): Promise<void> {
         if (this._running) {
-            console.error('IvaTransactionSubscription is already running');
+            console.error('VidaTransactionSubscription is already running');
             return;
         }
 
@@ -47,30 +45,32 @@ export class IvaTransactionSubscription {
 
         while (!this._stop) {
             if (this._pause) {
-                await this.sleep(this.pollInterval);
                 continue;
             }
 
             try {
                 const _ = await this.pwrjs.getLatestBlockNumber();
                 const latestBlock = BigInt(_);
-                const maxBlockToCheck =
-                    latestBlock < currentBlock + BigInt(1000)
-                        ? latestBlock
-                        : currentBlock + BigInt(1000);
 
-                const transactions = await this.pwrjs.getVMDataTransactions(
-                    currentBlock.toString(),
-                    maxBlockToCheck.toString(),
-                    this.vmId.toString()
-                );
+                let effectiveLatestBlock = latestBlock;
+                if (latestBlock > currentBlock + BigInt(1000)) {
+                    effectiveLatestBlock = currentBlock + BigInt(1000);
+                }
 
-                transactions.forEach((transaction) => {
-                    this.handler.processIvaTransactions(transaction);
-                });
-
-                this.latestCheckedBlock = maxBlockToCheck;
-                currentBlock = maxBlockToCheck;
+                if (effectiveLatestBlock >= currentBlock) {
+                    const transactions = await this.pwrjs.getVMDataTransactions(
+                        currentBlock.toString(),
+                        effectiveLatestBlock.toString(),
+                        this.vmId.toString()
+                    );
+    
+                    transactions.forEach((transaction) => {
+                        this.handler(transaction);
+                    });
+    
+                    this.latestCheckedBlock = effectiveLatestBlock;
+                    currentBlock = effectiveLatestBlock;
+                }
             } catch (error: any) {
                 // print trace
                 console.log(error.stack);
@@ -127,7 +127,7 @@ export class IvaTransactionSubscription {
         return this.vmId;
     }
 
-    public getHandler(): IvaTransactionHandler {
+    public getHandler(): ProcessVidaTransactions {
         return this.handler;
     }
 

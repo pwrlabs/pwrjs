@@ -1,12 +1,12 @@
 import { test, describe, beforeAll, afterAll, expect, vi } from 'vitest';
 import {
-    IvaTransactionSubscription,
-    IvaTransactionHandler,
-} from '../src/protocol/iva';
+    VidaTransactionSubscription,
+    ProcessVidaTransactions,
+} from '../src/protocol/vida';
 import { VmDataTransaction } from '../src/record/vmDataTransaction';
 import { PWRJS } from '../src';
 
-describe('IvaTransactionSubscription Unit Test (with mocks)', () => {
+describe('VidaTransactionSubscription Unit Test (with mocks)', () => {
     beforeAll(() => {
         vi.useFakeTimers();
     });
@@ -50,15 +50,13 @@ describe('IvaTransactionSubscription Unit Test (with mocks)', () => {
 
         // Create a handler mock to track calls.
         // const processIvaTransactionsMock = jest.fn();
-        const handler: IvaTransactionHandler = {
-            processIvaTransactions: vi.fn(),
-        };
+        const handler: ProcessVidaTransactions = vi.fn();
 
         const vmId = BigInt(705);
         const startingBlock = BigInt(1000);
         const pollInterval = 50; // Fast polling for the unit test.
 
-        const subscription = new IvaTransactionSubscription(
+        const subscription = new VidaTransactionSubscription(
             pwrjs,
             vmId,
             startingBlock,
@@ -87,6 +85,6 @@ describe('IvaTransactionSubscription Unit Test (with mocks)', () => {
         // Verify that the mocks were called.
         expect(pwrjs.getLatestBlockNumber).toHaveBeenCalled();
         expect(pwrjs.getVMDataTransactions).toHaveBeenCalled();
-        expect(handler.processIvaTransactions).toHaveBeenCalledWith(txn);
+        expect(handler).toHaveBeenCalledWith(txn);
     });
 });

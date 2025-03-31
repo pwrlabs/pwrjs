@@ -40,7 +40,7 @@ import {
     vmClaimingFeeRes,
     vmOwnerTransactionFeeShareRes,
 } from '../services/responses';
-import { IvaTransactionHandler, IvaTransactionSubscription } from './iva';
+import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
 
 export default class PWRJS {
     // private ecdsaVerificationFee: number = 10000;
@@ -655,14 +655,14 @@ export default class PWRJS {
     // #endregion
 
     // #region iva
-    subscribeToIvaTransactions(
+    subscribeToVidaTransactions(
         pwrj: PWRJS,
         vmId: bigint,
         startingBlock: bigint,
-        handler: IvaTransactionHandler,
+        handler: ProcessVidaTransactions,
         pollInterval: number = 100
-    ): IvaTransactionSubscription {
-        const subscription = new IvaTransactionSubscription(
+    ): VidaTransactionSubscription {
+        const subscription = new VidaTransactionSubscription(
             pwrj,
             vmId,
             startingBlock,
