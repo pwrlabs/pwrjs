@@ -1,0 +1,28 @@
+{
+    "name": "@pwrjs/browser",
+    "version": "0.0.0-alpha.1",
+    "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
+    "author": "pwrlabs <devservices@pwrlabs.io>",
+    "homepage": "",
+    "license": "ISC",
+    "main": "lib/index.js",
+    "directories": {
+        "lib": "lib"
+    },
+    "files": [
+        "lib"
+    ],
+    "scripts": {
+        "build": "pnpm build:ts",
+        "dev": "pnpm build:ts --watch",
+        "build:ts": "tsc -p tsconfig.json"
+    },
+    "dependencies": {
+        "bignumber.js": "^9.1.2"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.51.0",
+        "ts-jest": "^29.1.1",
+        "typescript": "^5.7.2"
+    }
+}
