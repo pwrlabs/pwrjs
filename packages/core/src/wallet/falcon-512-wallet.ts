@@ -316,7 +316,7 @@ export default class Falcon512Wallet {
                 privLengthBuffer.writeUInt32BE(this._privateKey.length, 0);
                 buffer = Buffer.concat([buffer, privLengthBuffer, Buffer.from(this._privateKey)]);
 
-                const { writeFile } = require('fs') as typeof import('fs/promises');
+                const { writeFile } = require('fs/promises') as typeof import('fs/promises');
 
                 await writeFile(filePath, buffer);
                 return true;
@@ -331,7 +331,7 @@ export default class Falcon512Wallet {
     static async loadWalletNode(filePath: string): Promise<Falcon512Wallet> {
         try {
             if (typeof window === 'undefined') {
-                const { readFile } = require('fs') as typeof import('fs/promises');
+                const { readFile } = require('fs/promises') as typeof import('fs/promises');
 
                 const data = await readFile(filePath);
 

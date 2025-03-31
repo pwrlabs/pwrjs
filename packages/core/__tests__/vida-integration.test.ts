@@ -1,12 +1,12 @@
 import { describe, test, vi, expect } from 'vitest';
 import {
-    IvaTransactionSubscription,
-    IvaTransactionHandler,
-} from '../src/protocol/iva';
+    VidaTransactionSubscription,
+    ProcessVidaTransactions,
+} from '../src/protocol/vida';
 import { VmDataTransaction } from '../src/record/vmDataTransaction';
 import { PWRJS } from '../src';
 
-describe('IvaTransactionSubscription Integration Test (Real Objects)', () => {
+describe('VidaTransactionSubscription Integration Test (Real Objects)', () => {
     // Increase timeout if needed because this test hits the real endpoint.
     // vi.setTimeout(10000);
 
@@ -17,11 +17,9 @@ describe('IvaTransactionSubscription Integration Test (Real Objects)', () => {
             const pwrjs: PWRJS = new PWRJS(rpc);
 
             // Real handler that logs the transaction.
-            const handler: IvaTransactionHandler = {
-                processIvaTransactions(transaction: VmDataTransaction): void {
-                    // console.log('--------- txn ---------');
-                    // console.log(transaction);
-                },
+            const handler: ProcessVidaTransactions = (transaction: VmDataTransaction): void => {
+                // console.log('--------- txn ---------');
+                // console.log(transaction);
             };
 
             const vmId = BigInt(705);
@@ -29,7 +27,7 @@ describe('IvaTransactionSubscription Integration Test (Real Objects)', () => {
             const pollInterval = 200; // short interval for testing
 
             // Create the subscription.
-            const subscription = new IvaTransactionSubscription(
+            const subscription = new VidaTransactionSubscription(
                 pwrjs,
                 vmId,
                 startingBlock,
