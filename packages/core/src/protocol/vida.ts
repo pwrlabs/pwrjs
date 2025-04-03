@@ -35,11 +35,11 @@ export class VidaTransactionSubscription {
         if (this._running) {
             console.error('VidaTransactionSubscription is already running');
             return;
+        } else {
+            this._running = true;
+            this._pause = false;
+            this._stop = false;
         }
-
-        this._running = true;
-        this._pause = false;
-        this._stop = false;
 
         let currentBlock = this.startingBlock;
 
@@ -69,7 +69,7 @@ export class VidaTransactionSubscription {
                     });
     
                     this.latestCheckedBlock = effectiveLatestBlock;
-                    currentBlock = effectiveLatestBlock;
+                    currentBlock = effectiveLatestBlock + BigInt(1);
                 }
             } catch (error: any) {
                 // print trace
