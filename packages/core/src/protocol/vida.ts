@@ -58,16 +58,17 @@ export class VidaTransactionSubscription {
                 }
 
                 if (effectiveLatestBlock >= currentBlock) {
-                    const transactions = await this.pwrjs.getVMDataTransactions(
-                        currentBlock.toString(),
-                        effectiveLatestBlock.toString(),
-                        this.vmId.toString()
-                    );
-    
+                    const transactions =
+                        await this.pwrjs.getVidaDataTransactions(
+                            currentBlock.toString(),
+                            effectiveLatestBlock.toString(),
+                            this.vmId.toString()
+                        );
+
                     transactions.forEach((transaction) => {
                         this.handler(transaction);
                     });
-    
+
                     this.latestCheckedBlock = effectiveLatestBlock;
                     currentBlock = effectiveLatestBlock + BigInt(1);
                 }

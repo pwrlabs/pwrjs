@@ -323,7 +323,7 @@ export default class TransactionDecoder {
         let dataLength;
         const senderHex = bytesToHex(sender);
 
-        if (PWRJS.isVmAddress(senderHex)) {
+        if (PWRJS.isVidaAddress(senderHex)) {
             // Assuming `isVmAddress` checks if the address is a VM
             dataLength = txn.length - 14;
         } else {

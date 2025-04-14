@@ -1,56 +1,36 @@
-import { Block } from '../record/block';
+// third party
+
+import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
+
+import { Block } from '../entities/block.entity';
 import { VmDataTransaction } from '../record/vmDataTransaction';
 import { Validator } from '../record/validator';
 import TransactionDecoder from './transaction-decoder';
 import { Transaction_ID } from '../static/enums/transaction.enum';
-import { bytesToHex } from '../utils';
 import HttpService from '../services/http.service';
 import {
     ActiveValidatorCountRes,
     AllValidtorsRes,
-    BLockTimestamp,
-    BLockchainVersionRes,
-    BalanceRes,
-    BlockNumberRes,
-    BlockRes,
-    BlocksCountRes,
-    BurnPercentageRes,
-    ChainRes,
     DelegatorsCount,
-    EcsdaFeeRes,
-    FeePerByteRes,
-    MaxBlockRes,
-    MaxGuardianTimeRes,
-    MaxTransactionSizeRes,
-    MinimunDelegatingAmountRes,
-    NonceRes,
     OwrnerOfVMRes,
-    ProposalFeeRes,
-    ProposalValidityTimeRes,
-    RewardsPerYearRes,
     StandbyValidatorCountRes,
     TotalValidatorCountRes,
-    TotalVotingPowerRes,
-    ValidatorCountRes,
-    ValidatorJoiningFeeRes,
-    ValidatorOperationalFeeRes,
-    ValidatorSlashingFeeRes,
     VmDataTransactionsRes,
-    WithdrawlLockTimeRes,
-    vmClaimingFeeRes,
-    vmOwnerTransactionFeeShareRes,
 } from '../services/responses';
 import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
+
+import { HttpTypes } from '../entities/http.types';
+import { FalconTransaction } from '../entities/falcon-transaction.entity';
 
 export default class PWRJS {
     // private ecdsaVerificationFee: number = 10000;
     private chainId: number;
-    private axios: HttpService;
+    private httpSvc: HttpService;
 
     // #region constructor
 
     constructor(private rpcNodeUrl: string) {
-        this.axios = new HttpService(rpcNodeUrl);
+        this.httpSvc = new HttpService(rpcNodeUrl);
         try {
             this.fetchChainId().then((chainId) => {
                 this.chainId = chainId;
@@ -61,7 +41,9 @@ export default class PWRJS {
     }
 
     private async fetchChainId(): Promise<number> {
-        const res = await this.axios.get<ChainRes>('/chainId/');
+        const res = await this.httpSvc.get<HttpTypes.ChainIdResponse>(
+            endpoints.pwrrpc.chain_id
+        );
         return res.chainId;
     }
 
@@ -77,18 +59,35 @@ export default class PWRJS {
         return this.rpcNodeUrl;
     }
 
-    public getChainId(): number {
+    public async getChainId(): Promise<number> {
+        if (this.chainId === -1) {
+            try {
+                const res = await this.httpSvc.get<HttpTypes.ChainIdResponse>(
+                    endpoints.pwrrpc.chain_id
+                );
+                this.chainId = res.chainId;
+            } catch {
+                throw new Error('Failed to get chain ID from the RPC node');
+            }
+        }
+
         return this.chainId;
     }
 
+    public setChainId(chainId: number) {
+        this.chainId = chainId;
+    }
+
     public async getFeePerByte(): Promise<number> {
-        const res = await this.axios.get<FeePerByteRes>('/feePerByte/');
+        const res = await this.httpSvc.get<HttpTypes.FeePerByteResponse>(
+            endpoints.pwrrpc.feePerByte
+        );
         return res.feePerByte;
     }
 
     public async getBlockchainVersion(): Promise<number> {
-        const res = await this.axios.get<BLockchainVersionRes>(
-            '/blockchainVersion/'
+        const res = await this.httpSvc.get<HttpTypes.BLockchainVersionResponse>(
+            endpoints.pwrrpc.blockchainVersion
         );
         return res.blockchainVersion;
     }
@@ -130,23 +129,52 @@ export default class PWRJS {
     }
 
     public async getEcdsaVerificationFee(): Promise<number> {
-        const res = await this.axios.get<EcsdaFeeRes>('/ecdsaVerificationFee/');
+        const res = await this.httpSvc.get<HttpTypes.EcsdaFeeRes>(
+            endpoints.pwrrpc.ecdsaVerificationFee
+        );
         return res.ecdsaVerificationFee;
     }
 
     // #endregion
 
     // #region wallet
+    public async getPublicKeyOfAddress(
+        address: string
+    ): Promise<Uint8Array | null> {
+        try {
+            const res =
+                await this.httpSvc.get<HttpTypes.PublicKeyOfAddressResponse>(
+                    endpoints.pwrrpc.publicKeyOfAddress.replace(
+                        ':address',
+                        address
+                    )
+                );
+
+            const pk = res.falconPublicKey.startsWith('0x')
+                ? res.falconPublicKey.substring(2)
+                : res.falconPublicKey;
+
+            return hexToBytes(pk);
+        } catch {
+            return null;
+        }
+    }
 
     public async getNonceOfAddress(address: string): Promise<string> {
-        const url = `/nonceOfUser/?userAddress=${address}`;
-        const res = await this.axios.get<NonceRes>(url);
+        const url = endpoints.pwrrpc.nonceOfAddress.replace(
+            ':address',
+            address
+        );
+        const res = await this.httpSvc.get<HttpTypes.NonceResponse>(url);
         return res.nonce;
     }
 
     public async getBalanceOfAddress(address: string): Promise<string> {
-        const url = `/balanceOf/?userAddress=${address}`;
-        const res = await this.axios.get<BalanceRes>(url);
+        const url = endpoints.pwrrpc.balanceOfAddress.replace(
+            ':address',
+            address
+        );
+        const res = await this.httpSvc.get<HttpTypes.BalanceResponse>(url);
         return res.balance;
     }
 
@@ -154,27 +182,35 @@ export default class PWRJS {
 
     // #region general
     public async getBurnPercentage() {
-        const url = `/burnPercentage/`;
-        const res = await this.axios.get<BurnPercentageRes>(url);
+        const url = endpoints.pwrrpc.burnPercentage;
+        const res = await this.httpSvc.get<HttpTypes.BurnPercentageResponse>(
+            url
+        );
 
         return res.burnPercentage;
     }
 
     public async getTotalVotingPower() {
-        const url = `/totalVotingPower/`;
-        const res = await this.axios.get<TotalVotingPowerRes>(url);
+        const url = endpoints.pwrrpc.totalVotingPower;
+        const res = await this.httpSvc.get<HttpTypes.TotalVotingPowerResponse>(
+            url
+        );
         return res.totalVotingPower;
     }
 
     public async getPwrRewardsPerYear() {
-        const url = `/pwrRewardsPerYear/`;
-        const res = await this.axios.get<RewardsPerYearRes>(url);
+        const url = endpoints.pwrrpc.pwrRewardsPerYear;
+        const res = await this.httpSvc.get<HttpTypes.RewardsPerYearResponse>(
+            url
+        );
         return res.pwrRewardsPerYear;
     }
 
     public async getWithdrawalLockTime() {
-        const url = `/withdrawalLockTime/`;
-        const res = await this.axios.get<WithdrawlLockTimeRes>(url);
+        const url = endpoints.pwrrpc.withdrawalLockTime;
+        const res = await this.httpSvc.get<HttpTypes.WithdrawlLockTimeResponse>(
+            url
+        );
         return res.withdrawalLockTime;
     }
 
@@ -187,7 +223,7 @@ export default class PWRJS {
 
     public async getEarlyWithdrawPenalty() {
         const url = `/allEarlyWithdrawPenalties/`;
-        const res = await this.axios.get<any>(url);
+        const res = await this.httpSvc.get<any>(url);
 
         const penaltiesRes = res.earlyWithdrawPenalties;
 
@@ -207,32 +243,35 @@ export default class PWRJS {
     // #region block
 
     public async getBlocksCount(): Promise<number> {
-        const url = `/blocksCount/`;
-        const res = await this.axios.get<BlocksCountRes>(url);
+        const url = endpoints.pwrrpc.blocksCount;
+        const res = await this.httpSvc.get<HttpTypes.BlocksCountResponse>(url);
         return res.blocksCount;
     }
 
     public async getMaxBlockSize(): Promise<number> {
-        const url = `/maxBlockSize/`;
-        const res = await this.axios.get<MaxBlockRes>(url);
+        const url = endpoints.pwrrpc.maxBlockSize;
+        const res = await this.httpSvc.get<HttpTypes.MaxBlockResponse>(url);
         return res.maxBlockSize;
     }
 
     public async getMaxTransactionSize(): Promise<number> {
-        const url = `/maxTransactionSize/`;
-        const res = await this.axios.get<MaxTransactionSizeRes>(url);
+        const url = endpoints.pwrrpc.maxTransactionSize;
+        const res =
+            await this.httpSvc.get<HttpTypes.MaxTransactionSizeResponse>(url);
         return res.maxTransactionSize;
     }
 
     public async getBlockNumber(): Promise<number> {
-        const url = `/blockNumber/`;
-        const res = await this.axios.get<BlockNumberRes>(url);
+        const url = endpoints.pwrrpc.blockNumber;
+        const res = await this.httpSvc.get<HttpTypes.BlockNumberResponse>(url);
         return res.blockNumber;
     }
 
     public async getBlockTimestamp(): Promise<number> {
-        const url = `/blockTimestamp/`;
-        const res = await this.axios.get<BLockTimestamp>(url);
+        const url = endpoints.pwrrpc.blockTimestamp;
+        const res = await this.httpSvc.get<HttpTypes.BLockTimestampResponse>(
+            url
+        );
         return res.blockTimestamp;
     }
 
@@ -242,25 +281,106 @@ export default class PWRJS {
     }
 
     public async getBlockByNumber(blockNumber: number): Promise<Block> {
-        const url = `/block/?blockNumber=${blockNumber}`;
-        const res = await this.axios.get<BlockRes>(url);
+        const url = endpoints.pwrrpc.block.replace(
+            ':blockNumber',
+            blockNumber.toString()
+        );
+        const res = await this.httpSvc.get<HttpTypes.BlockResponse>(url);
         return res.block;
+    }
+
+    public async getBlockByNumberExcludingDataAndExtraData(
+        blockNumber: number
+    ): Promise<any> {
+        const url = endpoints.pwrrpc.blockWithExtactedData.replace(
+            ':blockNumber',
+            blockNumber.toString()
+        );
+
+        const res =
+            await this.httpSvc.get<HttpTypes.BlockExcludingDataResponse>(url);
+
+        return res.block;
+    }
+
+    public async getBlockWithViDataTransactionsOnly(
+        blockNumber: number,
+        vidaId: number
+    ): Promise<any> {
+        const url = endpoints.pwrrpc.blockWithVmDataTransactionsOnly
+            .replace(':blockNumber', blockNumber.toString())
+            .replace(':vidaId', vidaId.toString());
+
+        const res =
+            await this.httpSvc.get<HttpTypes.BlockWithVidaTransactionsOnly>(
+                url
+            );
+
+        return res.block;
+    }
+
+    // #endregion
+
+    // #region transactions
+    public async getTransactionByHash(
+        hash: string
+    ): Promise<FalconTransaction> {
+        const url = endpoints.pwrrpc.transactionByHash.replace(
+            'transactionHash',
+            hash
+        );
+
+        const res = await this.httpSvc.get<HttpTypes.TransactionByHashResponse>(
+            url
+        );
+
+        return res.transaction;
+    }
+
+    public async getTransactionsByHashes(
+        hashes: string[]
+    ): Promise<FalconTransaction[]> {
+        const data = {
+            transactionHashes: hashes,
+        };
+
+        const res =
+            await this.httpSvc.post<HttpTypes.TransactionsByHashesResponse>(
+                endpoints.pwrrpc.transactionsByHashes,
+                data
+            );
+
+        return res.transactions;
     }
 
     // #endregion
 
     // #region proposal
 
-    public async getProposalFee() {
-        const url = `/proposalFee/`;
-        const res = await this.axios.get<ProposalFeeRes>(url);
+    public async getProposalFee(): Promise<number> {
+        const url = endpoints.pwrrpc.proposalFee;
+        const res = await this.httpSvc.get<HttpTypes.ProposalFeeResponse>(url);
         return res.proposalFee;
     }
 
-    public async getProposalValidityTime() {
-        const url = `/proposalValidityTime/`;
-        const res = await this.axios.get<ProposalValidityTimeRes>(url);
+    public async getProposalValidityTime(): Promise<number> {
+        const url = endpoints.pwrrpc.proposalValidityTime;
+        const res =
+            await this.httpSvc.get<HttpTypes.ProposalValidityTimeResponse>(url);
         return res.proposalValidityTime;
+    }
+
+    public async getProposalStatus(hash: string): Promise<string> {
+        const url = endpoints.pwrrpc.proposalStatus.replace(
+            ':proposalHash',
+            hash
+        );
+
+        const res = await this.httpSvc.get<HttpTypes.ProposalStatusResponse>(
+            url
+        );
+
+        return res.status;
     }
 
     // #endregion
@@ -268,62 +388,72 @@ export default class PWRJS {
     // #region validators
 
     public async getValidatorCountLimit(): Promise<number> {
-        const url = `/validatorCountLimit/`;
-        const res = await this.axios.get<ValidatorCountRes>(url);
+        const url = endpoints.pwrrpc.validatorCountLimit;
+        const res = await this.httpSvc.get<HttpTypes.ValidatorCountResponse>(
+            url
+        );
         return res.validatorCountLimit;
     }
 
     public async getValidatorSlashingFee(): Promise<number> {
-        const url = `/validatorSlashingFee/`;
-        const res = await this.axios.get<ValidatorSlashingFeeRes>(url);
+        const url = endpoints.pwrrpc.validatorSlashingFee;
+        const res =
+            await this.httpSvc.get<HttpTypes.ValidatorSlashingFeeResponse>(url);
         return res.validatorSlashingFee;
     }
 
     public async getValidatorOperationalFee(): Promise<number> {
-        const url = `/validatorOperationalFee/`;
-        const res = await this.axios.get<ValidatorOperationalFeeRes>(url);
+        const url = endpoints.pwrrpc.validatorOperationalFee;
+        const res =
+            await this.httpSvc.get<HttpTypes.ValidatorOperationalFeeResponse>(
+                url
+            );
         return res.validatorOperationalFee;
     }
 
     public async getValidatorJoiningFee() {
-        const url = `/validatorJoiningFee/`;
-        const res = await this.axios.get<ValidatorJoiningFeeRes>(url);
+        const url = endpoints.pwrrpc.validatorJoiningFee;
+        const res =
+            await this.httpSvc.get<HttpTypes.ValidatorJoiningFeeResponse>(url);
         return res.validatorJoiningFee;
     }
 
     public async getMinimumDelegatingAmount() {
-        const url = `/minimumDelegatingAmount/`;
-        const res = await this.axios.get<MinimunDelegatingAmountRes>(url);
+        const url = endpoints.pwrrpc.minimumDelegatingAmount;
+        const res =
+            await this.httpSvc.get<HttpTypes.MinimunDelegatingAmountResponse>(
+                url
+            );
         return res.minimumDelegatingAmount;
     }
 
     public async getTotalValidatorsCount(): Promise<number> {
         const url = `/totalValidatorsCount/`;
-        const res = await this.axios.get<TotalValidatorCountRes>(url);
+        const res = await this.httpSvc.get<TotalValidatorCountRes>(url);
         return res.validatorsCount;
     }
 
     public async getStandbyValidatorsCount(): Promise<number> {
         const url = `/standbyValidatorsCount/`;
-        const res = await this.axios.get<StandbyValidatorCountRes>(url);
+        const res = await this.httpSvc.get<StandbyValidatorCountRes>(url);
         return res.validatorsCount;
     }
 
     public async getActiveValidatorsCount(): Promise<number> {
         const url = `/activeValidatorsCount/`;
-        const res = await this.axios.get<ActiveValidatorCountRes>(url);
+        const res = await this.httpSvc.get<ActiveValidatorCountRes>(url);
         return res.validatorsCount;
     }
 
     public async getTotalDelegatorsCount(): Promise<number> {
         const url = `/totalDelegatorsCount/`;
-        const res = await this.axios.get<DelegatorsCount>(url);
+        const res = await this.httpSvc.get<DelegatorsCount>(url);
         return res.delegatorsCount;
     }
 
     public async getAllValidators(): Promise<Validator[]> {
         const url = `/allValidators/`;
-        const res = await this.axios.get<AllValidtorsRes>(url);
+        const res = await this.httpSvc.get<AllValidtorsRes>(url);
 
         const validators = res.validators;
 
@@ -351,7 +481,7 @@ export default class PWRJS {
 
     public async getStandbyValidators(): Promise<any[]> {
         const url = `/standbyValidators/`;
-        const res = await this.axios.get<any>(url);
+        const res = await this.httpSvc.get<any>(url);
         const validators = res.validators;
 
         const list = [];
@@ -378,7 +508,7 @@ export default class PWRJS {
 
     public async getActiveValidators(): Promise<any[]> {
         const url = `/activeValidators/`;
-        const res = await this.axios.get<any>(url);
+        const res = await this.httpSvc.get<any>(url);
 
         const validatorsData = res.validators;
         const validatorsList = [];
@@ -405,7 +535,7 @@ export default class PWRJS {
 
     public async getValidator(address: string): Promise<any> {
         const url = `/validator/?validatorAddress=${address}`;
-        const res = await this.axios.get<any>(url);
+        const res = await this.httpSvc.get<any>(url);
 
         const v = res.validator;
 
@@ -425,7 +555,7 @@ export default class PWRJS {
 
     public async getDelegatees(address: string): Promise<Validator[]> {
         const url = `/delegateesOfUser/?userAddress=${address}`;
-        const res = await this.axios.get<any>(url);
+        const res = await this.httpSvc.get<any>(url);
 
         const validatorsData = res.delegatees;
         const validatorsList = [];
@@ -453,67 +583,75 @@ export default class PWRJS {
     // prettier-ignore
     public async getDelegatedPWR(delegatorAddress: string, validatorAddress: string) {
         const url = `/validator/delegator/delegatedPWROfAddress/?userAddress=${delegatorAddress}&validatorAddress=${validatorAddress}`;
-        const res = await this.axios.get<any>(url);
+        const res = await this.httpSvc.get<any>(url);
         return res.delegatedPWR;
     }
 
     // prettier-ignore
     public async getSharesOfDelegator(delegatorAddress: string, validatorAddress: string) {
         const url = `/validator/delegator/sharesOfAddress/?userAddress=${delegatorAddress}&validatorAddress=${validatorAddress}`;
-        const res = await this.axios.get<any>(url);
+        const res = await this.httpSvc.get<any>(url);
         return res.shares;
     }
 
     public async getShareValue(validator: string) {
         const url = `/validator/shareValue/?validatorAddress=${validator}`;
-        const res = await this.axios.get<any>(url);
+        const res = await this.httpSvc.get<any>(url);
 
         return res.shareValue;
     }
 
     // #endregion
 
-    // #region vm
+    // #region vidas
 
-    public async getVmOwnerTransactionFeeShare() {
-        const url = `/vmOwnerTransactionFeeShare/`;
-        const res = await this.axios.get<vmOwnerTransactionFeeShareRes>(url);
+    public async getVidaOwnerTransactionFeeShare() {
+        const url = endpoints.pwrrpc.vidaOwnerTransactionFeeShare;
+        const res =
+            await this.httpSvc.get<HttpTypes.vidaOwnerTransactionFeeShareResponse>(
+                url
+            );
         return res.vmOwnerTransactionFeeShare;
     }
 
-    public async getVmIdClaimingFee() {
-        const url = `/vmIdClaimingFee/`;
-        const res = await this.axios.get<vmClaimingFeeRes>(url);
+    public async getVidaIdClaimingFee() {
+        const url = endpoints.pwrrpc.vidaIdClaimingFee;
+        const res = await this.httpSvc.get<HttpTypes.vidaClaimingFeeResponse>(
+            url
+        );
         return res.vmIdClaimingFee;
     }
 
-    public async getVMDataTransactions(
+    public async getVidaDataTransactions(
         startingBlock: string,
         endingBlock: string,
-        vmId: string
+        vidaId: bigint
     ): Promise<VmDataTransaction[]> {
-        const url = `/getVmTransactions/?startingBlock=${startingBlock}&endingBlock=${endingBlock}&vmId=${vmId}`;
-        const res = await this.axios.get<VmDataTransactionsRes>(url);
+        const url = endpoints.pwrrpc.vidaDataTransactions
+            .replace(':startingBlock', startingBlock)
+            .replace(':endingBlock', endingBlock)
+            .replace(':vidaId', vidaId.toString());
 
-        const transactions: VmDataTransaction[] = res.transactions;
-        const txnArray = new Array(transactions.length);
+        const res = await this.httpSvc.get<HttpTypes.VidaDataTransactionsRes>(
+            url
+        );
 
-        for (let i = 0; i < transactions.length; i++) {
-            const transaction = transactions[i];
-            txnArray[i] = transaction;
-        }
-
-        return txnArray;
+        return res.transactions;
     }
 
     // static async getVMDataTransactionsFiltered() {}
 
-    public getVmIdAddress(vmId: bigint): string {
-        let hexAddress: string = vmId >= 0 ? '1' : '0';
+    public getVidaIdAddressBytes(vidaId: bigint): Uint8Array {
+        const addressHex = this.getVidaIdAddress(vidaId).substring(2);
+        return hexToBytes(addressHex);
+    }
 
-        if (vmId < 0) vmId = -vmId;
+    public getVidaIdAddress(vidaId: bigint): string {
+        let hexAddress: string = vidaId >= 0 ? '1' : '0';
 
-        const vmIdString: string = vmId.toString();
+        if (vidaId < 0) vidaId = -vidaId;
+
+        const vmIdString: string = vidaId.toString();
 
         for (let i = 0; i < 39 - vmIdString.length; i++) {
             hexAddress += '0';
@@ -524,7 +662,7 @@ export default class PWRJS {
         return '0x' + hexAddress;
     }
 
-    public static isVmAddress(address: string): boolean {
+    public static isVidaAddress(address: string): boolean {
         if (
             address == null ||
             (address.length !== 40 && address.length !== 42)
@@ -567,7 +705,7 @@ export default class PWRJS {
 
     public async getOwnerOfVm(vmId: string): Promise<string | null> {
         const url = `/ownerOfVmId/?vmId=${vmId}`;
-        const res = await this.axios.get<OwrnerOfVMRes>(url);
+        const res = await this.httpSvc.get<OwrnerOfVMRes>(url);
 
         if (res.hasOwnProperty('claimed')) {
             return res.owner;
@@ -578,7 +716,7 @@ export default class PWRJS {
 
     public async getConduitsOfVm(vmId: string): Promise<Validator[]> {
         const url = `/conduitsOfVm/?vmId=${vmId}`;
-        const res = await this.axios.get<any>(url);
+        const res = await this.httpSvc.get<any>(url);
 
         const validatorsData = res.conduits;
         const validatorsList = [];
@@ -608,14 +746,18 @@ export default class PWRJS {
     // #region guardian
 
     public async getMaxGuardianTime() {
-        const url = `/maxGuardianTime/`;
-        const res = await this.axios.get<MaxGuardianTimeRes>(url);
+        const url = endpoints.pwrrpc.maxGuardianTime;
+        const res = await this.httpSvc.get<HttpTypes.MaxGuardianTimeResponse>(
+            url
+        );
         return res.maxGuardianTime;
     }
 
     public async isTransactionValidForGuardianApproval(transaction: string) {
         const url = `/isTransactionValidForGuardianApproval/`;
-        const res = await this.axios.post<any>(url, { data: { transaction } });
+        const res = await this.httpSvc.post<any>(url, {
+            data: { transaction },
+        });
 
         if (res.valid) {
             return {
@@ -641,15 +783,21 @@ export default class PWRJS {
         );
     }
 
-    public async getGuardianOfAddress(address: string) {
-        const url = `/guardianOf/?userAddress=${address}`;
-        const res = await this.axios.get<any>(url);
+    public async getGuardianOfAddress(
+        address: string
+    ): Promise<{ guardian: string; expiryDate: EpochTimeStamp } | null> {
+        const url = endpoints.pwrrpc.guardianOfAddress.replace(
+            ':address',
+            address
+        );
+        const res = await this.httpSvc.get<HttpTypes.GuardianResponse>(url);
 
         if (res.isGuarded) {
-            return res.guardian;
-        }
-
-        return null;
+            return {
+                guardian: res.guardian,
+                expiryDate: res.expiryDate,
+            };
+        } else return null;
     }
 
     // #endregion

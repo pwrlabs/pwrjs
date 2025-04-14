@@ -12,7 +12,6 @@ class HttpService {
         if (!response.ok) {
             // log error details
             const j = await response.json();
-            console.log(j);
 
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
