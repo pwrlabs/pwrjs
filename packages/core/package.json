@@ -14,8 +14,8 @@
         "lib"
     ],
     "scripts": {
-        "build": "pnpm build:ts",
-        "dev": "pnpm build:ts --watch",
+        "build": "npm build:ts",
+        "dev": "npm build:ts --watch",
         "build:ts": "tsc -p tsconfig.json",
         "dev:browser": "vite",
         "test": "vitest",

@@ -1,26 +1,21 @@
 // third party
-
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 
-import { Block } from '../entities/block.entity';
+// entities
+import { Block } from 'src/entities/block.entity';
+import { Validator } from 'src/entities/validator.entity';
+import { FalconTransaction } from 'src/entities/falcon-transaction.entity';
+import { HttpTypes } from 'src/entities/http.types';
+
+// services
+import HttpService from 'src/services/http.service';
+
 import { VmDataTransaction } from '../record/vmDataTransaction';
-import { Validator } from '../record/validator';
 import TransactionDecoder from './transaction-decoder';
 import { Transaction_ID } from '../static/enums/transaction.enum';
-import HttpService from '../services/http.service';
-import {
-    ActiveValidatorCountRes,
-    AllValidtorsRes,
-    DelegatorsCount,
-    OwrnerOfVMRes,
-    StandbyValidatorCountRes,
-    TotalValidatorCountRes,
-    VmDataTransactionsRes,
-} from '../services/responses';
 import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
 
-import { HttpTypes } from '../entities/http.types';
-import { FalconTransaction } from '../entities/falcon-transaction.entity';
+import api from 'src/shared/api/endpoints';
 
 export default class PWRJS {
     // private ecdsaVerificationFee: number = 10000;
@@ -41,9 +36,7 @@ export default class PWRJS {
     }
 
     private async fetchChainId(): Promise<number> {
-        const res = await this.httpSvc.get<HttpTypes.ChainIdResponse>(
-            endpoints.pwrrpc.chain_id
-        );
+        const res = await this.httpSvc.get<HttpTypes.ChainIdResponse>(api.rpc.chain_id);
         return res.chainId;
     }
 
@@ -62,9 +55,8 @@ export default class PWRJS {
     public async getChainId(): Promise<number> {
         if (this.chainId === -1) {
             try {
-                const res = await this.httpSvc.get<HttpTypes.ChainIdResponse>(
-                    endpoints.pwrrpc.chain_id
-                );
+                const url = api.rpc.chain_id;
+                const res = await this.httpSvc.get<HttpTypes.ChainIdResponse>(url);
                 this.chainId = res.chainId;
             } catch {
                 throw new Error('Failed to get chain ID from the RPC node');
@@ -79,16 +71,13 @@ export default class PWRJS {
     }
 
     public async getFeePerByte(): Promise<number> {
-        const res = await this.httpSvc.get<HttpTypes.FeePerByteResponse>(
-            endpoints.pwrrpc.feePerByte
-        );
+        const res = await this.httpSvc.get<HttpTypes.FeePerByteResponse>(api.rpc.feePerByte);
         return res.feePerByte;
     }
 
     public async getBlockchainVersion(): Promise<number> {
-        const res = await this.httpSvc.get<HttpTypes.BLockchainVersionResponse>(
-            endpoints.pwrrpc.blockchainVersion
-        );
+        const url = api.rpc.blockchainVersion;
+        const res = await this.httpSvc.get<HttpTypes.BLockchainVersionResponse>(url);
         return res.blockchainVersion;
     }
 
@@ -114,11 +103,10 @@ export default class PWRJS {
         if (transaction.type === Transaction_ID.GUARDIAN_TXN) {
             const guardianApprovalTransaction = transaction;
 
-            const sizeOfAllTransactions =
-                guardianApprovalTransaction.transactions.reduce(
-                    (acc, curr) => acc + curr.size,
-                    0
-                );
+            const sizeOfAllTransactions = guardianApprovalTransaction.transactions.reduce(
+                (acc, curr) => acc + curr.size,
+                0
+            );
 
             let fee = txn.length * feePerByte + ecdsaVerificationFee;
             fee += sizeOfAllTransactions * ecdsaVerificationFee;
@@ -129,26 +117,18 @@ export default class PWRJS {
     }
 
     public async getEcdsaVerificationFee(): Promise<number> {
-        const res = await this.httpSvc.get<HttpTypes.EcsdaFeeRes>(
-            endpoints.pwrrpc.ecdsaVerificationFee
-        );
+        const res = await this.httpSvc.get<HttpTypes.EcsdaFeeRes>(api.rpc.ecdsaVerificationFee);
         return res.ecdsaVerificationFee;
     }
 
     // #endregion
 
     // #region wallet
-    public async getPublicKeyOfAddress(
-        address: string
-    ): Promise<Uint8Array | null> {
+    public async getPublicKeyOfAddress(address: string): Promise<Uint8Array | null> {
         try {
-            const res =
-                await this.httpSvc.get<HttpTypes.PublicKeyOfAddressResponse>(
-                    endpoints.pwrrpc.publicKeyOfAddress.replace(
-                        ':address',
-                        address
-                    )
-                );
+            const res = await this.httpSvc.get<HttpTypes.PublicKeyOfAddressResponse>(
+                api.rpc.publicKeyOfAddress.replace(':address', address)
+            );
 
             const pk = res.falconPublicKey.startsWith('0x')
                 ? res.falconPublicKey.substring(2)
@@ -161,56 +141,42 @@ export default class PWRJS {
     }
 
     public async getNonceOfAddress(address: string): Promise<string> {
-        const url = endpoints.pwrrpc.nonceOfAddress.replace(
-            ':address',
-            address
-        );
+        const url = api.rpc.nonceOfAddress.replace(':address', address);
         const res = await this.httpSvc.get<HttpTypes.NonceResponse>(url);
         return res.nonce;
     }
 
-    public async getBalanceOfAddress(address: string): Promise<string> {
-        const url = endpoints.pwrrpc.balanceOfAddress.replace(
-            ':address',
-            address
-        );
+    public async getBalanceOfAddress(address: string): Promise<bigint> {
+        const url = api.rpc.balanceOfAddress.replace(':address', address);
         const res = await this.httpSvc.get<HttpTypes.BalanceResponse>(url);
-        return res.balance;
+        return BigInt(res.balance);
     }
 
     // #endregion
 
     // #region general
     public async getBurnPercentage() {
-        const url = endpoints.pwrrpc.burnPercentage;
-        const res = await this.httpSvc.get<HttpTypes.BurnPercentageResponse>(
-            url
-        );
+        const url = api.rpc.general.burnPercentage;
+        const res = await this.httpSvc.get<HttpTypes.BurnPercentageResponse>(url);
 
         return res.burnPercentage;
     }
 
     public async getTotalVotingPower() {
-        const url = endpoints.pwrrpc.totalVotingPower;
-        const res = await this.httpSvc.get<HttpTypes.TotalVotingPowerResponse>(
-            url
-        );
+        const url = api.rpc.general.totalVotingPower;
+        const res = await this.httpSvc.get<HttpTypes.TotalVotingPowerResponse>(url);
         return res.totalVotingPower;
     }
 
-    public async getPwrRewardsPerYear() {
-        const url = endpoints.pwrrpc.pwrRewardsPerYear;
-        const res = await this.httpSvc.get<HttpTypes.RewardsPerYearResponse>(
-            url
-        );
+    public async getPwrRewardsPerYear(): Promise<number> {
+        const url = api.rpc.general.pwrRewardsPerYear;
+        const res = await this.httpSvc.get<HttpTypes.RewardsPerYearResponse>(url);
         return res.pwrRewardsPerYear;
     }
 
-    public async getWithdrawalLockTime() {
-        const url = endpoints.pwrrpc.withdrawalLockTime;
-        const res = await this.httpSvc.get<HttpTypes.WithdrawlLockTimeResponse>(
-            url
-        );
+    public async getWithdrawalLockTime(): Promise<number> {
+        const url = api.rpc.general.withdrawalLockTime;
+        const res = await this.httpSvc.get<HttpTypes.WithdrawlLockTimeResponse>(url);
         return res.withdrawalLockTime;
     }
 
@@ -221,21 +187,54 @@ export default class PWRJS {
         return res.activeVotingPower;
     }
 
-    public async getEarlyWithdrawPenalty() {
-        const url = `/allEarlyWithdrawPenalties/`;
-        const res = await this.httpSvc.get<any>(url);
+    public async getEarlyWithdrawPenalty(withdrawTime: bigint): Promise<any> {
+        const url = api.rpc.general.earlyWithdrawPenalty.replace(
+            ':earlyWithdrawPenalty',
+            withdrawTime.toString()
+        );
+        const res = await this.httpSvc.get<HttpTypes.EarlyWithdrawPenaltyResponse>(url);
+        const penaltiesRes = res;
 
-        const penaltiesRes = res.earlyWithdrawPenalties;
+        // const penalties: Record<string, string> = {};
 
-        const penalties: Record<string, string> = {};
+        // for (const key in penaltiesRes) {
+        //     const withdrawTime = parseInt(key);
+        //     const penalty = penaltiesRes[key];
+        //     penalties[withdrawTime] = penalty;
+        // }
 
-        for (const key in penaltiesRes) {
-            const withdrawTime = parseInt(key);
-            const penalty = penaltiesRes[key];
-            penalties[withdrawTime] = penalty;
-        }
+        return penaltiesRes;
+    }
 
-        return penalties;
+    public async getAllEarlyWithdrawPenalties(): Promise<any> {
+        const url = api.rpc.general.allEarlyWithdrawPenalties;
+
+        const res = await this.httpSvc.get<HttpTypes.AllEarlyWithdrawPenaltiesResponse>(url);
+
+        const mapp: Record<string, string> = {};
+
+        // const penalties: Record<string, string> = {};
+
+        // for (const key in penaltiesRes) {
+        //     const withdrawTime = parseInt(key);
+        //     const penalty = penaltiesRes[key];
+        //     penalties[withdrawTime] = penalty;
+        // }
+
+        return res.earlyWithdrawPenalties;
+    }
+
+    public async getWithdrawalOrder(withdrawalHash: Uint8Array): Promise<any> {
+        const url = api.rpc.general.withdrawalOrder.replace(
+            ':withdrawalHash',
+            bytesToHex(withdrawalHash)
+        );
+
+        const res = await this.httpSvc.get<HttpTypes.WithdrawalOrderResponse>(url);
+
+        if (!res.withdrawalOrderFound) return null;
+
+        return res.withdrawalOrder;
     }
 
     // #endregio
@@ -243,35 +242,32 @@ export default class PWRJS {
     // #region block
 
     public async getBlocksCount(): Promise<number> {
-        const url = endpoints.pwrrpc.blocksCount;
+        const url = api.rpc.blocksCount;
         const res = await this.httpSvc.get<HttpTypes.BlocksCountResponse>(url);
         return res.blocksCount;
     }
 
     public async getMaxBlockSize(): Promise<number> {
-        const url = endpoints.pwrrpc.maxBlockSize;
+        const url = api.rpc.maxBlockSize;
         const res = await this.httpSvc.get<HttpTypes.MaxBlockResponse>(url);
         return res.maxBlockSize;
     }
 
     public async getMaxTransactionSize(): Promise<number> {
-        const url = endpoints.pwrrpc.maxTransactionSize;
-        const res =
-            await this.httpSvc.get<HttpTypes.MaxTransactionSizeResponse>(url);
+        const url = api.rpc.maxTransactionSize;
+        const res = await this.httpSvc.get<HttpTypes.MaxTransactionSizeResponse>(url);
         return res.maxTransactionSize;
     }
 
     public async getBlockNumber(): Promise<number> {
-        const url = endpoints.pwrrpc.blockNumber;
+        const url = api.rpc.blockNumber;
         const res = await this.httpSvc.get<HttpTypes.BlockNumberResponse>(url);
         return res.blockNumber;
     }
 
     public async getBlockTimestamp(): Promise<number> {
-        const url = endpoints.pwrrpc.blockTimestamp;
-        const res = await this.httpSvc.get<HttpTypes.BLockTimestampResponse>(
-            url
-        );
+        const url = api.rpc.blockTimestamp;
+        const res = await this.httpSvc.get<HttpTypes.BLockTimestampResponse>(url);
         return res.blockTimestamp;
     }
 
@@ -281,24 +277,15 @@ export default class PWRJS {
     }
 
     public async getBlockByNumber(blockNumber: number): Promise<Block> {
-        const url = endpoints.pwrrpc.block.replace(
-            ':blockNumber',
-            blockNumber.toString()
-        );
+        const url = api.rpc.block.replace(':blockNumber', blockNumber.toString());
         const res = await this.httpSvc.get<HttpTypes.BlockResponse>(url);
         return res.block;
     }
 
-    public async getBlockByNumberExcludingDataAndExtraData(
-        blockNumber: number
-    ): Promise<any> {
-        const url = endpoints.pwrrpc.blockWithExtactedData.replace(
-            ':blockNumber',
-            blockNumber.toString()
-        );
+    public async getBlockByNumberExcludingDataAndExtraData(blockNumber: number): Promise<any> {
+        const url = api.rpc.blockWithExtactedData.replace(':blockNumber', blockNumber.toString());
 
-        const res =
-            await this.httpSvc.get<HttpTypes.BlockExcludingDataResponse>(url);
+        const res = await this.httpSvc.get<HttpTypes.BlockExcludingDataResponse>(url);
 
         return res.block;
     }
@@ -307,14 +294,11 @@ export default class PWRJS {
         blockNumber: number,
         vidaId: number
     ): Promise<any> {
-        const url = endpoints.pwrrpc.blockWithVmDataTransactionsOnly
+        const url = api.rpc.blockWithVmDataTransactionsOnly
             .replace(':blockNumber', blockNumber.toString())
             .replace(':vidaId', vidaId.toString());
 
-        const res =
-            await this.httpSvc.get<HttpTypes.BlockWithVidaTransactionsOnly>(
-                url
-            );
+        const res = await this.httpSvc.get<HttpTypes.BlockWithVidaTransactionsOnly>(url);
 
         return res.block;
     }
@@ -322,33 +306,23 @@ export default class PWRJS {
     // #endregion
 
     // #region transactions
-    public async getTransactionByHash(
-        hash: string
-    ): Promise<FalconTransaction> {
-        const url = endpoints.pwrrpc.transactionByHash.replace(
-            'transactionHash',
-            hash
-        );
+    public async getTransactionByHash(hash: string): Promise<FalconTransaction> {
+        const url = api.rpc.transactionByHash.replace('transactionHash', hash);
 
-        const res = await this.httpSvc.get<HttpTypes.TransactionByHashResponse>(
-            url
-        );
+        const res = await this.httpSvc.get<HttpTypes.TransactionByHashResponse>(url);
 
         return res.transaction;
     }
 
-    public async getTransactionsByHashes(
-        hashes: string[]
-    ): Promise<FalconTransaction[]> {
+    public async getTransactionsByHashes(hashes: string[]): Promise<FalconTransaction[]> {
         const data = {
             transactionHashes: hashes,
         };
 
-        const res =
-            await this.httpSvc.post<HttpTypes.TransactionsByHashesResponse>(
-                endpoints.pwrrpc.transactionsByHashes,
-                data
-            );
+        const res = await this.httpSvc.post<HttpTypes.TransactionsByHashesResponse>(
+            api.rpc.transactionsByHashes,
+            data
+        );
 
         return res.transactions;
     }
@@ -358,27 +332,21 @@ export default class PWRJS {
     // #region proposal
 
     public async getProposalFee(): Promise<number> {
-        const url = endpoints.pwrrpc.proposalFee;
+        const url = api.rpc.proposals.proposalFee;
         const res = await this.httpSvc.get<HttpTypes.ProposalFeeResponse>(url);
         return res.proposalFee;
     }
 
     public async getProposalValidityTime(): Promise<number> {
-        const url = endpoints.pwrrpc.proposalValidityTime;
-        const res =
-            await this.httpSvc.get<HttpTypes.ProposalValidityTimeResponse>(url);
+        const url = api.rpc.proposals.proposalValidityTime;
+        const res = await this.httpSvc.get<HttpTypes.ProposalValidityTimeResponse>(url);
         return res.proposalValidityTime;
     }
 
     public async getProposalStatus(hash: string): Promise<string> {
-        const url = endpoints.pwrrpc.proposalStatus.replace(
-            ':proposalHash',
-            hash
-        );
+        const url = api.rpc.proposals.proposalStatus.replace(':proposalHash', hash);
 
-        const res = await this.httpSvc.get<HttpTypes.ProposalStatusResponse>(
-            url
-        );
+        const res = await this.httpSvc.get<HttpTypes.ProposalStatusResponse>(url);
 
         return res.status;
     }
@@ -388,72 +356,62 @@ export default class PWRJS {
     // #region validators
 
     public async getValidatorCountLimit(): Promise<number> {
-        const url = endpoints.pwrrpc.validatorCountLimit;
-        const res = await this.httpSvc.get<HttpTypes.ValidatorCountResponse>(
-            url
-        );
+        const url = api.rpc.validators.validatorCountLimit;
+        const res = await this.httpSvc.get<HttpTypes.ValidatorCountResponse>(url);
         return res.validatorCountLimit;
     }
 
     public async getValidatorSlashingFee(): Promise<number> {
-        const url = endpoints.pwrrpc.validatorSlashingFee;
-        const res =
-            await this.httpSvc.get<HttpTypes.ValidatorSlashingFeeResponse>(url);
+        const url = api.rpc.validators.validatorSlashingFee;
+        const res = await this.httpSvc.get<HttpTypes.ValidatorSlashingFeeResponse>(url);
         return res.validatorSlashingFee;
     }
 
     public async getValidatorOperationalFee(): Promise<number> {
-        const url = endpoints.pwrrpc.validatorOperationalFee;
-        const res =
-            await this.httpSvc.get<HttpTypes.ValidatorOperationalFeeResponse>(
-                url
-            );
+        const url = api.rpc.validators.validatorOperationalFee;
+        const res = await this.httpSvc.get<HttpTypes.ValidatorOperationalFeeResponse>(url);
         return res.validatorOperationalFee;
     }
 
     public async getValidatorJoiningFee() {
-        const url = endpoints.pwrrpc.validatorJoiningFee;
-        const res =
-            await this.httpSvc.get<HttpTypes.ValidatorJoiningFeeResponse>(url);
+        const url = api.rpc.validators.validatorJoiningFee;
+        const res = await this.httpSvc.get<HttpTypes.ValidatorJoiningFeeResponse>(url);
         return res.validatorJoiningFee;
     }
 
     public async getMinimumDelegatingAmount() {
-        const url = endpoints.pwrrpc.minimumDelegatingAmount;
-        const res =
-            await this.httpSvc.get<HttpTypes.MinimunDelegatingAmountResponse>(
-                url
-            );
+        const url = api.rpc.validators.minimumDelegatingAmount;
+        const res = await this.httpSvc.get<HttpTypes.MinimunDelegatingAmountResponse>(url);
         return res.minimumDelegatingAmount;
     }
 
     public async getTotalValidatorsCount(): Promise<number> {
-        const url = `/totalValidatorsCount/`;
-        const res = await this.httpSvc.get<TotalValidatorCountRes>(url);
+        const url = api.rpc.validators.totalValidatorsCount;
+        const res = await this.httpSvc.get<HttpTypes.TotalValidatorCountResponse>(url);
         return res.validatorsCount;
     }
 
     public async getStandbyValidatorsCount(): Promise<number> {
-        const url = `/standbyValidatorsCount/`;
-        const res = await this.httpSvc.get<StandbyValidatorCountRes>(url);
+        const url = api.rpc.validators.standbyValidatorsCount;
+        const res = await this.httpSvc.get<HttpTypes.StandbyValidatorCountResponse>(url);
         return res.validatorsCount;
     }
 
     public async getActiveValidatorsCount(): Promise<number> {
-        const url = `/activeValidatorsCount/`;
-        const res = await this.httpSvc.get<ActiveValidatorCountRes>(url);
+        const url = api.rpc.validators.activeValidatorsCount;
+        const res = await this.httpSvc.get<HttpTypes.ActiveValidatorCountResponse>(url);
         return res.validatorsCount;
     }
 
     public async getTotalDelegatorsCount(): Promise<number> {
-        const url = `/totalDelegatorsCount/`;
-        const res = await this.httpSvc.get<DelegatorsCount>(url);
+        const url = api.rpc.validators.totalDelegatorsCount;
+        const res = await this.httpSvc.get<HttpTypes.DelegatorsCountResponse>(url);
         return res.delegatorsCount;
     }
 
     public async getAllValidators(): Promise<Validator[]> {
-        const url = `/allValidators/`;
-        const res = await this.httpSvc.get<AllValidtorsRes>(url);
+        const url = api.rpc.validators.allValidators;
+        const res = await this.httpSvc.get<HttpTypes.AllValidatorsResponse>(url);
 
         const validators = res.validators;
 
@@ -480,8 +438,8 @@ export default class PWRJS {
     }
 
     public async getStandbyValidators(): Promise<any[]> {
-        const url = `/standbyValidators/`;
-        const res = await this.httpSvc.get<any>(url);
+        const url = api.rpc.validators.standbyValidators;
+        const res = await this.httpSvc.get<HttpTypes.AllStandByValidatorsResponse>(url);
         const validators = res.validators;
 
         const list = [];
@@ -507,8 +465,8 @@ export default class PWRJS {
     }
 
     public async getActiveValidators(): Promise<any[]> {
-        const url = `/activeValidators/`;
-        const res = await this.httpSvc.get<any>(url);
+        const url = api.rpc.validators.activeValidators;
+        const res = await this.httpSvc.get<HttpTypes.AllActiveValidatorsResponse>(url);
 
         const validatorsData = res.validators;
         const validatorsList = [];
@@ -534,28 +492,29 @@ export default class PWRJS {
     }
 
     public async getValidator(address: string): Promise<any> {
-        const url = `/validator/?validatorAddress=${address}`;
-        const res = await this.httpSvc.get<any>(url);
+        const url = api.rpc.validators.validator.replace(':validatorAddress', address);
+        const res = await this.httpSvc.get<HttpTypes.validatorResponse>(url);
 
         const v = res.validator;
 
-        // prettier-ignore
-        const validator = {
-            address: v.hasOwnProperty('address') ? v.address : '0x',
-            ip: v.hasOwnProperty('ip') ? v.ip : '',
-            isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
-            votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
-            shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
-            delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
-            status: v.hasOwnProperty('status') ? v.status : 'unknown',
-        };
+        return res.validator;
+        // // prettier-ignore
+        // const validator = {
+        //     address: v.hasOwnProperty('address') ? v.address : '0x',
+        //     ip: v.hasOwnProperty('ip') ? v.ip : '',
+        //     isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
+        //     votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
+        //     shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
+        //     delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
+        //     status: v.hasOwnProperty('status') ? v.status : 'unknown',
+        // };
 
-        return validator;
+        // return validator;
     }
 
     public async getDelegatees(address: string): Promise<Validator[]> {
-        const url = `/delegateesOfUser/?userAddress=${address}`;
-        const res = await this.httpSvc.get<any>(url);
+        const url = api.rpc.validators.delegateesOfUser.replace(':userAddress', address);
+        const res = await this.httpSvc.get<HttpTypes.allDelegateesOfUserResponse>(url);
 
         const validatorsData = res.delegatees;
         const validatorsList = [];
@@ -581,23 +540,29 @@ export default class PWRJS {
     }
 
     // prettier-ignore
-    public async getDelegatedPWR(delegatorAddress: string, validatorAddress: string) {
-        const url = `/validator/delegator/delegatedPWROfAddress/?userAddress=${delegatorAddress}&validatorAddress=${validatorAddress}`;
-        const res = await this.httpSvc.get<any>(url);
+    public async getDelegatedPWR(delegatorAddress: string, validatorAddress: string): Promise<bigint> {
+        const url = api.rpc.validators.delegatedPwr
+            .replace(':userAddress', delegatorAddress)
+            .replace(':validatorAddress', validatorAddress);
+        
+        const res = await this.httpSvc.get<HttpTypes.DelegatedPwrResponse>(url);
         return res.delegatedPWR;
     }
 
     // prettier-ignore
-    public async getSharesOfDelegator(delegatorAddress: string, validatorAddress: string) {
-        const url = `/validator/delegator/sharesOfAddress/?userAddress=${delegatorAddress}&validatorAddress=${validatorAddress}`;
-        const res = await this.httpSvc.get<any>(url);
+    public async getSharesOfDelegator(delegatorAddress: string, validatorAddress: string): Promise<number> {
+        
+        const url = api.rpc.validators.sharesOfDelegator
+            .replace(':userAddress', delegatorAddress)
+            .replace(':validatorAddress', validatorAddress);
+
+        const res = await this.httpSvc.get<HttpTypes.SharesOfDelegatorResponse>(url);
         return res.shares;
     }
 
-    public async getShareValue(validator: string) {
-        const url = `/validator/shareValue/?validatorAddress=${validator}`;
-        const res = await this.httpSvc.get<any>(url);
-
+    public async getShareValue(validator: string): Promise<bigint> {
+        const url = api.rpc.validators.shareValue.replace(':validatorAddress', validator);
+        const res = await this.httpSvc.get<HttpTypes.ShareValueResponse>(url);
         return res.shareValue;
     }
 
@@ -606,19 +571,14 @@ export default class PWRJS {
     // #region vidas
 
     public async getVidaOwnerTransactionFeeShare() {
-        const url = endpoints.pwrrpc.vidaOwnerTransactionFeeShare;
-        const res =
-            await this.httpSvc.get<HttpTypes.vidaOwnerTransactionFeeShareResponse>(
-                url
-            );
+        const url = api.rpc.vida.vidaOwnerTransactionFeeShare;
+        const res = await this.httpSvc.get<HttpTypes.vidaOwnerTransactionFeeShareResponse>(url);
         return res.vmOwnerTransactionFeeShare;
     }
 
     public async getVidaIdClaimingFee() {
-        const url = endpoints.pwrrpc.vidaIdClaimingFee;
-        const res = await this.httpSvc.get<HttpTypes.vidaClaimingFeeResponse>(
-            url
-        );
+        const url = api.rpc.vida.vidaIdClaimingFee;
+        const res = await this.httpSvc.get<HttpTypes.vidaClaimingFeeResponse>(url);
         return res.vmIdClaimingFee;
     }
 
@@ -627,14 +587,29 @@ export default class PWRJS {
         endingBlock: string,
         vidaId: bigint
     ): Promise<VmDataTransaction[]> {
-        const url = endpoints.pwrrpc.vidaDataTransactions
+        const url = api.rpc.vidaDataTransactions
             .replace(':startingBlock', startingBlock)
             .replace(':endingBlock', endingBlock)
             .replace(':vidaId', vidaId.toString());
 
-        const res = await this.httpSvc.get<HttpTypes.VidaDataTransactionsRes>(
-            url
-        );
+        const res = await this.httpSvc.get<HttpTypes.VidaDataTransactionsResponse>(url);
+
+        return res.transactions;
+    }
+
+    public async getVidaDataTransactionsFilterByBytePrefix(
+        startingBlock: string,
+        endingBlock: string,
+        vidaId: bigint,
+        bytePrefix: Uint8Array
+    ): Promise<VmDataTransaction[]> {
+        const url = api.rpc.vidaDataTransactions
+            .replace(':startingBlock', startingBlock)
+            .replace(':endingBlock', endingBlock)
+            .replace(':vidaId', vidaId.toString())
+            .replace(':bytePrefix', bytesToHex(bytePrefix));
+
+        const res = await this.httpSvc.get<HttpTypes.VidaDataTransactionsFilteredResponse>(url);
 
         return res.transactions;
     }
@@ -663,10 +638,7 @@ export default class PWRJS {
     }
 
     public static isVidaAddress(address: string): boolean {
-        if (
-            address == null ||
-            (address.length !== 40 && address.length !== 42)
-        ) {
+        if (address == null || (address.length !== 40 && address.length !== 42)) {
             return false;
         }
 
@@ -703,20 +675,36 @@ export default class PWRJS {
         return true;
     }
 
-    public async getOwnerOfVm(vmId: string): Promise<string | null> {
-        const url = `/ownerOfVmId/?vmId=${vmId}`;
-        const res = await this.httpSvc.get<OwrnerOfVMRes>(url);
-
+    public async getOwnerOfVida(vidaId: bigint): Promise<string | null> {
+        const url = api.rpc.vida.ownerOfVida.replace(':vidaId', vidaId.toString());
+        const res = await this.httpSvc.get<HttpTypes.OwrnerOfVidaResponse>(url);
         if (res.hasOwnProperty('claimed')) {
             return res.owner;
         }
-
         return null;
     }
 
-    public async getConduitsOfVm(vmId: string): Promise<Validator[]> {
-        const url = `/conduitsOfVm/?vmId=${vmId}`;
-        const res = await this.httpSvc.get<any>(url);
+    public async getVidaSponsoredAddress(vidaID: bigint): Promise<string[]> {
+        const url = api.rpc.vida.sponsoredAddresses.replace(':vidaId', vidaID.toString());
+        const res = await this.httpSvc.get<HttpTypes.SponsoredAddressResponse>(url);
+        return res.sponsoredAddresses;
+    }
+
+    public async getVidaAllowedSenders(vidaId: bigint): Promise<string[]> {
+        const url = api.rpc.vida.allowedSenders.replace(':vidaId', vidaId.toString());
+        const res = await this.httpSvc.get<HttpTypes.VidaAllowedSendersResponse>(url);
+        return res.allowedSenders;
+    }
+
+    public async isVidaPrivate(vidaId: bigint): Promise<boolean> {
+        const url = api.rpc.vida.isVidaPrivate.replace(':vidaId', vidaId.toString());
+        const res = await this.httpSvc.get<HttpTypes.IsVidaPrivateResponse>(url);
+        return res.isPrivate;
+    }
+
+    public async getConduitsOfVida(vidaId: bigint): Promise<Validator[]> {
+        const url = api.rpc.vida.conduitsOfVida.replace(':vidaId', vidaId.toString());
+        const res = await this.httpSvc.get<HttpTypes.ConduitsOfVidaResponse>(url);
 
         const validatorsData = res.conduits;
         const validatorsList = [];
@@ -728,7 +716,7 @@ export default class PWRJS {
             const validator = {
                 address: v.address,
                 ip: v.ip,
-                isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
+                isBadActor: v.hasOwnProperty('badActor') ? v.isBadActor : false,
                 votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
                 shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
                 delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
@@ -741,55 +729,75 @@ export default class PWRJS {
         return validatorsList;
     }
 
+    public async isOwnerAllowedToTransferPWRFromVida(vidaId: bigint): Promise<boolean> {
+        const url = api.rpc.vida.isOwnerAllowedToTransferPWRFromVida.replace(
+            ':vidaId',
+            vidaId.toString()
+        );
+        const res = await this.httpSvc.get<HttpTypes.IsOwnerAllowedToTransferPWRFromVidaResponse>(
+            url
+        );
+
+        return res.allowed;
+    }
+
+    public async areConduitsAllowedToTransferPWRFromVida(vidaId: bigint): Promise<boolean> {
+        const url = api.rpc.vida.areConduitsAllowedToTransferPWRFromVida.replace(
+            ':vidaId',
+            vidaId.toString()
+        );
+
+        const res =
+            await this.httpSvc.get<HttpTypes.AreConduitsAllowedToTransferPWRFromVidaResponse>(url);
+
+        return res.allowed;
+    }
+
     // #endregion
 
     // #region guardian
 
     public async getMaxGuardianTime() {
-        const url = endpoints.pwrrpc.maxGuardianTime;
-        const res = await this.httpSvc.get<HttpTypes.MaxGuardianTimeResponse>(
-            url
-        );
+        const url = api.rpc.guardians.maxGuardianTime;
+        const res = await this.httpSvc.get<HttpTypes.MaxGuardianTimeResponse>(url);
         return res.maxGuardianTime;
     }
 
     public async isTransactionValidForGuardianApproval(transaction: string) {
-        const url = `/isTransactionValidForGuardianApproval/`;
-        const res = await this.httpSvc.post<any>(url, {
-            data: { transaction },
-        });
+        const url = api.rpc.guardians.isTransactionValidForGuardianApproval;
+
+        const data = { transaction };
+
+        const res =
+            await this.httpSvc.post<HttpTypes.IsTransactionValidForGuardianApprovalResponse>(
+                url,
+                data
+            );
 
         if (res.valid) {
             return {
                 valid: res.valid,
                 guardianAddress: `0x${res.guardian}`,
-                transaction: res.transaction,
+                // transaction: res.transaction,
             };
         } else {
             return {
                 valid: res.valid,
-                errorMesage: res.error,
+                // errorMesage: res.error,
                 transaction: null,
                 guardianAddress: `0x${res.guardian}`,
             };
         }
     }
 
-    public async isTransactionValidForGuardianApprovalBytes(
-        transaction: Uint8Array
-    ) {
-        return this.isTransactionValidForGuardianApproval(
-            bytesToHex(transaction)
-        );
+    public async isTransactionValidForGuardianApprovalBytes(transaction: Uint8Array) {
+        return this.isTransactionValidForGuardianApproval(bytesToHex(transaction));
     }
 
     public async getGuardianOfAddress(
         address: string
     ): Promise<{ guardian: string; expiryDate: EpochTimeStamp } | null> {
-        const url = endpoints.pwrrpc.guardianOfAddress.replace(
-            ':address',
-            address
-        );
+        const url = api.rpc.guardians.guardianOfAddress.replace(':address', address);
         const res = await this.httpSvc.get<HttpTypes.GuardianResponse>(url);
 
         if (res.isGuarded) {

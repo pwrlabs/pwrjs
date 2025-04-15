@@ -1,5 +1,8 @@
 import { VmDataTransaction } from '../record/vmDataTransaction';
+
 import { Block } from './block.entity';
+import { Validator } from './validator.entity';
+
 import { FalconTransaction } from './falcon-transaction.entity';
 
 export namespace HttpTypes {
@@ -41,6 +44,11 @@ export namespace HttpTypes {
 
     export type MaxGuardianTimeResponse = {
         maxGuardianTime: number;
+    };
+
+    export type IsTransactionValidForGuardianApprovalResponse = {
+        valid: boolean;
+        guardian: string;
     };
 
     // #endregion
@@ -90,7 +98,11 @@ export namespace HttpTypes {
         transactions: FalconTransaction[];
     };
 
-    export type VidaDataTransactionsRes = {
+    export type VidaDataTransactionsResponse = {
+        transactions: VmDataTransaction[];
+    };
+
+    export type VidaDataTransactionsFilteredResponse = {
         transactions: VmDataTransaction[];
     };
 
@@ -111,6 +123,23 @@ export namespace HttpTypes {
 
     export type WithdrawlLockTimeResponse = {
         withdrawalLockTime: number;
+    };
+
+    export type EarlyWithdrawPenaltyResponse = {
+        earlyWithdrawAvailable: boolean;
+        penalty: number;
+    };
+
+    export type AllEarlyWithdrawPenaltiesResponse = {
+        earlyWithdrawPenalties: {
+            penalty: number;
+            blockNumber: number;
+        }[];
+    };
+
+    export type WithdrawalOrderResponse = {
+        withdrawalOrderFound: boolean;
+        withdrawalOrder: any;
     };
     // #endregion
 
@@ -135,6 +164,94 @@ export namespace HttpTypes {
         minimumDelegatingAmount: number;
     };
 
+    export type TotalValidatorCountResponse = {
+        validatorsCount: number;
+    };
+
+    export type StandbyValidatorCountResponse = {
+        validatorsCount: number;
+    };
+
+    export type ActiveValidatorCountResponse = {
+        validatorsCount: number;
+    };
+
+    export type DelegatorsCountResponse = {
+        delegatorsCount: number;
+    };
+
+    export type AllValidatorsResponse = {
+        validators: {
+            votingPower: number;
+            address: string;
+            ip: string;
+            delegatorsCount: number;
+            totalShares: number;
+            badActor?: boolean;
+            status: string;
+        }[];
+    };
+
+    export type AllStandByValidatorsResponse = {
+        validators: {
+            votingPower: number;
+            address: string;
+            ip: string;
+            delegatorsCount: number;
+            totalShares: number;
+            badActor?: boolean;
+            status: string;
+        }[];
+    };
+
+    export type AllActiveValidatorsResponse = {
+        validators: {
+            votingPower: number;
+            address: string;
+            ip: string;
+            delegatorsCount: number;
+            totalShares: number;
+            badActor?: boolean;
+            status: string;
+        }[];
+    };
+
+    export type allDelegateesOfUserResponse = {
+        delegatees: {
+            votingPower: number;
+            address: string;
+            ip: string;
+            delegatorsCount: number;
+            totalShares: number;
+            badActor?: boolean;
+            status: string;
+        }[];
+    };
+
+    export type validatorResponse = {
+        validator: {
+            votingPower: number;
+            address: string;
+            ip: string;
+            delegatorsCount: number;
+            totalShares: number;
+            badActor?: boolean;
+            status: string;
+        };
+    };
+
+    export type DelegatedPwrResponse = {
+        delegatedPWR: bigint;
+    };
+
+    export type SharesOfDelegatorResponse = {
+        shares: number;
+    };
+
+    export type ShareValueResponse = {
+        shareValue: bigint;
+    };
+
     // #endregion
 
     // #region vida
@@ -145,6 +262,35 @@ export namespace HttpTypes {
 
     export type vidaClaimingFeeResponse = {
         vmIdClaimingFee: number;
+    };
+
+    export type OwrnerOfVidaResponse = {
+        owner?: string;
+        claimed: boolean;
+    };
+
+    export type SponsoredAddressResponse = {
+        sponsoredAddresses: string[];
+    };
+
+    export type VidaAllowedSendersResponse = {
+        allowedSenders: string[];
+    };
+
+    export type IsVidaPrivateResponse = {
+        isPrivate: boolean;
+    };
+
+    export type ConduitsOfVidaResponse = {
+        conduits: Validator[];
+    };
+
+    export type IsOwnerAllowedToTransferPWRFromVidaResponse = {
+        allowed: boolean;
+    };
+
+    export type AreConduitsAllowedToTransferPWRFromVidaResponse = {
+        allowed: boolean;
     };
 
     // #endregion

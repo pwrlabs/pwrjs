@@ -1,8 +1,8 @@
-const endpoints = {
+const api = {
     // The base URL for the API
     baseUrl: 'https://api.example.com',
 
-    pwrrpc: {
+    rpc: {
         // #blockchain props
 
         chain_id: '/chainId/',
@@ -23,13 +23,11 @@ const endpoints = {
 
         // #endregion
 
-        // #region guardian
-
-        guardianOfAddress: '/guardianOf/?userAddress=:address',
-
-        maxGuardianTime: '/maxGuardianTime/',
-
-        // #endregion
+        guardians: {
+            guardianOfAddress: '/guardianOf/?userAddress=:address',
+            maxGuardianTime: '/maxGuardianTime/',
+            isTransactionValidForGuardianApproval: '/isTransactionValidForGuardianApproval/',
+        },
 
         // #region blocks
 
@@ -45,8 +43,7 @@ const endpoints = {
 
         block: '/block/?blockNumber=:blockNumber',
 
-        blockWithExtactedData:
-            '/blockExcludingDataAndExtraData/?blockNumber=:blockNumber',
+        blockWithExtactedData: '/blockExcludingDataAndExtraData/?blockNumber=:blockNumber',
 
         blockWithVmDataTransactionsOnly:
             '/blockWithVmDataTransactionsOnly/?blockNumber=:blockNumber&vmId=:vidaId',
@@ -55,57 +52,76 @@ const endpoints = {
 
         // #region transactions
 
-        transactionByHash:
-            '/transactionByHash/?transactionHash=:transactionHash',
+        transactionByHash: '/transactionByHash/?transactionHash=:transactionHash',
 
         transactionsByHashes: '/getTransactionsByHashes',
 
         vidaDataTransactions:
             '/getVidaTransactions/?startingBlock=:startingBlock&endingBlock=:endingBlock&vidaId=:vidaId',
 
-        // #endregion
-
-        // #region general
-        burnPercentage: '/burnPercentage/',
-
-        totalVotingPower: '/totalVotingPower/',
-
-        pwrRewardsPerYear: '/pwrRewardsPerYear/',
-
-        withdrawalLockTime: '/withdrawalLockTime/',
-        // #endregion
-
-        // #region validators
-
-        validatorCountLimit: '/validatorCountLimit/',
-
-        validatorSlashingFee: '/validatorSlashingFee/',
-
-        validatorOperationalFee: '/validatorOperationalFee/',
-
-        validatorJoiningFee: '/validatorJoiningFee/',
-
-        minimumDelegatingAmount: '/minimumDelegatingAmount/',
+        VmTransactionsSortByBytePrefix:
+            '/getVmTransactionsSortByBytePrefix/?startingBlock=:startingBlock&endingBlock=:endingBlock&vidaId=:vidaId&bytePrefix=:bytePrefix',
 
         // #endregion
 
-        // #region vida
+        general: {
+            burnPercentage: '/burnPercentage/',
+            totalVotingPower: '/totalVotingPower/',
+            pwrRewardsPerYear: '/pwrRewardsPerYear/',
+            withdrawalLockTime: '/withdrawalLockTime/',
+            earlyWithdrawPenalty: '/earlyWithdrawPenalty/?withdrawTime=:earlyWithdrawPenalty',
+            allEarlyWithdrawPenalties: '/allEarlyWithdrawPenalties/',
+            withdrawalOrder: '/withdrawalOrder?withdrawalHash=:withdrawalHash',
+        },
 
-        vidaOwnerTransactionFeeShare: '/vmOwnerTransactionFeeShare/',
+        validators: {
+            validatorCountLimit: '/validatorCountLimit/',
+            validatorSlashingFee: '/validatorSlashingFee/',
+            validatorOperationalFee: '/validatorOperationalFee/',
+            validatorJoiningFee: '/validatorJoiningFee/',
+            minimumDelegatingAmount: '/minimumDelegatingAmount/',
+            totalValidatorsCount: '/totalValidatorsCount/',
+            standbyValidatorsCount: '/standbyValidatorsCount/',
+            activeValidatorsCount: '/activeValidatorsCount/',
+            totalDelegatorsCount: '/totalDelegatorsCount/',
+            allValidators: '/allValidators/',
+            standbyValidators: '/standbyValidators/',
+            activeValidators: '/activeValidators/',
+            delegateesOfUser: '/delegateesOfUser/?userAddress=:userAddress',
+            validator: '/validator/?validatorAddress=:validatorAddress',
+            delegatedPwr:
+                '/validator/delegator/delegatedPWROfAddress/?userAddress=:userAddress&validatorAddress=:validatorAddress',
+            sharesOfDelegator:
+                '/validator/delegator/sharesOfAddress/?userAddress=:userAddress&validatorAddress=validatorAddress',
+            shareValue: '/validator/shareValue/?validatorAddress=:validatorAddress',
+        },
 
-        vidaIdClaimingFee: '/vidaIdClaimingFee/',
-
-        // #endregion
+        vida: {
+            vidaOwnerTransactionFeeShare: '/vmOwnerTransactionFeeShare/',
+            vidaIdClaimingFee: '/vidaIdClaimingFee/',
+            ownerOfVida: '/ownerOfVidaId/?vidaId=:vidaId',
+            sponsoredAddresses: '/vidaSponsoredAddresses?vidaId=:vidaId',
+            allowedSenders: '/vidaAllowedSenders?vidaId=:vidaId',
+            isVidaPrivate: '/isVidaPrivate/?vidaId=:vidaId',
+            conduitsOfVida: '/conduitsOfVida?vidaId=:vidaId',
+            isOwnerAllowedToTransferPWRFromVida:
+                '/isOwnerAllowedToTransferPWRFromVida/?vidaId=:vidaId',
+            areConduitsAllowedToTransferPWRFromVida:
+                '/areConduitsAllowedToTransferPWRFromVida/?vidaId=:vidaId',
+        },
 
         // #region proposal
-        proposalFee: '/proposalFee/',
+        proposals: {
+            proposalFee: '/proposalFee/',
+            proposalValidityTime: '/proposalValidityTime/',
+            proposalStatus: '/proposalStatus/?proposalHash=:proposalHash',
+        },
 
-        proposalValidityTime: '/proposalValidityTime/',
-
-        proposalStatus: '/proposalStatus/?proposalHash=:proposalHash',
         // #endregion
 
         // #region others
         ecdsaVerificationFee: '/ecdsaVerificationFee/',
     },
 };
+
+export default api;
