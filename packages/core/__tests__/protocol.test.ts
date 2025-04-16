@@ -58,9 +58,7 @@ describe('pwrjs core', () => {
     test('PWRJS nonce', async () => {
         const randomWallet = WalletUtils.getRandomWallet();
 
-        const nonce = await pwrjs.getNonceOfAddress(
-            randomWallet.getAddressString()
-        );
+        const nonce = await pwrjs.getNonceOfAddress(randomWallet.getAddressString());
 
         expect(nonce).toBe(0);
     });
@@ -68,15 +66,11 @@ describe('pwrjs core', () => {
     test('PWRJS balance', async () => {
         const randomWallet = WalletUtils.getRandomWallet();
 
-        const balanceOfRandom = await pwrjs.getBalanceOfAddress(
-            randomWallet.getAddressString()
-        );
+        const balanceOfRandom = await pwrjs.getBalanceOfAddress(randomWallet.getAddressString());
 
         const balanceOfTest = await pwrjs.getBalanceOfAddress(testAddress);
         expect(balanceOfRandom).toBe(0);
-        expect(BigInt(balanceOfTest.toString())).toBeGreaterThan(
-            BigInt((90 * 10 ** 9).toString())
-        );
+        expect(BigInt(balanceOfTest.toString())).toBeGreaterThan(BigInt((90 * 10 ** 9).toString()));
     });
 
     // #endregion
@@ -147,8 +141,7 @@ describe('pwrjs core', () => {
         const firstBlock = await pwrjs.getBlockByNumber(3);
 
         const firstBlockData = {
-            blockHash:
-                '8cba45cdab2947ac39b88f9138c95a920eb0cb488c4d5f1a88c551d6d3c99ae2',
+            blockHash: '8cba45cdab2947ac39b88f9138c95a920eb0cb488c4d5f1a88c551d6d3c99ae2',
             size: 1492,
             networkVotingPower: 20000000000000000,
             success: true,
@@ -206,12 +199,8 @@ describe('pwrjs core', () => {
     test('PWRJ isVm address', async () => {
         const notVmAddress = PWRJS.isVmAddress(testAddress);
         const _vmAddress = PWRJS.isVmAddress(vmAddress);
-        const _vmAddress2 = PWRJS.isVmAddress(
-            '0x0000000000000000000007075656276978097000'
-        );
-        const _vmAddress3 = PWRJS.isVmAddress(
-            '0x1000000000000000000007075656276978097000'
-        );
+        const _vmAddress2 = PWRJS.isVmAddress('0x0000000000000000000007075656276978097000');
+        const _vmAddress3 = PWRJS.isVmAddress('0x1000000000000000000007075656276978097000');
 
         expect(notVmAddress).toBe(false);
         expect(_vmAddress).toBe(true);
@@ -304,9 +293,7 @@ describe('pwrjs core', () => {
 
     test('PWRJS guardian', async () => {
         const randomWallet = new PWRWallet();
-        const noGuardian = await pwrjs.getGuardianOfAddress(
-            randomWallet.getAddress()
-        );
+        const noGuardian = await pwrjs.getGuardianOfAddress(randomWallet.getAddress());
         const guardian = await pwrjs.getGuardianOfAddress(testAddress);
 
         expect(noGuardian).toBeNull();
@@ -346,9 +333,7 @@ describe('pwrjs core', () => {
     test('PWRJS validator', async () => {
         const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
         const validator = await pwrjs.getValidator(vAddress);
-        expect(validator.address.toLowerCase()).toBe(
-            vAddress.toLowerCase().substring(2)
-        );
+        expect(validator.address.toLowerCase()).toBe(vAddress.toLowerCase().substring(2));
     });
 
     test('PWRJS all Validators', async () => {
@@ -374,9 +359,7 @@ describe('pwrjs core', () => {
     });
 
     test('PWRJS get delegatees', async () => {
-        const delegatees = await pwrjs.getDelegatees(
-            '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA'
-        );
+        const delegatees = await pwrjs.getDelegatees('0x87B84E7FAF722FB906F34E4EB9118F49933E55FA');
 
         expect(delegatees.length).toBeGreaterThan(0);
     });

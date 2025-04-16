@@ -38,19 +38,10 @@ const api = {
                 '/blockWithVidaDataTransactions?blockNumber=:blockNumber&vmId=:vidaId',
         },
 
-        // #region transactions
-
-        transactionByHash: '/transactionByHash?transactionHash=:transactionHash',
-
-        transactionsByHashes: '/getTransactionsByHashes',
-
-        vidaDataTransactions:
-            '/getVidaTransactions?startingBlock=:startingBlock&endingBlock=:endingBlock&vidaId=:vidaId',
-
-        VmTransactionsSortByBytePrefix:
-            '/getVmTransactionsSortByBytePrefix?startingBlock=:startingBlock&endingBlock=:endingBlock&vidaId=:vidaId&bytePrefix=:bytePrefix',
-
-        // #endregion
+        transactions: {
+            transactionByHash: '/transactionByHash?transactionHash=:transactionHash',
+            transactionsByHashes: '/getTransactionsByHashes',
+        },
 
         general: {
             burnPercentage: '/burnPercentage',
@@ -97,6 +88,10 @@ const api = {
                 '/isOwnerAllowedToTransferPWRFromVida?vidaId=:vidaId',
             areConduitsAllowedToTransferPWRFromVida:
                 '/areConduitsAllowedToTransferPWRFromVida?vidaId=:vidaId',
+            vidaDataTransactions:
+                '/getVidaTransactions?startingBlock=:startingBlock&endingBlock=:endingBlock&vidaId=:vidaId',
+            VmTransactionsSortByBytePrefix:
+                '/getVmTransactionsSortByBytePrefix?startingBlock=:startingBlock&endingBlock=:endingBlock&vidaId=:vidaId&bytePrefix=:bytePrefix',
         },
 
         // #region proposal

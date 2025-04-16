@@ -2,8 +2,7 @@ import { VmDataTransaction } from '../record/vmDataTransaction';
 
 import { Block } from './block.entity';
 import { Validator } from './validator.entity';
-
-import { FalconTransaction } from './falcon-transaction.entity';
+import { AnyFalconTransaction } from './falcon-transaction.entity';
 
 export namespace HttpTypes {
     export type ChainIdResponse = {
@@ -87,11 +86,11 @@ export namespace HttpTypes {
     // #region transactions
 
     export type TransactionByHashResponse = {
-        transaction: FalconTransaction;
+        transaction: AnyFalconTransaction;
     };
 
     export type TransactionsByHashesResponse = {
-        transactions: FalconTransaction[];
+        transactions: AnyFalconTransaction[];
     };
 
     export type VidaDataTransactionsResponse = {
@@ -181,39 +180,15 @@ export namespace HttpTypes {
     };
 
     export type AllValidatorsResponse = {
-        validators: {
-            votingPower: number;
-            address: string;
-            ip: string;
-            delegatorsCount: number;
-            totalShares: number;
-            badActor?: boolean;
-            status: string;
-        }[];
+        validators: Validator[];
     };
 
     export type AllStandByValidatorsResponse = {
-        validators: {
-            votingPower: number;
-            address: string;
-            ip: string;
-            delegatorsCount: number;
-            totalShares: number;
-            badActor?: boolean;
-            status: string;
-        }[];
+        validators: Validator[];
     };
 
     export type AllActiveValidatorsResponse = {
-        validators: {
-            votingPower: number;
-            address: string;
-            ip: string;
-            delegatorsCount: number;
-            totalShares: number;
-            badActor?: boolean;
-            status: string;
-        }[];
+        validators: Validator[];
     };
 
     export type allDelegateesOfUserResponse = {
@@ -229,15 +204,7 @@ export namespace HttpTypes {
     };
 
     export type validatorResponse = {
-        validator: {
-            votingPower: number;
-            address: string;
-            ip: string;
-            delegatorsCount: number;
-            totalShares: number;
-            badActor?: boolean;
-            status: string;
-        };
+        validator: Validator;
     };
 
     export type DelegatedPwrResponse = {

@@ -1,9 +1,9 @@
 export type Validator = {
-    votingPower: string;
     address: string;
     ip: string;
+    isBadActor?: boolean;
+    votingPower: string;
+    totalShares: number;
     delegatorsCount: number;
-    isBadActor: boolean;
-    totalShares: string;
     status: string;
 };

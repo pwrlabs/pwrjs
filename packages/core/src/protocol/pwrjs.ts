@@ -4,7 +4,7 @@ import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 // entities
 import { Block } from 'src/entities/block.entity';
 import { Validator } from 'src/entities/validator.entity';
-import { FalconTransaction } from 'src/entities/falcon-transaction.entity';
+import { AnyFalconTransaction, FalconTransaction } from 'src/entities/falcon-transaction.entity';
 import { HttpTypes } from 'src/entities/http.types';
 
 // services
@@ -16,6 +16,7 @@ import { Transaction_ID } from '../static/enums/transaction.enum';
 import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
 
 import api from 'src/shared/api/api';
+import { deserializeTransaction } from 'src/services/transaction-deserializer';
 
 export default class PWRJS {
     // private ecdsaVerificationFee: number = 10000;
@@ -295,21 +296,19 @@ export default class PWRJS {
     // #endregion
 
     // #region transactions
-    public async getTransactionByHash(hash: string): Promise<FalconTransaction> {
-        const url = api.rpc.transactionByHash.replace('transactionHash', hash);
-
+    public async getTransactionByHash(hash: string): Promise<AnyFalconTransaction> {
+        const url = api.rpc.transactions.transactionByHash.replace(':transactionHash', hash);
         const res = await this.httpSvc.get<HttpTypes.TransactionByHashResponse>(url);
-
         return res.transaction;
     }
 
-    public async getTransactionsByHashes(hashes: string[]): Promise<FalconTransaction[]> {
+    public async getTransactionsByHashes(hashes: string[]): Promise<AnyFalconTransaction[]> {
         const data = {
             transactionHashes: hashes,
         };
 
         const res = await this.httpSvc.post<HttpTypes.TransactionsByHashesResponse>(
-            api.rpc.transactionsByHashes,
+            api.rpc.transactions.transactionsByHashes,
             data
         );
 
@@ -404,101 +403,25 @@ export default class PWRJS {
 
         const validators = res.validators;
 
-        const list = [];
-
-        for (let i = 0; i < validators.length; i++) {
-            const v = validators[i];
-
-            // prettier-ignore
-            const validator = {
-                address: v.address,
-                ip: v.ip,
-                isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
-                votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
-                shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
-                delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
-                status: v.hasOwnProperty('status') ? v.status : 'unknown',
-            };
-
-            list.push(validator);
-        }
-
-        return list;
+        return res.validators;
     }
 
-    public async getStandbyValidators(): Promise<any[]> {
+    public async getStandbyValidators(): Promise<Validator[]> {
         const url = api.rpc.validators.standbyValidators;
         const res = await this.httpSvc.get<HttpTypes.AllStandByValidatorsResponse>(url);
-        const validators = res.validators;
-
-        const list = [];
-
-        for (let i = 0; i < validators.length; i++) {
-            const v = validators[i];
-
-            // prettier-ignore
-            const validator = {
-                address: v.address,
-                ip: v.ip,
-                isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
-                votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
-                shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
-                delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
-                status: 'standby', 
-            };
-
-            list.push(validator);
-        }
-
-        return list;
+        return res.validators;
     }
 
-    public async getActiveValidators(): Promise<any[]> {
+    public async getActiveValidators(): Promise<Validator[]> {
         const url = api.rpc.validators.activeValidators;
         const res = await this.httpSvc.get<HttpTypes.AllActiveValidatorsResponse>(url);
-
-        const validatorsData = res.validators;
-        const validatorsList = [];
-
-        for (let i = 0; i < validatorsData.length; i++) {
-            const v = validatorsData[i];
-
-            // prettier-ignore
-            const validator = {
-                address: v.address,
-                ip: v.ip,
-                isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
-                votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
-                shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
-                delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
-                status: 'active', 
-            };
-
-            validatorsList.push(validator);
-        }
-
-        return validatorsList;
+        return res.validators;
     }
 
-    public async getValidator(address: string): Promise<any> {
+    public async getValidator(address: string): Promise<Validator> {
         const url = api.rpc.validators.validator.replace(':validatorAddress', address);
         const res = await this.httpSvc.get<HttpTypes.validatorResponse>(url);
-
-        const v = res.validator;
-
         return res.validator;
-        // // prettier-ignore
-        // const validator = {
-        //     address: v.hasOwnProperty('address') ? v.address : '0x',
-        //     ip: v.hasOwnProperty('ip') ? v.ip : '',
-        //     isBadActor: v.hasOwnProperty('badActor') ? v.badActor : false,
-        //     votingPower: v.hasOwnProperty('votingPower') ? v.votingPower : 0,
-        //     shares: v.hasOwnProperty('totalShares') ? v.totalShares : 0,
-        //     delegatorsCount: v.hasOwnProperty('delegatorsCount') ? v.delegatorsCount : 0,
-        //     status: v.hasOwnProperty('status') ? v.status : 'unknown',
-        // };
-
-        // return validator;
     }
 
     public async getDelegatees(address: string): Promise<Validator[]> {
@@ -576,7 +499,7 @@ export default class PWRJS {
         endingBlock: string,
         vidaId: bigint
     ): Promise<VmDataTransaction[]> {
-        const url = api.rpc.vidaDataTransactions
+        const url = api.rpc.vida.vidaDataTransactions
             .replace(':startingBlock', startingBlock)
             .replace(':endingBlock', endingBlock)
             .replace(':vidaId', vidaId.toString());
@@ -592,7 +515,7 @@ export default class PWRJS {
         vidaId: bigint,
         bytePrefix: Uint8Array
     ): Promise<VmDataTransaction[]> {
-        const url = api.rpc.vidaDataTransactions
+        const url = api.rpc.vida.vidaDataTransactions
             .replace(':startingBlock', startingBlock)
             .replace(':endingBlock', endingBlock)
             .replace(':vidaId', vidaId.toString())
