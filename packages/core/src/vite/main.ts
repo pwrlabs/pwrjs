@@ -45,8 +45,7 @@ function displayMethodCall(methodName: string, args: any[]): void {
 }
 
 function displayMethodResult(methodName: string, result: any): void {
-    const resultString =
-        typeof result === 'string' ? result : JSON.stringify(result);
+    const resultString = typeof result === 'string' ? result : JSON.stringify(result);
     appendDisplay(`${methodName} => ${resultString}`);
 }
 
@@ -117,6 +116,8 @@ async function init() {
     window.svc = svc;
 
     window.dispatchEvent(new Event('initCompleted'));
+
+    const resss = await pwr.getAllEarlyWithdrawPenalties();
 }
 init();
 // .then(async () => {

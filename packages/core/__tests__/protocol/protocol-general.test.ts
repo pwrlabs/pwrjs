@@ -4,6 +4,8 @@ import PWRJS from '../../src/protocol/pwrjs';
 
 import WalletUtils from '../../src/wallet.utils';
 
+import { HttpTypes } from '../../src/entities/http.types';
+
 function sleep(timeMs: number) {
     return new Promise((resolve) => {
         setTimeout(resolve, timeMs);
@@ -11,7 +13,7 @@ function sleep(timeMs: number) {
 }
 
 describe('pwrjs core general', () => {
-    const url = 'https://pwrrpc.pwrlabs.io';
+    const url = 'http://46.101.151.203:8085';
 
     const testAddress = '0xffb927e3e1fd43fc47bd140c817af780241d1b31';
     const vmAddress = '0x1000000000000000000000000000000000010023';
@@ -71,6 +73,8 @@ describe('pwrjs core general', () => {
         const balanceOfRandom = await pwrjs.getBalanceOfAddress(randomWallet.getAddressString());
         const balanceOfTest = await pwrjs.getBalanceOfAddress(testAddress);
 
+        console.log({ balanceOfRandom, balanceOfTest });
+
         expect(balanceOfRandom).toBe(0n);
         expect(balanceOfTest > BigInt(90 * 10 ** 9)).toBe(true);
     });
@@ -99,11 +103,24 @@ describe('pwrjs core general', () => {
         expect(withdrawalLockTime).toBe(604800000);
     });
 
-    // test('PWRJS get early withdraw penalty', async () => {
-    //     const penalty = await pwrjs.getEarlyWithdrawPenalty();
+    test('Active voting pwr', async () => {
+        const activeVotingPwr = await pwrjs.getActiveVotingPower();
+        expect(activeVotingPwr).toBeTypeOf('number');
+    });
 
-    //     expect(penalty).toEqual({});
-    // });
+    test('PWRJS get early withdraw penalty', async () => {
+        const res = await pwrjs.getEarlyWithdrawPenalty(1);
+
+        expect(res.earlyWithdrawAvailable).toEqual(false);
+    });
+
+    test('All early withdraw penalties', async () => {
+        const res: HttpTypes.AllEarlyWithdrawPenaltiesResponse =
+            await pwrjs.getAllEarlyWithdrawPenalties();
+        // const asd: HttpTypes.AllEarlyWithdrawPenaltiesResponse = res;
+
+        expect(res.earlyWithdrawPenalties).toBeDefined();
+    });
 
     // #endregion
 });

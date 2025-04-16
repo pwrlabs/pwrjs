@@ -15,7 +15,7 @@ import TransactionDecoder from './transaction-decoder';
 import { Transaction_ID } from '../static/enums/transaction.enum';
 import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
 
-import api from 'src/shared/api/endpoints';
+import api from 'src/shared/api/api';
 
 export default class PWRJS {
     // private ecdsaVerificationFee: number = 10000;
@@ -180,20 +180,21 @@ export default class PWRJS {
         return res.withdrawalLockTime;
     }
 
-    public async getActiveVotingPower() {
-        const rawRes = await fetch(`${this.rpcNodeUrl}/activeVotingPower/`);
-        const res = await rawRes.json();
-
+    public async getActiveVotingPower(): Promise<number> {
+        const url = api.rpc.general.activeVotingPower;
+        const res = await this.httpSvc.get<HttpTypes.ActiveVotingPwrResponse>(url);
         return res.activeVotingPower;
     }
 
-    public async getEarlyWithdrawPenalty(withdrawTime: bigint): Promise<any> {
+    public async getEarlyWithdrawPenalty(
+        withdrawTime: EpochTimeStamp
+    ): Promise<HttpTypes.EarlyWithdrawPenaltyResponse> {
         const url = api.rpc.general.earlyWithdrawPenalty.replace(
             ':earlyWithdrawPenalty',
             withdrawTime.toString()
         );
         const res = await this.httpSvc.get<HttpTypes.EarlyWithdrawPenaltyResponse>(url);
-        const penaltiesRes = res;
+        return res;
 
         // const penalties: Record<string, string> = {};
 
@@ -202,16 +203,14 @@ export default class PWRJS {
         //     const penalty = penaltiesRes[key];
         //     penalties[withdrawTime] = penalty;
         // }
-
-        return penaltiesRes;
     }
 
-    public async getAllEarlyWithdrawPenalties(): Promise<any> {
+    public async getAllEarlyWithdrawPenalties(): Promise<HttpTypes.AllEarlyWithdrawPenaltiesResponse> {
         const url = api.rpc.general.allEarlyWithdrawPenalties;
-
         const res = await this.httpSvc.get<HttpTypes.AllEarlyWithdrawPenaltiesResponse>(url);
+        return res;
 
-        const mapp: Record<string, string> = {};
+        // const mapp: Record<string, string> = {};
 
         // const penalties: Record<string, string> = {};
 
@@ -220,8 +219,6 @@ export default class PWRJS {
         //     const penalty = penaltiesRes[key];
         //     penalties[withdrawTime] = penalty;
         // }
-
-        return res.earlyWithdrawPenalties;
     }
 
     public async getWithdrawalOrder(withdrawalHash: Uint8Array): Promise<any> {
@@ -242,31 +239,31 @@ export default class PWRJS {
     // #region block
 
     public async getBlocksCount(): Promise<number> {
-        const url = api.rpc.blocksCount;
+        const url = api.rpc.block.blocksCount;
         const res = await this.httpSvc.get<HttpTypes.BlocksCountResponse>(url);
         return res.blocksCount;
     }
 
     public async getMaxBlockSize(): Promise<number> {
-        const url = api.rpc.maxBlockSize;
+        const url = api.rpc.block.maxBlockSize;
         const res = await this.httpSvc.get<HttpTypes.MaxBlockResponse>(url);
         return res.maxBlockSize;
     }
 
     public async getMaxTransactionSize(): Promise<number> {
-        const url = api.rpc.maxTransactionSize;
+        const url = api.rpc.block.maxTransactionSize;
         const res = await this.httpSvc.get<HttpTypes.MaxTransactionSizeResponse>(url);
         return res.maxTransactionSize;
     }
 
     public async getBlockNumber(): Promise<number> {
-        const url = api.rpc.blockNumber;
+        const url = api.rpc.block.blockNumber;
         const res = await this.httpSvc.get<HttpTypes.BlockNumberResponse>(url);
         return res.blockNumber;
     }
 
     public async getBlockTimestamp(): Promise<number> {
-        const url = api.rpc.blockTimestamp;
+        const url = api.rpc.block.blockTimestamp;
         const res = await this.httpSvc.get<HttpTypes.BLockTimestampResponse>(url);
         return res.blockTimestamp;
     }
@@ -277,24 +274,16 @@ export default class PWRJS {
     }
 
     public async getBlockByNumber(blockNumber: number): Promise<Block> {
-        const url = api.rpc.block.replace(':blockNumber', blockNumber.toString());
+        const url = api.rpc.block.block.replace(':blockNumber', blockNumber.toString());
         const res = await this.httpSvc.get<HttpTypes.BlockResponse>(url);
-        return res.block;
-    }
-
-    public async getBlockByNumberExcludingDataAndExtraData(blockNumber: number): Promise<any> {
-        const url = api.rpc.blockWithExtactedData.replace(':blockNumber', blockNumber.toString());
-
-        const res = await this.httpSvc.get<HttpTypes.BlockExcludingDataResponse>(url);
-
         return res.block;
     }
 
     public async getBlockWithViDataTransactionsOnly(
         blockNumber: number,
         vidaId: number
-    ): Promise<any> {
-        const url = api.rpc.blockWithVmDataTransactionsOnly
+    ): Promise<Block> {
+        const url = api.rpc.block.blockWithVidaDataTransactionsOnly
             .replace(':blockNumber', blockNumber.toString())
             .replace(':vidaId', vidaId.toString());
 

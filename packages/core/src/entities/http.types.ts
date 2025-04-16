@@ -79,10 +79,6 @@ export namespace HttpTypes {
         block: Block;
     };
 
-    export type BlockExcludingDataResponse = {
-        block: any;
-    };
-
     export type BlockWithVidaTransactionsOnly = {
         block: any;
     };
@@ -123,6 +119,10 @@ export namespace HttpTypes {
 
     export type WithdrawlLockTimeResponse = {
         withdrawalLockTime: number;
+    };
+
+    export type ActiveVotingPwrResponse = {
+        activeVotingPower: number;
     };
 
     export type EarlyWithdrawPenaltyResponse = {
