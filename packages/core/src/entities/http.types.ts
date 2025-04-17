@@ -24,7 +24,7 @@ export namespace HttpTypes {
     };
 
     export type NonceResponse = {
-        nonce: string;
+        nonce: number;
     };
 
     export type BalanceResponse = {

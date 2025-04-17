@@ -141,7 +141,7 @@ export default class PWRJS {
         }
     }
 
-    public async getNonceOfAddress(address: string): Promise<string> {
+    public async getNonceOfAddress(address: string): Promise<number> {
         const url = api.rpc.nonceOfAddress.replace(':address', address);
         const res = await this.httpSvc.get<HttpTypes.NonceResponse>(url);
         return res.nonce;

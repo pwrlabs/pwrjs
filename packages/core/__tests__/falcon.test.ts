@@ -11,26 +11,28 @@ const fs = require('fs') as typeof import('fs');
 
 const RPC = 'https://pwrrpc.pwrlabs.io';
 
-// async function generateWallet() {
-//     const pwr = new PWRJS(RPC);
-//     const falconWallet = await PWRFaconl512Wallet.new(pwr);
+// http://104.248.38.152:8085/giveTokensToValidatorNode/?validatorAddress=0x7D55953FF7572C32AF4EC31D2AD6E8E70F61F874
 
-//     const pk = falconWallet.getPublicKey();
-//     const sk = falconWallet.getPrivateKey();
-//     const address = falconWallet.getAddress();
+async function generateWallet() {
+    const pwr = new PWRJS(RPC);
+    const falconWallet = await Falcon512Wallet.new(pwr);
 
-//     const pkHex = Buffer.from(pk).toString('hex');
-//     const skHex = Buffer.from(sk).toString('hex');
+    const pk = falconWallet.getPublicKey();
+    const sk = falconWallet.getPrivateKey();
+    const address = falconWallet.getAddress();
 
-//     const content = JSON.stringify({ pk: pkHex, sk: skHex, address });
-//     const filePath = path.resolve(__dirname, 'files', 'seed.json');
-//     fs.writeFileSync(filePath, content);
-// }
+    const pkHex = Buffer.from(pk).toString('hex');
+    const skHex = Buffer.from(sk).toString('hex');
 
-// generateWallet().then(() => {
-//     // end process
-//     exit(0);
-// });
+    const content = JSON.stringify({ pk: pkHex, sk: skHex, address });
+    const filePath = path.resolve(__dirname, 'files', 'seed.json');
+    fs.writeFileSync(filePath, content);
+}
+
+generateWallet().then(() => {
+    // end process
+    exit(0);
+});
 
 function restoreWallet(): { pk: Uint8Array; address: string; sk: Uint8Array } {
     const filePath = path.resolve(__dirname, 'files', 'seed.json');
@@ -80,12 +82,8 @@ describe('wallet core', () => {
 
         const signature = await falconWallet.sign(data);
 
-        const valid = await Falcon.verify512(
-            data,
-            signature,
-            falconWallet.getPublicKey()
-        );
-        
+        const valid = await Falcon.verify512(data, signature, falconWallet.getPublicKey());
+
         const valid2 = await falconWallet.verifySignature(data, signature);
 
         expect(signature).toBeInstanceOf(Uint8Array);
@@ -94,11 +92,9 @@ describe('wallet core', () => {
     });
 
     test('Wallet balance', async () => {
-        const balance = await pwr.getBalanceOfAddress(
-            falconWallet.getAddress()
-        );
+        const balance = await pwr.getBalanceOfAddress(falconWallet.getAddress());
 
-        const balanceBN = new BigNumber(balance);
+        const balanceBN = new BigNumber(balance.toString());
 
         console.log(`Balance: ${balanceBN.shiftedBy(-9).toNumber()} PWR`);
         expect(balance).toBeGreaterThan(BigNumber(1).shiftedBy(9).toNumber());
@@ -127,7 +123,7 @@ describe('wallet core', () => {
             const tx = await falconWallet.transferPWR(to, amount.toString());
             console.log('Txn hash:', tx.transactionHash);
             expect(tx.success).toBe(true);
-        } catch (error ) {
+        } catch (error) {
             expect(false).toBe(true);
         }
 
@@ -155,7 +151,7 @@ describe('wallet core', () => {
     // });
 
     test('exports a wallet', async () => {
-        falconWallet.storeWallet("wallet.dat");
+        falconWallet.storeWallet('wallet.dat');
     });
 
     test('imports a wallet', async () => {
@@ -177,6 +173,6 @@ describe('wallet core', () => {
         const _p = path.resolve('wallet.dat');
         const exists = fs.existsSync(_p);
         if (exists) fs.rmSync(_p);
-    }); 
+    });
     // #endregion
 });

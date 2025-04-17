@@ -2,20 +2,20 @@
 import { bytesToHex } from '@noble/hashes/utils';
 
 // protocol
-import PWRJS from '../protocol/pwrjs';
+import PWRJS from 'src/protocol/pwrjs';
 
 // services
-import HttpService from '../services/http.service';
-import HashService from '../services/hash.service';
-import StorageService from '../services/storage.service';
+import HttpService from 'src/services/http.service';
+import HashService from 'src/services/hash.service';
+import StorageService from 'src/services/storage.service';
+import BytesService from 'src/services/bytes.service';
+import CryptoService from 'src/services/crypto.service';
 
 // utils
 import { TransactionResponse } from './wallet.types';
-import TransactionBuilder from '../protocol/transaction-builder';
-import { FalconKeyPair } from '../services/falcon/c';
-import BytesService from '../services/bytes.service';
-import CryptoService from '../services/crypto.service';
-import { Falcon } from '../services/falcon.service';
+import TransactionBuilder from 'src/protocol/transaction-builder';
+import { FalconKeyPair } from 'src/services/falcon/c';
+import { Falcon } from 'src/services/falcon.service';
 
 export default class Falcon512Wallet {
     public _addressHex: string;
@@ -31,10 +31,7 @@ export default class Falcon512Wallet {
 
     // #region instantiate
 
-    constructor(
-        publicKey: Uint8Array,
-        privateKey: Uint8Array
-    ) {
+    constructor(publicKey: Uint8Array, privateKey: Uint8Array) {
         this._publicKey = publicKey;
         this._privateKey = privateKey;
 
@@ -44,14 +41,15 @@ export default class Falcon512Wallet {
         this._addressHex = '0x' + bytesToHex(address);
     }
 
-    getChainId() {
+    async getChainId() {
         return this.pwrjs.getChainId();
     }
 
     static async new(pwr: PWRJS): Promise<Falcon512Wallet> {
         if (typeof window === 'undefined') {
             // node
-            const { pk, sk } = await Falcon.generateKeypair512();
+            const m = await import('src/services/falcon/falcon-node.service');
+            const { pk, sk } = await m.default.generateKeyPair();
             return new Falcon512Wallet(pk, sk);
         } else {
             // browser
@@ -61,30 +59,24 @@ export default class Falcon512Wallet {
         }
     }
 
-    static fromKeys(
-        publicKey: Uint8Array,
-        privateKey: Uint8Array
-    ): Falcon512Wallet {
+    static fromKeys(publicKey: Uint8Array, privateKey: Uint8Array): Falcon512Wallet {
         return new Falcon512Wallet(publicKey, privateKey);
     }
 
     // #endregion
 
-    async getNonce(): Promise<number> {
-        const res = await this.s_httpSvc.get<{ nonce: number }>(
-            `/nonceOfUser/?userAddress=${this._addressHex}`
-        );
+    // #region wallet props
 
-        return res.nonce;
-    }
-
-    // remove
     getKeyPair(): FalconKeyPair {
         return this.keypair;
     }
 
     getAddress(): string {
         return this._addressHex;
+    }
+
+    getAddressBytes(): Uint8Array {
+        return this._addressBytes;
     }
 
     getPublicKey(): Uint8Array {
@@ -95,7 +87,16 @@ export default class Falcon512Wallet {
         return this._privateKey;
     }
 
-    async getBalance(): Promise<string> {
+    // #endregion
+
+    // #region wallet api
+
+    async getNonce(): Promise<number> {
+        const nonce = await this.pwrjs.getNonceOfAddress(this._addressHex);
+        return nonce;
+    }
+
+    async getBalance(): Promise<bigint> {
         const res = await this.pwrjs.getBalanceOfAddress(this._addressHex);
         return res;
     }
@@ -103,7 +104,8 @@ export default class Falcon512Wallet {
     async sign(data: Uint8Array): Promise<Uint8Array> {
         if (typeof window === 'undefined') {
             // node
-            return await Falcon.sign512(data, this._privateKey);
+            const m = await import('src/services/falcon/falcon-node.service');
+            return m.default.sign(data, this._privateKey);
         } else {
             // browser
             const m = await import('../services/falcon/falcon-browser.service');
@@ -114,9 +116,7 @@ export default class Falcon512Wallet {
     async getSignedTransaction(transaction: Uint8Array): Promise<Uint8Array> {
         const signature = await this.sign(transaction);
 
-        const buffer = new ArrayBuffer(
-            2 + signature.length + transaction.length
-        );
+        const buffer = new ArrayBuffer(2 + signature.length + transaction.length);
         const view = new DataView(buffer);
 
         // copy txn
@@ -129,12 +129,13 @@ export default class Falcon512Wallet {
         return new Uint8Array(buffer);
     }
 
-    async verifySignature(
-        message: Uint8Array,
-        signature: Uint8Array
-    ): Promise<boolean> {
+    async verifySignature(message: Uint8Array, signature: Uint8Array): Promise<boolean> {
         return await Falcon.verify512(message, signature, this._publicKey);
     }
+
+    // #endregion
+
+    // #region transactions
 
     async setPublicKey(publicKey: Uint8Array): Promise<TransactionResponse>;
     // prettier-ignore
@@ -144,7 +145,7 @@ export default class Falcon512Wallet {
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
-        const _chainId = this.getChainId();
+        const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getFalconSetPublicKeyTransaction(
             publicKey,
             _nonce,
@@ -168,7 +169,7 @@ export default class Falcon512Wallet {
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
-        const _chainId = this.getChainId();
+        const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getFalconJoinAsValidatorTransaction(
             ip,
             _nonce,
@@ -192,7 +193,7 @@ export default class Falcon512Wallet {
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
-        const _chainId = this.getChainId();
+        const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getFalconDelegateTransaction(
             validator,
             pwrAmount,
@@ -217,7 +218,7 @@ export default class Falcon512Wallet {
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
-        const _chainId = this.getChainId();
+        const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getFalconChangeIpTransaction(
             newIp,
             _nonce,
@@ -241,7 +242,7 @@ export default class Falcon512Wallet {
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
-        const _chainId = this.getChainId();
+        const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getFalconClaimActiveNodeSpotTransaction(
             _nonce,
             _chainId,
@@ -264,7 +265,7 @@ export default class Falcon512Wallet {
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
-        const _chainId = this.getChainId();
+        const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getFalconTransferPwrTransaction(
             to,
             amount,
@@ -289,7 +290,7 @@ export default class Falcon512Wallet {
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
-        const _chainId = this.getChainId();
+        const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getFalconVmDataTransaction(
             vmId,
             data,
@@ -302,6 +303,10 @@ export default class Falcon512Wallet {
         const res = await this.signAndSend(txn);
         return res;
     }
+
+    // #endregion
+
+    // #region wallet exporting
 
     async storeWallet(filePath: string): Promise<boolean> {
         try {
@@ -341,18 +346,23 @@ export default class Falcon512Wallet {
 
                 const pubLength = data.readUInt32BE(offset);
                 offset += 4;
-                if (pubLength === 0 || pubLength > 2048) throw new Error(`Invalid public key length: ${pubLength}`);
-                if (offset + pubLength > data.length) throw new Error(`File too small for public key of length ${pubLength}`);
+                if (pubLength === 0 || pubLength > 2048)
+                    throw new Error(`Invalid public key length: ${pubLength}`);
+                if (offset + pubLength > data.length)
+                    throw new Error(`File too small for public key of length ${pubLength}`);
 
                 const publicKeyBytes = data.slice(offset, offset + pubLength);
                 offset += pubLength;
 
-                if (offset + 4 > data.length) throw new Error("File too small for secret key length");
+                if (offset + 4 > data.length)
+                    throw new Error('File too small for secret key length');
 
                 const secLength = data.readUInt32BE(offset);
                 offset += 4;
-                if (secLength === 0 || secLength > 4096) throw new Error(`Invalid secret key length: ${secLength}`);
-                if (offset + secLength > data.length) throw new Error(`File too small for secret key of length ${secLength}`);
+                if (secLength === 0 || secLength > 4096)
+                    throw new Error(`Invalid secret key length: ${secLength}`);
+                if (offset + secLength > data.length)
+                    throw new Error(`File too small for secret key of length ${secLength}`);
 
                 const privateKeyBytes = data.slice(offset, offset + secLength);
 
@@ -375,8 +385,10 @@ export default class Falcon512Wallet {
         try {
             const bytes = await StorageService.loadBrowser(file);
 
-            const decrypted: Uint8Array =
-                await CryptoService.decryptPrivateKeyBrowser(bytes, password);
+            const decrypted: Uint8Array = await CryptoService.decryptPrivateKeyBrowser(
+                bytes,
+                password
+            );
 
             const { pk, sk } = BytesService.arrayBufferToKeypair(decrypted);
 
@@ -386,6 +398,8 @@ export default class Falcon512Wallet {
             throw new Error('Failed to load wallet');
         }
     }
+
+    // #endregion
 
     // #endregion
 
@@ -405,20 +419,12 @@ export default class Falcon512Wallet {
 
     // #region utils
 
-    private async signAndSend(
-        transaction: Uint8Array
-    ): Promise<TransactionResponse> {
+    private async signAndSend(transaction: Uint8Array): Promise<TransactionResponse> {
         const signedTransaction = await this.getSignedTransaction(transaction);
         const txnHex = bytesToHex(signedTransaction);
-        const txnHash = bytesToHex(
-            HashService.hashTransaction(signedTransaction)
-        );
+        const txnHash = bytesToHex(HashService.hashTransaction(signedTransaction));
 
-        const res = await this.s_httpSvc.broadcastTxn(
-            this.pwrjs.getRpcNodeUrl(),
-            txnHex,
-            txnHash
-        );
+        const res = await this.s_httpSvc.broadcastTxn(this.pwrjs.getRpcNodeUrl(), txnHex, txnHash);
 
         return res;
     }

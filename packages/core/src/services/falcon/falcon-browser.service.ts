@@ -12,7 +12,6 @@ export default class FalconServiceBrowser extends FalconService {
         return { pk, sk };
     }
 
-    // prettier-ignore
     static async sign(message: Uint8Array, sk: Uint8Array): Promise<Uint8Array> {
         const falcon = await FalconServiceBrowser.getFalcon512();
         const { signature } = await falcon.sign(message, sk);
