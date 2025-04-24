@@ -27,7 +27,10 @@ describe('pwrjs core general', () => {
 
     const pwrjs = new PWRJS(url);
 
+    // #region proposals
     test('retrieve transaction by hash', async () => {
         expect(true).toBe(true);
     });
+
+    // #endregion
 });

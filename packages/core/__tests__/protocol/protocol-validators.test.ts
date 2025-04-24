@@ -36,6 +36,8 @@ describe('pwrjs core general', () => {
         expect(validator).toHaveProperty('status');
     }
 
+    // #region validators
+
     test('Get validator count limit', async () => {
         const validatorCountLimit = await pwrjs.getValidatorCountLimit();
         expect(validatorCountLimit).toBe(200);
@@ -130,4 +132,6 @@ describe('pwrjs core general', () => {
 
         expect(res.shareValue).toBe(1.0e-9);
     });
+
+    // #endregion
 });

@@ -37,12 +37,8 @@ class HttpService {
         return response.json() as Promise<T>;
     }
 
-    async broadcastTxn(
-        rpc: string,
-        txnHex: string,
-        txnHash: string
-    ): Promise<TransactionResponse> {
-        const url = `${rpc}/broadcast/`;
+    async broadcastTxn(rpc: string, txnHex: string, txnHash: string): Promise<TransactionResponse> {
+        const url = `${rpc}/broadcast`;
 
         try {
             const raw = await fetch(url, {

@@ -228,7 +228,7 @@ export namespace HttpTypes {
     };
 
     export type vidaClaimingFeeResponse = {
-        vmIdClaimingFee: number;
+        vidaIdClaimingFee: number;
     };
 
     export type OwrnerOfVidaResponse = {

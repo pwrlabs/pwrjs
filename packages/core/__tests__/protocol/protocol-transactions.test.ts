@@ -41,6 +41,8 @@ describe('pwrjs core general', () => {
         expect(transaction).toHaveProperty('success');
     }
 
+    // #region transactions
+
     test('retrieve transaction by hash', async () => {
         const transactionHash =
             '0x6CECB4BCB7377CBEDDA26B4D71350D977A3AFB7F8578E6FDB30733948D707B29';
@@ -74,4 +76,6 @@ describe('pwrjs core general', () => {
         expect(tx_1).toHaveProperty('guardianAddress');
         expect(tx_1).toHaveProperty('guardianExpiryDate');
     });
+
+    // #endregion
 });

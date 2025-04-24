@@ -22,6 +22,8 @@
         "test:browser": "npx playwright test"
     },
     "dependencies": {
+        "@btq-js/falcon-js": "^0.0.38",
+        "@dashlane/pqc-sign-falcon-1024-node": "^1.0.0",
         "@dashlane/pqc-sign-falcon-512-browser": "^1.0.0",
         "@dashlane/pqc-sign-falcon-512-node": "^1.0.0",
         "@ethereumjs/util": "^9.0.3",

@@ -18,10 +18,20 @@ export function HexToBytes(hex: string): Uint8Array {
 }
 
 export function bytesToHex(val: Uint8Array) {
-    return val.reduce(
-        (acc, curr) => acc + curr.toString(16).padStart(2, '0'),
-        ''
-    );
+    return val.reduce((acc, curr) => acc + curr.toString(16).padStart(2, '0'), '');
+}
+
+// Helper: dynamically sized bigint to byte array
+export function bigintToBytesDynamic(value: bigint): Uint8Array {
+    const hex = value.toString(16);
+    const paddedHex = hex.length % 2 === 0 ? hex : '0' + hex;
+    const bytes = new Uint8Array(paddedHex.length / 2);
+
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(paddedHex.substr(i * 2, 2), 16);
+    }
+
+    return bytes;
 }
 
 export function decToBytes2(decimalNumber, numberOfBytes) {

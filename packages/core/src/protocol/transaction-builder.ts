@@ -1,27 +1,16 @@
 import BigNumber from 'bignumber.js';
-import {
-    BnToBytes,
-    HexToBytes,
-    decToBytes,
-    decToBytes2,
-    decodeHex,
-} from '../utils';
+import { hexToBytes, by, hexToBytestesToHex } from '@noble/hashes/utils';
+import { BnToBytes, decToBytes, decToBytes2, decodeHex } from '../utils';
 import { Transaction_ID } from '../static/enums/transaction.enum';
 
 function assetAddressValidity(to: string): void {
-    // Implement your address validation logic here.  This is a placeholder.
-    // Example (replace with your actual validation):
     if (!to.startsWith('0x') || to.length !== 42) {
         throw new Error('Invalid address format');
     }
 }
 
 export default class TransactionBuilder {
-    private static getTransactionBase(
-        id: Transaction_ID,
-        chainId: number,
-        nonce: number
-    ) {
+    private static getTransactionBase(id: Transaction_ID, chainId: number, nonce: number) {
         const buffer = new ArrayBuffer(9);
         const view = new DataView(buffer);
 
@@ -62,11 +51,7 @@ export default class TransactionBuilder {
 
         const toBytes = decodeHex(to.substring(2));
 
-        const base = this.getTransactionBase(
-            Transaction_ID.TRANSFER,
-            chainId,
-            nonce
-        );
+        const base = this.getTransactionBase(Transaction_ID.TRANSFER, chainId, nonce);
 
         const buffer = new Uint8Array(base.length + 8 + 20);
         const dataView = new DataView(buffer.buffer);
@@ -84,16 +69,8 @@ export default class TransactionBuilder {
         return buffer;
     }
 
-    static getJoinTransaction(
-        ip: string,
-        nonce: number,
-        chainId: number
-    ): Uint8Array {
-        const base = this.getTransactionBase(
-            Transaction_ID.JOIN,
-            chainId,
-            nonce
-        );
+    static getJoinTransaction(ip: string, nonce: number, chainId: number): Uint8Array {
+        const base = this.getTransactionBase(Transaction_ID.JOIN, chainId, nonce);
 
         const ipBytes = new TextEncoder().encode(ip);
         const txnBytes = new Uint8Array([...base, ...ipBytes]);
@@ -101,15 +78,8 @@ export default class TransactionBuilder {
         return txnBytes;
     }
 
-    static getClaimActiveNodeSpotTransaction(
-        nonce: number,
-        chainId: number
-    ): Uint8Array {
-        const base = this.getTransactionBase(
-            Transaction_ID.CLAIM_SPOT,
-            chainId,
-            nonce
-        );
+    static getClaimActiveNodeSpotTransaction(nonce: number, chainId: number): Uint8Array {
+        const base = this.getTransactionBase(Transaction_ID.CLAIM_SPOT, chainId, nonce);
 
         return base;
     }
@@ -137,14 +107,10 @@ export default class TransactionBuilder {
          * validator - 20
          * signature - 65*/
 
-        const base = this.getTransactionBase(
-            Transaction_ID.DELEGATE,
-            chainId,
-            nonce
-        );
+        const base = this.getTransactionBase(Transaction_ID.DELEGATE, chainId, nonce);
         const b_amount = BnToBytes(amountBN);
 
-        const b_validator = HexToBytes(validator);
+        const b_validator = hexToBytes(validator);
 
         const txnBytes = new Uint8Array([...base, ...b_amount, ...b_validator]);
 
@@ -165,19 +131,11 @@ export default class TransactionBuilder {
             throw new Error('Nonce cannot be negative');
         }
 
-        const base = this.getTransactionBase(
-            Transaction_ID.WITHDRAW,
-            chainId,
-            nonce
-        );
+        const base = this.getTransactionBase(Transaction_ID.WITHDRAW, chainId, nonce);
         const b_sharesAmount = BnToBytes(sharesAmountBN);
-        const b_validator = HexToBytes(validator);
+        const b_validator = hexToBytes(validator);
 
-        const txnBytes = new Uint8Array([
-            ...base,
-            ...b_sharesAmount,
-            ...b_validator,
-        ]);
+        const txnBytes = new Uint8Array([...base, ...b_sharesAmount, ...b_validator]);
 
         return txnBytes;
     }
@@ -194,12 +152,7 @@ export default class TransactionBuilder {
 
         const b_data = new TextEncoder().encode(data);
 
-        const buffer = TransactionBuilder.getVmBytesDataTransaction(
-            vmId,
-            b_data,
-            nonce,
-            chainId
-        );
+        const buffer = TransactionBuilder.getVmBytesDataTransaction(vmId, b_data, nonce, chainId);
 
         return buffer;
     }
@@ -226,11 +179,7 @@ export default class TransactionBuilder {
 
         const _vmId = BigInt(vmId);
 
-        const base = this.getTransactionBase(
-            Transaction_ID.VM_DATA_TXN,
-            chainId,
-            nonce
-        );
+        const base = this.getTransactionBase(Transaction_ID.VM_DATA_TXN, chainId, nonce);
 
         const buffer = new Uint8Array(base.length + 8 + 4 + data.length);
         buffer.set(base, 0);
@@ -252,16 +201,8 @@ export default class TransactionBuilder {
         return buffer;
     }
 
-    static getClaimVmIdTransaction(
-        vmId: bigint,
-        nonce: number,
-        chainId: number
-    ): Uint8Array {
-        const base = this.getTransactionBase(
-            Transaction_ID.CLAIM_VM_ID,
-            chainId,
-            nonce
-        );
+    static getClaimVmIdTransaction(vmId: bigint, nonce: number, chainId: number): Uint8Array {
+        const base = this.getTransactionBase(Transaction_ID.CLAIM_VM_ID, chainId, nonce);
 
         const buffer = new Uint8Array(base.length + 8);
 
@@ -301,29 +242,18 @@ export default class TransactionBuilder {
          * signature - 65
          * */
 
-        const base = this.getTransactionBase(
-            Transaction_ID.SET_GUARDIAN,
-            chainId,
-            nonce
-        );
+        const base = this.getTransactionBase(Transaction_ID.SET_GUARDIAN, chainId, nonce);
 
         const b_expiryDate = decToBytes2(expiryDate, 8);
 
-        const b_guardian = HexToBytes(guardian);
+        const b_guardian = hexToBytes(guardian);
 
-        const txnBytes = new Uint8Array([
-            ...base,
-            ...b_expiryDate,
-            ...b_guardian,
-        ]);
+        const txnBytes = new Uint8Array([...base, ...b_expiryDate, ...b_guardian]);
 
         return txnBytes;
     }
 
-    static getRemoveGuardianTransaction(
-        nonce: number,
-        chainId: number
-    ): Uint8Array {
+    static getRemoveGuardianTransaction(nonce: number, chainId: number): Uint8Array {
         if (nonce < 0) {
             throw new Error('Nonce cannot be negative');
         }
@@ -334,11 +264,7 @@ export default class TransactionBuilder {
          * Nonce - 4
          * */
 
-        const base = this.getTransactionBase(
-            Transaction_ID.REMOVE_GUARDIAN,
-            chainId,
-            nonce
-        );
+        const base = this.getTransactionBase(Transaction_ID.REMOVE_GUARDIAN, chainId, nonce);
 
         return base;
     }
@@ -353,11 +279,7 @@ export default class TransactionBuilder {
         //     totalLength += t.length;
         // }
 
-        const base = this.getTransactionBase(
-            Transaction_ID.GUARDIAN_TXN,
-            chainId,
-            nonce
-        );
+        const base = this.getTransactionBase(Transaction_ID.GUARDIAN_TXN, chainId, nonce);
 
         let arr = [...base];
 
@@ -382,11 +304,7 @@ export default class TransactionBuilder {
             throw new Error('Nonce cannot be negative');
         }
 
-        const base = this.getTransactionBase(
-            Transaction_ID.PAYABLE_VM_DATA_TXN,
-            chainId,
-            nonce
-        );
+        const base = this.getTransactionBase(Transaction_ID.PAYABLE_VM_DATA_TXN, chainId, nonce);
 
         const buffer = new Uint8Array(base.length + 8 + 4 + data.length + 8);
         const dataView = new DataView(buffer.buffer);
@@ -426,7 +344,7 @@ export default class TransactionBuilder {
     //         chainId,
     //         nonce
     //     );
-    //     const b_validator = HexToBytes(validator);
+    //     const b_validator = hexToBytes(validator);
 
     //     const bytes = new Uint8Array([...base, ...b_validator]);
 
@@ -470,22 +388,13 @@ export default class TransactionBuilder {
             throw new Error('nonce cannot be negative');
         }
 
-        const base = this.getTransactionBase(
-            Transaction_ID.MOVE_STAKE,
-            chainId,
-            nonce
-        );
+        const base = this.getTransactionBase(Transaction_ID.MOVE_STAKE, chainId, nonce);
 
         const b_shares = BnToBytes(new BigNumber(sharesAmount));
-        const b_from = HexToBytes(fromValidator);
-        const b_to = HexToBytes(toValidator);
+        const b_from = hexToBytes(fromValidator);
+        const b_to = hexToBytes(toValidator);
 
-        const txnBytes = new Uint8Array([
-            ...base,
-            ...b_shares,
-            ...b_from,
-            ...b_to,
-        ]);
+        const txnBytes = new Uint8Array([...base, ...b_shares, ...b_from, ...b_to]);
 
         return txnBytes;
     }
@@ -520,9 +429,7 @@ export default class TransactionBuilder {
 
         const b_title = new TextEncoder().encode(title);
         const b_title_length = decToBytes(b_title.length, 4);
-        const b_withdrawalPenaltyTime = BnToBytes(
-            BigNumber(withdrawalPenaltyTime)
-        );
+        const b_withdrawalPenaltyTime = BnToBytes(BigNumber(withdrawalPenaltyTime));
         const b_withdrawalPenalty = decToBytes(withdrawalPenalty, 4);
         const b_description = new TextEncoder().encode(description);
 
@@ -899,17 +806,8 @@ export default class TransactionBuilder {
         return txnBytes;
     }
 
-    static getOtherProposalTxn(
-        title: string,
-        description: string,
-        nonce: number,
-        chainId: number
-    ) {
-        const base = this.getTransactionBase(
-            Transaction_ID.OTHER_PROPOSAL_TXN,
-            chainId,
-            nonce
-        );
+    static getOtherProposalTxn(title: string, description: string, nonce: number, chainId: number) {
+        const base = this.getTransactionBase(Transaction_ID.OTHER_PROPOSAL_TXN, chainId, nonce);
 
         /*
         Identifier - 1
@@ -925,12 +823,7 @@ export default class TransactionBuilder {
         const b_title_length = decToBytes(b_title.length, 4);
         const b_description = new TextEncoder().encode(description);
 
-        const txnBytes = new Uint8Array([
-            ...base,
-            ...b_title_length,
-            ...b_title,
-            ...b_description,
-        ]);
+        const txnBytes = new Uint8Array([...base, ...b_title_length, ...b_title, ...b_description]);
 
         return txnBytes;
     }
@@ -941,11 +834,7 @@ export default class TransactionBuilder {
         nonce: number,
         chainId: number
     ) {
-        const base = this.getTransactionBase(
-            Transaction_ID.VOTE_ON_PROPOSAL_TXN,
-            chainId,
-            nonce
-        );
+        const base = this.getTransactionBase(Transaction_ID.VOTE_ON_PROPOSAL_TXN, chainId, nonce);
 
         /*
         Identifier - 1
@@ -956,14 +845,10 @@ export default class TransactionBuilder {
         signature - 65
         */
 
-        const b_proposalHash = HexToBytes(proposalHash);
+        const b_proposalHash = hexToBytes(proposalHash);
         const b_vote = decToBytes(vote, 1);
 
-        const txnBytes = new Uint8Array([
-            ...base,
-            ...b_proposalHash,
-            ...b_vote,
-        ]);
+        const txnBytes = new Uint8Array([...base, ...b_proposalHash, ...b_vote]);
 
         return txnBytes;
     }
@@ -1012,20 +897,19 @@ export default class TransactionBuilder {
         nonce: number,
         chainId: number,
         address: Uint8Array,
-        feePerByte: string,
+        feePerByte: string
     ): Uint8Array {
         const base = this.getFalconTransactionBase(
-            Transaction_ID.FALCON_SET_PUBLIC_KEY, chainId,
-            nonce, address, feePerByte
+            Transaction_ID.FALCON_SET_PUBLIC_KEY,
+            chainId,
+            nonce,
+            address,
+            feePerByte
         );
 
         const publicKeyLength = decToBytes(publicKey.length, 2);
 
-        const txnBytes = new Uint8Array([
-            ...base,
-            ...publicKeyLength,
-            ...publicKey,
-        ]);
+        const txnBytes = new Uint8Array([...base, ...publicKeyLength, ...publicKey]);
 
         return txnBytes;
     }
@@ -1035,21 +919,20 @@ export default class TransactionBuilder {
         nonce: number,
         chainId: number,
         address: Uint8Array,
-        feePerByte: string,
+        feePerByte: string
     ): Uint8Array {
         const base = this.getFalconTransactionBase(
-            Transaction_ID.FALCON_JOIN_AS_VALIDATOR, chainId,
-            nonce, address, feePerByte
+            Transaction_ID.FALCON_JOIN_AS_VALIDATOR,
+            chainId,
+            nonce,
+            address,
+            feePerByte
         );
 
-        const ipBytes = new Uint8Array(Buffer.from(ip, "utf-8"))
+        const ipBytes = new Uint8Array(Buffer.from(ip, 'utf-8'));
         const ipBytesLength = decToBytes(ipBytes.length, 2);
 
-        const txnBytes = new Uint8Array([
-            ...base,
-            ...ipBytesLength,
-            ...ipBytes,
-        ]);
+        const txnBytes = new Uint8Array([...base, ...ipBytesLength, ...ipBytes]);
 
         return txnBytes;
     }
@@ -1060,7 +943,7 @@ export default class TransactionBuilder {
         nonce: number,
         chainId: number,
         address: Uint8Array,
-        feePerByte: string,
+        feePerByte: string
     ): Uint8Array {
         assetAddressValidity(validator);
 
@@ -1077,8 +960,11 @@ export default class TransactionBuilder {
         const validatorBytes = decodeHex(validator.substring(2));
 
         const base = this.getFalconTransactionBase(
-            Transaction_ID.FALCON_DELEGATE, chainId,
-            nonce, address, feePerByte
+            Transaction_ID.FALCON_DELEGATE,
+            chainId,
+            nonce,
+            address,
+            feePerByte
         );
 
         const buffer = new Uint8Array(base.length + 20 + 8);
@@ -1099,39 +985,39 @@ export default class TransactionBuilder {
         nonce: number,
         chainId: number,
         address: Uint8Array,
-        feePerByte: string,
+        feePerByte: string
     ): Uint8Array {
         const base = this.getFalconTransactionBase(
-            Transaction_ID.FALCON_CHANGE_IP, chainId,
-            nonce, address, feePerByte
+            Transaction_ID.FALCON_CHANGE_IP,
+            chainId,
+            nonce,
+            address,
+            feePerByte
         );
 
-        const newIpBytes = new Uint8Array(Buffer.from(newIp, "utf-8"));
+        const newIpBytes = new Uint8Array(Buffer.from(newIp, 'utf-8'));
         const newIpBytesLength = decToBytes(newIpBytes.length, 2);
 
-        const txnBytes = new Uint8Array([
-            ...base,
-            ...newIpBytesLength,
-            ...newIpBytes,
-        ]);
+        const txnBytes = new Uint8Array([...base, ...newIpBytesLength, ...newIpBytes]);
 
         return txnBytes;
     }
-    
+
     static getFalconClaimActiveNodeSpotTransaction(
         nonce: number,
         chainId: number,
         address: Uint8Array,
-        feePerByte: string,
+        feePerByte: string
     ): Uint8Array {
         const base = this.getFalconTransactionBase(
-            Transaction_ID.FALCON_ACTIVE_NODE_SPOT, chainId,
-            nonce, address, feePerByte
+            Transaction_ID.FALCON_ACTIVE_NODE_SPOT,
+            chainId,
+            nonce,
+            address,
+            feePerByte
         );
 
-        const txnBytes = new Uint8Array([
-            ...base,
-        ]);
+        const txnBytes = new Uint8Array([...base]);
 
         return txnBytes;
     }
@@ -1142,8 +1028,17 @@ export default class TransactionBuilder {
         nonce: number,
         chainId: number,
         address: Uint8Array,
-        feePerByte: string,
+        feePerByte: string
     ): Uint8Array {
+        console.log('data of txn', {
+            to,
+            amount,
+            nonce,
+            chainId,
+            address,
+            feePerByte,
+        });
+
         assetAddressValidity(to);
 
         const amountBigInt = BigInt(amount);
@@ -1156,11 +1051,14 @@ export default class TransactionBuilder {
             throw new Error('Nonce cannot be negative');
         }
 
-        const toBytes = decodeHex(to.substring(2));
+        const toBytes = hexToBytes(to.substring(2));
 
         const base = this.getFalconTransactionBase(
-            Transaction_ID.FALCON_TRANSFER, chainId,
-            nonce, address, feePerByte
+            Transaction_ID.FALCON_TRANSFER,
+            chainId,
+            nonce,
+            address,
+            feePerByte
         );
 
         const buffer = new Uint8Array(base.length + 20 + 8);
@@ -1182,7 +1080,7 @@ export default class TransactionBuilder {
         nonce: number,
         chainId: number,
         address: Uint8Array,
-        feePerByte: string,
+        feePerByte: string
     ): Uint8Array {
         if (nonce < 0) {
             throw new Error('Nonce cannot be negative');
@@ -1191,8 +1089,11 @@ export default class TransactionBuilder {
         const _vmId = BigInt(vmId);
 
         const base = this.getFalconTransactionBase(
-            Transaction_ID.FALCON_VM_DATA, chainId,
-            nonce, address, feePerByte
+            Transaction_ID.FALCON_VM_DATA,
+            chainId,
+            nonce,
+            address,
+            feePerByte
         );
 
         const buffer = new Uint8Array(base.length + 8 + 4 + data.length);

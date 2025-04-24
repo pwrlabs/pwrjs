@@ -15,7 +15,7 @@ function sleep(timeMs: number) {
 describe('pwrjs core general', () => {
     const url = 'http://46.101.151.203:8085';
 
-    const testAddress = '0xffb927e3e1fd43fc47bd140c817af780241d1b31';
+    const testAddress = '0x1f13a5331b56f4d84737308ca7ec337070fec6fd';
     const vmAddress = '0x1000000000000000000000000000000000010023';
 
     const pwrjs = new PWRJS(url);

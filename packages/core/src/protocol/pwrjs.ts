@@ -4,7 +4,7 @@ import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 // entities
 import { Block } from 'src/entities/block.entity';
 import { Validator } from 'src/entities/validator.entity';
-import { AnyFalconTransaction, FalconTransaction } from 'src/entities/falcon-transaction.entity';
+import { AnyFalconTransaction } from 'src/entities/falcon-transaction.entity';
 import { HttpTypes } from 'src/entities/http.types';
 
 // services
@@ -16,7 +16,6 @@ import { Transaction_ID } from '../static/enums/transaction.enum';
 import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
 
 import api from 'src/shared/api/api';
-import { deserializeTransaction } from 'src/services/transaction-deserializer';
 
 export default class PWRJS {
     // private ecdsaVerificationFee: number = 10000;
@@ -491,7 +490,7 @@ export default class PWRJS {
     public async getVidaIdClaimingFee() {
         const url = api.rpc.vida.vidaIdClaimingFee;
         const res = await this.httpSvc.get<HttpTypes.vidaClaimingFeeResponse>(url);
-        return res.vmIdClaimingFee;
+        return res.vidaIdClaimingFee;
     }
 
     public async getVidaDataTransactions(
@@ -596,7 +595,7 @@ export default class PWRJS {
         return null;
     }
 
-    public async getVidaSponsoredAddress(vidaID: bigint): Promise<string[]> {
+    public async getVidaSponsoredAddresses(vidaID: bigint): Promise<string[]> {
         const url = api.rpc.vida.sponsoredAddresses.replace(':vidaId', vidaID.toString());
         const res = await this.httpSvc.get<HttpTypes.SponsoredAddressResponse>(url);
         return res.sponsoredAddresses;
