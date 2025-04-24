@@ -1,5 +1,5 @@
 // 3rd party
-import { bytesToHex } from '@noble/hashes/utils';
+import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 
 // protocol
 import PWRJS from 'src/protocol/pwrjs';
@@ -13,7 +13,7 @@ import CryptoService from 'src/services/crypto.service';
 
 // utils
 import { TransactionResponse } from './wallet.types';
-import TransactionBuilder from 'src/protocol/transaction-builder';
+import TransactionBuilder from 'src/protocol/falcon-transaction-builder';
 import { FalconKeyPair } from 'src/services/falcon/c';
 
 export default class Falcon512Wallet {
@@ -163,38 +163,39 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconSetPublicKeyTransaction(
+        const txn = TransactionBuilder.getSetPublicKeyTransaction(
             publicKey,
             _nonce,
             _chainId,
             this._addressBytes,
-            _feePerByte.toString()
-        );
+            BigInt(_feePerByte),
+        )
 
         return this.signAndSend(txn);
     }
 
-    async transferPWR(to: string, amount: string): Promise<TransactionResponse>;
+    async transferPWR(to: string, amount: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWR(to: string, amount: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async transferPWR(to: string, amount: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWR(to: string, amount: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async transferPWR(to: string, amount: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
 
-       
         if (response != null && !response.success) { return response }
 
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
+        const receiverHex = to.startsWith('0x') ? to.substring(2) : to;
+
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconTransferPwrTransaction(
-            to,
+        const txn = TransactionBuilder.getTransferTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
+            hexToBytes(receiverHex),
             amount,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -216,22 +217,22 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconJoinAsValidatorTransaction(
+        const txn = TransactionBuilder.getJoinAsValidatorTransaction(
             ip,
+            this._addressBytes,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
     }
 
-    async delegate(validator: string, pwrAmount: string): Promise<TransactionResponse>;
+    async delegate(validator: string, pwrAmount: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async delegate(validator: string, pwrAmount: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async delegate(validator: string, pwrAmount: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async delegate(validator: string, pwrAmount: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async delegate(validator: string, pwrAmount: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -239,13 +240,13 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconDelegateTransaction(
-            validator,
+        const txn = TransactionBuilder.getDelegateTransaction(
+            hexToBytes(validator),
             pwrAmount,
             _nonce,
             _chainId,
             this._addressBytes,
-            _feePerByte.toString()
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -264,11 +265,11 @@ export default class Falcon512Wallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getFalconChangeIpTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             newIp,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -286,11 +287,11 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconClaimActiveNodeSpotTransaction(
-            _nonce,
-            _chainId,
+        const txn = TransactionBuilder.getClaimActiveNodeSpotTransaction(
+            BigInt(_feePerByte),
             this._addressBytes,
-            _feePerByte.toString()
+            _nonce,
+            _chainId
         );
 
         return this.signAndSend(txn);
@@ -309,14 +310,14 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconMoveStakeTransaction(
+        const txn = TransactionBuilder.getMoveStakeTxnTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             sharesAmount,
-            fromValidator,
-            toValidator,
+            hexToBytes(fromValidator),
+            hexToBytes(toValidator),
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -335,12 +336,12 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconRemoveValidatorTransaction(
-            validatorAddress,
+        const txn = TransactionBuilder.getRemoveValidatorTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
+            hexToBytes(validatorAddress),
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -358,14 +359,14 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconWithdrawTransaction(
+        const txn = TransactionBuilder.getWithdrawTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             sharesAmount,
-            validator,
+            hexToBytes(validator),
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
-        );
+        )
 
         return this.signAndSend(txn);
     }
@@ -386,12 +387,12 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconClaimVidaIdTransaction(
+        const txn = TransactionBuilder.getClaimVidaIdTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             vidaId,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -410,42 +411,17 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconSubmitPayableVidaDataTransaction(
+        const txn = TransactionBuilder.getPayableVidaDataTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             vidaId,
             data,
             value,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
-    }
-
-    async sendVmData(vmId: string, data: Uint8Array): Promise<TransactionResponse>;
-    // prettier-ignore
-    async sendVmData(vmId: string, data: Uint8Array, nonce: number, feePerByte: string): Promise<TransactionResponse>;
-    // prettier-ignore
-    async sendVmData(vmId: string, data: Uint8Array, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
-        const response = await this.makeSurePublicKeyIsSet();
-        if (response != null && !response.success) { return response }
-
-        const _nonce = nonce ?? (await this.getNonce());
-        const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
-
-        const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconVmDataTransaction(
-            vmId,
-            data,
-            _nonce,
-            _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
-        );
-
-        const res = await this.signAndSend(txn);
-        return res;
     }
 
     // prettier-ignore
@@ -461,13 +437,13 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconAddVidaAllowedSendersTransaction(
-            vidaID,
-            allowedSenders,
-            _nonce,
-            _chainId,
+        const txn = TransactionBuilder.getAddVidaAllowedSendersTransaction(
+            BigInt(_feePerByte),
             this._addressBytes,
-            _feePerByte.toString()
+            vidaID,
+            new Set(allowedSenders.map((s) => hexToBytes(s))),
+            nonce,
+            _chainId,
         );
 
         return this.signAndSend(txn);
@@ -486,13 +462,13 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconAddVidaSponsoredAddressesTransaction(
+        const txn = TransactionBuilder.getAddVidaSponsoredAddressesTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             vidaId,
-            sponsoredAddresses,
+            new Set(sponsoredAddresses.map((s) => hexToBytes(s))),
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -511,13 +487,13 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconRemoveVidaSponsoredAddressesTransaction(
-            vidaId,
-            sponsoredAddresses,
-            _nonce,
-            _chainId,
+        const txn = TransactionBuilder.getRemoveSponsoredAddressesTransaction(
+            BigInt(_feePerByte),
             this._addressBytes,
-            _feePerByte.toString()
+            vidaId,
+            new Set(sponsoredAddresses.map((s) => hexToBytes(s))),
+            _nonce,
+            _chainId,    
         );
 
         return this.signAndSend(txn);
@@ -536,13 +512,13 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconRemoveVidaAllowedSendersTransaction(
+        const txn = TransactionBuilder.getRemoveVidaAllowedSendersTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             vidaId,
-            allowedSenders,
+            new Set(allowedSenders.map((s) => hexToBytes(s))),
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -561,13 +537,13 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconSetVidaPrivateStateTransaction(
+        const txn = TransactionBuilder.getSetVidaPrivateStateTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             vidaId,
             privateState,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -585,12 +561,12 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconSetVidaToAbsolutePublicTransaction(
+        const txn = TransactionBuilder.getSetVidaToAbsolutePublicTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             vidaId,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -609,24 +585,24 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconSetPWRTransferRightsTransaction(
+        const txn = TransactionBuilder.getSetPWRTransferRightsTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             vidaId,
             ownerCanTransferPWR,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
     }
 
     // prettier-ignore
-    async transferPWRFromVida(vidaId: bigint, receiver: string, amount: string): Promise<TransactionResponse>;
+    async transferPWRFromVida(vidaId: bigint, receiver: string, amount: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWRFromVida(vidaId: bigint, receiver: string, amount: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async transferPWRFromVida(vidaId: bigint, receiver: string, amount: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWRFromVida(vidaId: bigint, receiver: string, amount: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async transferPWRFromVida(vidaId: bigint, receiver: string, amount: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -634,14 +610,14 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconTransferPWRFromVidaTransaction(
+        const txn = TransactionBuilder.getTransferPWRFromVidaTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             vidaId,
-            receiver,
+            hexToBytes(receiver),
             amount,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -651,52 +627,61 @@ export default class Falcon512Wallet {
 
     // #region conduits txns
     // prettier-ignore
-    async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: Set<string>, conduitsWithVotingPower: Record<string, bigint>): Promise<TransactionResponse>;
+    async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: string[], conduitsWithVotingPower: Map<string, bigint>): Promise<TransactionResponse>;
     // prettier-ignore
-    async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: Set<string>, conduitsWithVotingPower: Record<string, bigint>, feePerByte: string): Promise<TransactionResponse>;
+    async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: string[], conduitsWithVotingPower: Map<string, bigint>, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: Set<string>, conduitsWithVotingPower: Record<string, bigint>, feePerByte?: string): Promise<TransactionResponse> {
+    async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: string[], conduitsWithVotingPower: Map<string, bigint>, feePerByte?: string): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconSetConduitModeTransaction(
-            vidaId,
-            mode,
-            conduitThreshold,
-            conduits,
-            conduitsWithVotingPower,
-            _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
-        );
+        // const txn = TransactionBuilder.getConduitModeTransaction(
+        //     BigInt(_feePerByte),
+        //     this._addressBytes,
+        //     vidaId,
+        //     mode,
+        //     conduitThreshold,
+        //     new Set(conduits.map((s) => hexToBytes(s))),
+        //     conduitsWithVotingPower,
+        //     nonce,
+        //     _chainId,
+        // );
 
-        return this.signAndSend(txn);
+        // return this.signAndSend(txn);
+
+        return {
+            message: '',
+            success: true,
+            transactionHash: '',
+        }// TODO: remove this line and uncomment the above code
     }
 
     // prettier-ignore
     async setConduitModeWithVidaBased(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Array<string>, stakingPowers: Array<bigint>): Promise<TransactionResponse>;
     // prettier-ignore
-    async setConduitModeWithVidaBased(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Array<string>, stakingPowers: Array<bigint>, feePerByte: string): Promise<TransactionResponse>;
+    async setConduitModeWithVidaBased(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Array<string>, stakingPowers: Array<bigint>, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async setConduitModeWithVidaBased(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Array<string>, stakingPowers: Array<bigint>, feePerByte?: string): Promise<TransactionResponse> {
+    async setConduitModeWithVidaBased(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Array<string>, stakingPowers: Array<bigint>, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
-
+        const _nonce = nonce ?? (await this.getNonce());
+    
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconSetConduitModeWithVidaBasedTransaction(
+        const txn = TransactionBuilder.getSetConduitModeWithVidaBasedTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             vidaId,
             mode,
             conduitThreshold,
-            conduits,
+            conduits.map((s) => hexToBytes(s)),
             stakingPowers,
+            _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -712,14 +697,17 @@ export default class Falcon512Wallet {
         if (response != null && !response.success) { return response }
 
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
+        const _nonce = nonce ?? (await this.getNonce());
+
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconApproveAsConduitTransaction(
-            vidaId,
-            wrappedTxns,
-            _chainId,
+        const txn = TransactionBuilder.getConduitApprovalTransaction(
+            BigInt(_feePerByte),
             this._addressBytes,
-            _feePerByte.toString()
+            vidaId,
+            wrappedTxns.map((s) => hexToBytes(s)),
+            _nonce,
+            _chainId,
         );
 
         return this.signAndSend(txn);
@@ -738,13 +726,13 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconRemoveConduitsTransaction(
+        const txn = TransactionBuilder.getRemoveConduitsTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             vidaId,
-            conduits,
+            conduits.map((s) => hexToBytes(s)),
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -757,20 +745,23 @@ export default class Falcon512Wallet {
     // prettier-ignore
     async approveAsGuardian(wrappedTxns: string[]): Promise<TransactionResponse>;
     // prettier-ignore
-    async approveAsGuardian(wrappedTxns: string[], feePerByte: string): Promise<TransactionResponse>;
+    async approveAsGuardian(wrappedTxns: string[], nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async approveAsGuardian(wrappedTxns: string[], feePerByte?: string): Promise<TransactionResponse> {
+    async approveAsGuardian(wrappedTxns: string[], nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
+        const _nonce = nonce ?? (await this.getNonce());
+
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconApproveAsGuardianTransaction(
-            wrappedTxns,
-            _chainId,
+        const txn = TransactionBuilder.getGuardianApprovalTransaction(
+            BigInt(_feePerByte),
             this._addressBytes,
-            _feePerByte.toString()
+            wrappedTxns.map((s) => hexToBytes(s)),
+            _nonce,
+            _chainId,
         );
 
         return this.signAndSend(txn);
@@ -779,43 +770,50 @@ export default class Falcon512Wallet {
     // prettier-ignore
     async removeGuardian(): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeGuardian(feePerByte: string): Promise<TransactionResponse>;
+    async removeGuardian(nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeGuardian(feePerByte?: string): Promise<TransactionResponse>{
+    async removeGuardian(nonce?: number, feePerByte?: string): Promise<TransactionResponse>{
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
+        const _nonce = nonce ?? (await this.getNonce());
+
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconRemoveGuardianTransaction(
-            _chainId,
+        const txn = TransactionBuilder.getRemoveGuardianTransaction(
+            BigInt(_feePerByte),
             this._addressBytes,
-            _feePerByte.toString()
+            _nonce,
+            _chainId,
         );
 
         return this.signAndSend(txn);
     }
 
     // prettier-ignore
-    async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string[]): Promise<TransactionResponse>;
+    async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string[], feePerByte: string): Promise<TransactionResponse>;
+    async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string[], feePerByte?: string): Promise<TransactionResponse> {
+    async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
+        const _nonce = nonce ?? (await this.getNonce());
+        
 
         const _chainId = await this.getChainId();
 
-        const txn = TransactionBuilder.getFalconSetGuardianTransaction(
-            expiryDate,
-            guardianAddress,
-            _chainId,
+
+        const txn = TransactionBuilder.getSetGuardianTransaction(
+            BigInt(_feePerByte),
             this._addressBytes,
-            _feePerByte.toString()
+            expiryDate,
+            hexToBytes(guardianAddress),
+            _nonce,
+            _chainId,
         );
 
         return this.signAndSend(txn);
@@ -826,11 +824,11 @@ export default class Falcon512Wallet {
     // #region proposal transactions
 
     // prettier-ignore
-    async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: EpochTimeStamp, withdrawalPenalty: number): Promise<TransactionResponse>;
+    async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: bigint, withdrawalPenalty: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: EpochTimeStamp, withdrawalPenalty: number, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: bigint, withdrawalPenalty: number, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: EpochTimeStamp, withdrawalPenalty: number, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: bigint, withdrawalPenalty: number, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -838,15 +836,15 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconProposeChangeEarlyWithdrawPenaltyTransaction(
+        const txn = TransactionBuilder.getChangeEarlyWithdrawPenaltyProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             earlyWithdrawalTime,
             withdrawalPenalty,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -865,25 +863,25 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconProposeChangeFeePerByteTransaction(
+        const txn = TransactionBuilder.getChangeFeePerByteProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             newFeePerByte,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
     }
 
     // prettier-ignore
-    async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: number): Promise<TransactionResponse>;
+    async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: number, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: number, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -891,25 +889,25 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconProposeChangeMaxBlockSizeTransaction(
+        const txn = TransactionBuilder.getChangeMaxBlockSizeProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             maxBlockSize,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
-        );
+        )
 
         return this.signAndSend(txn);
     }
 
     // prettier-ignore
-    async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: number): Promise<TransactionResponse>;
+    async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: number, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: number, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -917,14 +915,14 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconProposeChangeMaxTxnSizeTransaction(
+        const txn = TransactionBuilder.getChangeMaxTxnSizeProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             maxTxnSize,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -943,14 +941,15 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconProposeChangeOverallBurnPercentageTransaction(
+        const txn = TransactionBuilder.getChangeOverallBurnPercentageProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             burnPercentage,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
+
         );
 
         return this.signAndSend(txn);
@@ -971,14 +970,14 @@ export default class Falcon512Wallet {
 
         const _chainId = await this.getChainId();
 
-        const txn = TransactionBuilder.getFalconProposeChangeRewardPerYearTransaction(
+        const txn = TransactionBuilder.getChangeRewardPerYearProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             rewardPerYear,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -998,14 +997,14 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconProposeChangeValidatorCountLimitTransaction(
+        const txn = TransactionBuilder.getChangeValidatorCountLimitProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             validatorCountLimit,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -1024,14 +1023,14 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconProposeChangeValidatorJoiningFeeTransaction(
+        const txn = TransactionBuilder.getChangeValidatorJoiningFeeProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             joiningFee,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -1050,14 +1049,14 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconProposeChangeVidaIdClaimingFeeTransaction(
+        const txn = TransactionBuilder.getChangeVidaIdClaimingFeeProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             claimingFee,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -1076,14 +1075,14 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconProposeChangeVmOwnerTxnFeeShareTransaction(
+        const txn = TransactionBuilder.getChangeVmOwnerTxnFeeShareProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             vmOwnerTxnFeeShare,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -1102,13 +1101,13 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconProposeOtherTransaction(
+        const txn = TransactionBuilder.getOtherProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
             title,
             description,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);
@@ -1126,13 +1125,13 @@ export default class Falcon512Wallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getFalconVoteOnProposalTransaction(
-            proposalHash,
+        const txn = TransactionBuilder.getVoteOnProposalTransaction(
+            BigInt(_feePerByte),
+            this._addressBytes,
+            hexToBytes(proposalHash),
             vote,
             _nonce,
             _chainId,
-            this._addressBytes,
-            _feePerByte.toString()
         );
 
         return this.signAndSend(txn);

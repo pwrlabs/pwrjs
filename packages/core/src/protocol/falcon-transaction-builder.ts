@@ -1,9 +1,10 @@
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import { Transaction_ID } from 'src/static/enums/transaction.enum';
 import { bigintToBytesDynamic, decToBytes } from 'src/utils';
+import { BigNumber } from 'bignumber.js';
 
 function assetAddressValidity(to: string): void {
-    if (!to.startsWith('0x') || to.length !== 42) {
+    if (to.length !== 40) {
         throw new Error('Invalid address format');
     }
 }
@@ -11,13 +12,8 @@ function assetAddressValidity(to: string): void {
 export default class FalconTransactionBuilder {
     // #region - falcon transactions
 
-    private static getFalconTransactionBase(
-        id: Transaction_ID,
-        nonce: number,
-        chainId: number,
-        feePerByte: bigint,
-        sender: Uint8Array
-    ) {
+    // prettier-ignore
+    private static getFalconTransactionBase(id: Transaction_ID, nonce: number, chainId: number, feePerByte: bigint, sender: Uint8Array): Uint8Array {
         const buffer = new Uint8Array(37);
         const view = new DataView(buffer.buffer);
 
@@ -45,8 +41,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getSetPublicKeyTransaction(publicKey: Uint8Array, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint
-    ): Uint8Array {
+    static getSetPublicKeyTransaction(publicKey: Uint8Array, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_SET_PUBLIC_KEY,
             nonce,
@@ -182,10 +177,9 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getFalconTransferPwrTransaction(feePerByte: bigint, sender: Uint8Array, receiver: Uint8Array, amount: string, nonce: number, chainId: number): Uint8Array {
+    static getTransferTransaction(feePerByte: bigint, sender: Uint8Array, receiver: Uint8Array, amount: bigint, nonce: number, chainId: number): Uint8Array {
         assetAddressValidity(bytesToHex(receiver));
 
-        const amountBigInt = BigInt(amount);
         const amountBN = BigNumber(amount);
 
         if (amountBN.comparedTo(0) < 0) {
@@ -194,7 +188,6 @@ export default class FalconTransactionBuilder {
         if (nonce < 0) {
             throw new Error('Nonce cannot be negative');
         }
-
 
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_TRANSFER,
@@ -214,7 +207,7 @@ export default class FalconTransactionBuilder {
         buffer.set(receiver, offset);
         offset += 20;
         
-        dataView.setBigUint64(offset, amountBigInt, false);
+        dataView.setBigUint64(offset, amount, false);
         offset += 8;
 
         return buffer;
@@ -1272,15 +1265,8 @@ export default class FalconTransactionBuilder {
         return buffer;
     }
 
-    static getTransferPWRFromVidaTransaction(
-        feePerByte: bigint,
-        sender: Uint8Array,
-        vidaId: bigint,
-        receiver: Uint8Array,
-        amount: bigint,
-        nonce: number,
-        chainId: number
-    ): Uint8Array {
+    // prettier-ignore
+    static getTransferPWRFromVidaTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, receiver: Uint8Array, amount: bigint, nonce: number, chainId: number): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_TRANSFER_PWR_FROM_VIDA,
             nonce,

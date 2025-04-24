@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { hexToBytes, by, hexToBytestesToHex } from '@noble/hashes/utils';
+import { hexToBytes, by, hexToBytestesToHex, bytesToHex } from '@noble/hashes/utils';
 import { BnToBytes, decToBytes, decToBytes2, decodeHex } from '../utils';
 import { Transaction_ID } from '../static/enums/transaction.enum';
 
@@ -1022,24 +1022,10 @@ export default class TransactionBuilder {
         return txnBytes;
     }
 
-    static getFalconTransferPwrTransaction(
-        to: string,
-        amount: string,
-        nonce: number,
-        chainId: number,
-        address: Uint8Array,
-        feePerByte: string
-    ): Uint8Array {
-        console.log('data of txn', {
-            to,
-            amount,
-            nonce,
-            chainId,
-            address,
-            feePerByte,
-        });
-
-        assetAddressValidity(to);
+    // prettier-ignore
+    static getTransferTransaction(feePerByte: string, sender: Uint8Array, receiver: Uint8Array, amount: bigint, nonce: number, chainId: number): Uint8Array {
+        assetAddressValidity(bytesToHex(sender));
+        assetAddressValidity(bytesToHex(receiver));
 
         const amountBigInt = BigInt(amount);
         const amountBN = BigNumber(amount);
@@ -1051,23 +1037,25 @@ export default class TransactionBuilder {
             throw new Error('Nonce cannot be negative');
         }
 
-        const toBytes = hexToBytes(to.substring(2));
 
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_TRANSFER,
             chainId,
             nonce,
-            address,
+            sender,
             feePerByte
         );
 
         const buffer = new Uint8Array(base.length + 20 + 8);
         const dataView = new DataView(buffer.buffer);
         let offset = 0;
+
         buffer.set(base, offset);
         offset += base.length;
-        buffer.set(toBytes, offset);
+        
+        buffer.set(receiver, offset);
         offset += 20;
+        
         dataView.setBigUint64(offset, amountBigInt, false);
         offset += 8;
 
