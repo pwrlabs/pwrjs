@@ -10,6 +10,7 @@ import HashService from 'src/services/hash.service';
 import StorageService from 'src/services/storage.service';
 import BytesService from 'src/services/bytes.service';
 import CryptoService from 'src/services/crypto.service';
+import { Falcon } from 'src/services/falcon.service';
 
 // utils
 import { TransactionResponse } from './wallet.types';

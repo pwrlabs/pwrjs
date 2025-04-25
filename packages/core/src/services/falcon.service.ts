@@ -9,9 +9,9 @@ export class Falcon {
         return await getKernel('falcon1024_n3_v1');
     }
 
-    static async generateKeypair512() {
+    static async generateKeypair512(seed?: Uint8Array) {
         const falcon512 = await this.getFalcon512();
-        return falcon512.genkey(); // { sk, pk, genKeySeed }
+        return falcon512.genkey(seed); // { sk, pk, genKeySeed }
     }
 
     static async generateKeypair1024() {
@@ -29,12 +29,20 @@ export class Falcon {
         return falcon1024.sign(message, secretKey);
     }
 
-    static async verify512(message: Uint8Array, signature: Uint8Array, publicKey: Uint8Array): Promise<boolean> {
+    static async verify512(
+        message: Uint8Array,
+        signature: Uint8Array,
+        publicKey: Uint8Array
+    ): Promise<boolean> {
         const falcon512 = await this.getFalcon512();
         return falcon512.verify(signature, message, publicKey);
     }
 
-    static async verify1024(message: Uint8Array, signature: Uint8Array, publicKey: Uint8Array): Promise<boolean> {
+    static async verify1024(
+        message: Uint8Array,
+        signature: Uint8Array,
+        publicKey: Uint8Array
+    ): Promise<boolean> {
         const falcon1024 = await this.getFalcon1024();
         return falcon1024.verify(signature, message, publicKey);
     }

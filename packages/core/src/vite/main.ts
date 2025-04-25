@@ -1,7 +1,9 @@
-import { hexToBytes } from '@noble/hashes/utils';
+import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import FalconServiceBrowser from '../services/falcon/falcon-browser.service';
 import PWRFaconl512Wallet from '../wallet/falcon-512-wallet';
 import PWRJS from '../protocol/pwrjs';
+import { Falcon } from '../services/falcon.service';
+import { hkdfSync } from 'crypto';
 
 // cheerpjInit();
 const javaSign = {
@@ -119,7 +121,35 @@ async function init() {
 
     const resss = await pwr.getAllEarlyWithdrawPenalties();
 }
-init();
+// init();
+
+async function init2() {
+    const mnemonic =
+        'cram spoon wrong express rack pudding cabbage until movie juice convince season';
+    const salt = 'falcon-seed';
+    const info = 'falcon-genkey';
+
+    const encoder = new TextEncoder();
+
+    const seed = hkdfSync(
+        'sha256',
+        encoder.encode(mnemonic),
+        encoder.encode(salt),
+        encoder.encode(info),
+        48
+    );
+
+    const keypair = await Falcon.generateKeypair512(new Uint8Array(seed));
+
+    console.log({
+        pk: bytesToHex(keypair.pk),
+        sk: bytesToHex(keypair.sk),
+        seed: bytesToHex(keypair.genkeySeed),
+    });
+}
+
+init2();
+
 // .then(async () => {
 //     const keypair = await window.svc.generateKeyPair();
 
