@@ -49,12 +49,12 @@ export default class Falcon512Wallet {
     static async new(pwr: PWRJS): Promise<Falcon512Wallet> {
         if (typeof window === 'undefined') {
             // node
-            const m = await import('src/services/falcon/falcon-node.service');
+            const m = await import('../services/falcon/falcon-node.service');
             const keys = await m.default.generateKeyPair();
             return Falcon512Wallet.fromKeys(keys.sk, keys.pk, pwr);
         } else {
             // browser
-            const m = await import('src/services/falcon/falcon-browser.service');
+            const m = await import('../services/falcon/falcon-browser.service');
             const keys = await m.default.generateKeyPair();
             return Falcon512Wallet.fromKeys(keys.sk, keys.pk, pwr);
         }
@@ -108,11 +108,11 @@ export default class Falcon512Wallet {
     async sign(data: Uint8Array): Promise<Uint8Array> {
         if (typeof window === 'undefined') {
             // node
-            const m = await import('src/services/falcon/falcon-node.service');
+            const m = await import('../services/falcon/falcon-node.service');
             return m.default.sign(data, this._privateKey);
         } else {
             // browser
-            const m = await import('src/services/falcon/falcon-browser.service');
+            const m = await import('../services/falcon/falcon-browser.service');
             return m.default.sign(data, this._privateKey);
         }
     }
@@ -141,7 +141,7 @@ export default class Falcon512Wallet {
     async verifySignature(message: Uint8Array, signature: Uint8Array): Promise<boolean> {
         if (typeof window === 'undefined') {
             // node
-            const m = await import('src/services/falcon/falcon-node.service');
+            const m = await import('../services/falcon/falcon-node.service');
             return m.default.verify(message, this._publicKey, signature);
         } else {
             // browser
