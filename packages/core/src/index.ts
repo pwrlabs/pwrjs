@@ -6,7 +6,7 @@ import PWRJS from './protocol/pwrjs';
 import TransactionDecoder from './protocol/transaction-decoder';
 import FalconTransactionBuilder from './protocol/falcon-transaction-builder';
 
-// todo: split into separate files
+// todo: split into separate files add package.json for each module
 export {
     Falcon512Wallet,
     PWRJS,
