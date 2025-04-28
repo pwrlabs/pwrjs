@@ -2,19 +2,19 @@
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 
 // protocol
-import PWRJS from 'src/protocol/pwrjs';
+import PWRJS from '../protocol/pwrjs';
 
 // services
-import HttpService from 'src/services/http.service';
-import HashService from 'src/services/hash.service';
-import StorageService from 'src/services/storage.service';
-import BytesService from 'src/services/bytes.service';
-import CryptoService from 'src/services/crypto.service';
+import HttpService from '../services/http.service';
+import HashService from '../services/hash.service';
+import StorageService from '../services/storage.service';
+import BytesService from '../services/bytes.service';
+import CryptoService from '../services/crypto.service';
 
 // utils
 import { TransactionResponse } from './wallet.types';
-import TransactionBuilder from 'src/protocol/falcon-transaction-builder';
-import { FalconKeyPair } from 'src/services/falcon/c';
+import TransactionBuilder from '../protocol/falcon-transaction-builder';
+import { FalconKeyPair } from '../services/falcon/c';
 
 export default class Falcon512Wallet {
     public _addressHex: string;

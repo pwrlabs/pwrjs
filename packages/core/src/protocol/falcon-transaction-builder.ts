@@ -1,6 +1,6 @@
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
-import { Transaction_ID } from 'src/static/enums/transaction.enum';
-import { bigintToBytesDynamic, decToBytes } from 'src/utils';
+import { Transaction_ID } from '../static/enums/transaction.enum';
+import { bigintToBytesDynamic, decToBytes } from '../utils';
 import { BigNumber } from 'bignumber.js';
 
 function assetAddressValidity(to: string): void {

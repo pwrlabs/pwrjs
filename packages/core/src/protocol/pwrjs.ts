@@ -2,20 +2,23 @@
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 
 // entities
-import { Block } from 'src/entities/block.entity';
-import { Validator } from 'src/entities/validator.entity';
-import { AnyFalconTransaction } from 'src/entities/falcon-transaction.entity';
-import { HttpTypes } from 'src/entities/http.types';
+import { Block } from '../entities/block.entity';
+import { Validator } from '../entities/validator.entity';
+import { AnyFalconTransaction } from '../entities/falcon-transaction.entity';
+import { HttpTypes } from '../entities/http.types';
 
 // services
-import HttpService from 'src/services/http.service';
+import HttpService from '../services/http.service';
+
+// static
+import { Transaction_ID } from '../static/enums/transaction.enum';
 
 import { VmDataTransaction } from '../record/vmDataTransaction';
 import TransactionDecoder from './transaction-decoder';
-import { Transaction_ID } from '../static/enums/transaction.enum';
 import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
 
-import api from 'src/shared/api/api';
+// shared
+import api from '../shared/api/api';
 
 export default class PWRJS {
     // private ecdsaVerificationFee: number = 10000;
