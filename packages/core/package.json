@@ -1,5 +1,5 @@
 {
-    "name": "@pwrjs/core",
+    "name": "@pwrjs/core-beta",
     "version": "0.7.0",
     "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
     "author": "pwrlabs <devservices@pwrlabs.io>",
@@ -24,13 +24,11 @@
     "dependencies": {
         "@dashlane/pqc-sign-falcon-512-browser": "^1.0.0",
         "@dashlane/pqc-sign-falcon-512-node": "^1.0.0",
-        "@ethereumjs/util": "^9.0.3",
         "@noble/hashes": "^1.7.1",
         "axios": "^1.6.7",
         "bignumber.js": "^9.1.2",
         "ethereumjs-wallet": "^1.0.2",
         "ethers": "^6.12.1",
-        "js-sha3": "^0.9.3",
         "secp256k1": "^5.0.0"
     },
     "devDependencies": {
