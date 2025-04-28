@@ -1,6 +1,8 @@
 {
-    "$schema": "node_modules/lerna/schemas/lerna-schema.json",
-    "version": "0.7.0",
-    "hoist": "true",
-    "packages": ["packages/*"]
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "version": "0.8.0",
+  "hoist": "true",
+  "packages": [
+    "packages/*"
+  ]
 }
