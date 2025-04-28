@@ -15,15 +15,13 @@ function hashTxn(txnBytes: Uint8Array): ArrayBuffer {
 describe('wallet_core', () => {
     const destinyAddress = '0xe01a20baa4b041a1d0700a43aac2425655d9f256';
 
-    const pvk =
-        '0x3ca459c75f4e5b480de52e665105a7c0256c4a3dd7042f9cbcdf432360fb629b'; // txn are failing
+    const pvk = '0x3ca459c75f4e5b480de52e665105a7c0256c4a3dd7042f9cbcdf432360fb629b'; // txn are failing
 
     const pwrWallet = new PWRWallet(pvk);
 
     const wallet0 = new PWRWallet();
 
-    const pvkGuardian =
-        '0xb8a70832e8fec8f6a0ec4721f5d5b0239834105eb52a606914e61fbe3506d278';
+    const pvkGuardian = '0xb8a70832e8fec8f6a0ec4721f5d5b0239834105eb52a606914e61fbe3506d278';
     const guardianWallet = new PWRWallet(pvkGuardian);
 
     const validator = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
@@ -86,10 +84,7 @@ describe('wallet_core', () => {
 
         try {
             const amount = BigInt(randomBal) * BigInt(10 ** 8);
-            const tx = await pwrWallet.transferPWR(
-                destinyAddress,
-                amount.toString()
-            );
+            const tx = await pwrWallet.transferPWR(destinyAddress, amount.toString());
 
             console.log('transfer txn:', tx);
 
@@ -196,11 +191,7 @@ describe('wallet_core', () => {
         const dataBytes = new TextEncoder().encode(data);
 
         try {
-            const tx = await pwrWallet.sendPayableVmDataTransaction(
-                vmId,
-                '1',
-                dataBytes
-            );
+            const tx = await pwrWallet.sendPayableVmDataTransaction(vmId, '1', dataBytes);
             // console.log('payable VM data txn:', tx);
             expect(tx.success).toBe(true);
         } catch (e) {
@@ -604,9 +595,7 @@ describe('wallet_core', () => {
         const _p = path.resolve(__dirname, 'files');
         const importedWallet = await pwrWallet.loadWallet(password, _p);
 
-        expect(importedWallet.getPrivateKeyHex()).toStrictEqual(
-            pwrWallet.getPrivateKeyHex()
-        );
+        expect(importedWallet.getPrivateKeyHex()).toStrictEqual(pwrWallet.getPrivateKeyHex());
     });
 
     afterAll(() => {

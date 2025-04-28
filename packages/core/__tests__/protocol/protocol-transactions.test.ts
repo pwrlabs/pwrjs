@@ -2,22 +2,12 @@ import { describe, test, expect } from 'vitest';
 
 import PWRJS from '../../src/protocol/pwrjs';
 
-import WalletUtils from '../../src/wallet.utils';
-
-import { HttpTypes } from '../../src/entities/http.types';
 import {
     AnyFalconTransaction,
-    SetGuardianTransaction,
-    SetPublicKeyTransaction,
+    PayableVidaDataTransaction,
     Transactions,
     TransferTransaction,
 } from '../../src/entities/falcon-transaction.entity';
-
-function sleep(timeMs: number) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, timeMs);
-    });
-}
 
 describe('pwrjs core general', () => {
     const url = 'http://46.101.151.203:8085';
@@ -45,7 +35,7 @@ describe('pwrjs core general', () => {
 
     test('retrieve transaction by hash', async () => {
         const transactionHash =
-            '0x6CECB4BCB7377CBEDDA26B4D71350D977A3AFB7F8578E6FDB30733948D707B29';
+            '0x4858df364241221c2914907dce78dd2e98be880afae370af80d646b6e2753764';
         const res = await pwrjs.getTransactionByHash(transactionHash);
 
         const tx = res as TransferTransaction;
@@ -58,23 +48,24 @@ describe('pwrjs core general', () => {
 
     test('retrieve multiple transactions by hash', async () => {
         const hashes = [
-            '0x280BFC342C6ED15E9E41E0CF078C4AB3F9B7EC0986F470A0C731756995BFA72F',
-            '0x3FFE49E319C0F4D8B7ABE1B1146AB8C06D4E7C555F1C72205B02F736B988595B',
+            '0xccfae04dc39c1a473df1336fbd17b1d44213fccb06334847caeb14f860ef1a8d',
+            '0x6a6d21f2930f02837aca8b953edb0a149d449d3e87357da154db36350600a2dc',
         ];
 
         const res = await pwrjs.getTransactionsByHashes(hashes);
 
-        const tx_0 = res[0] as SetPublicKeyTransaction;
-        const tx_1 = res[1] as SetGuardianTransaction;
+        const tx_0 = res[0] as TransferTransaction;
+        const tx_1 = res[1] as PayableVidaDataTransaction;
 
-        expect(tx_0).toHaveProperty('identifier', Transactions.SET_PUBLIC_KEY);
+        expect(tx_0).toHaveProperty('identifier', Transactions.TRANSFER);
         checkBaseTxn(tx_0);
-        expect(tx_0).toHaveProperty('publicKey');
+        expect(tx_0).toHaveProperty('receiver');
+        expect(tx_0).toHaveProperty('amount');
 
-        expect(tx_1).toHaveProperty('identifier', Transactions.SET_GUARDIAN);
+        expect(tx_1).toHaveProperty('identifier', Transactions.PAYABLE_VIDA_DATA);
         checkBaseTxn(tx_1);
-        expect(tx_1).toHaveProperty('guardianAddress');
-        expect(tx_1).toHaveProperty('guardianExpiryDate');
+        expect(tx_1).toHaveProperty('vidaId');
+        expect(tx_1).toHaveProperty('data');
     });
 
     // #endregion

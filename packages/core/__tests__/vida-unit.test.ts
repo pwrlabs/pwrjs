@@ -1,8 +1,5 @@
 import { test, describe, beforeAll, afterAll, expect, vi } from 'vitest';
-import {
-    VidaTransactionSubscription,
-    ProcessVidaTransactions,
-} from '../src/protocol/vida';
+import { VidaTransactionSubscription, ProcessVidaTransactions } from '../src/protocol/vida';
 import { VmDataTransaction } from '../src/record/vmDataTransaction';
 import { PWRJS } from '../src';
 
@@ -84,7 +81,7 @@ describe('VidaTransactionSubscription Unit Test (with mocks)', () => {
 
         // Verify that the mocks were called.
         expect(pwrjs.getLatestBlockNumber).toHaveBeenCalled();
-        expect(pwrjs.getVMDataTransactions).toHaveBeenCalled();
+        expect(pwrjs.getVidaDataTransactions).toHaveBeenCalled();
         expect(handler).toHaveBeenCalledWith(txn);
     });
 });

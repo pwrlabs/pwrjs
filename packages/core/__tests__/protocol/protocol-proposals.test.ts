@@ -2,8 +2,6 @@ import { describe, test, expect } from 'vitest';
 
 import PWRJS from '../../src/protocol/pwrjs';
 
-import WalletUtils from '../../src/wallet.utils';
-
 import { HttpTypes } from '../../src/entities/http.types';
 import {
     AnyFalconTransaction,

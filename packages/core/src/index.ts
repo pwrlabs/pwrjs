@@ -1,15 +1,14 @@
-import PWRWallet from './wallet/wallet';
+// import  from
 import Falcon512Wallet from './wallet/falcon-512-wallet';
 import PWRJS from './protocol/pwrjs';
 
 import TransactionDecoder from './protocol/transaction-decoder';
-import TransactionBuilder from './protocol/transaction-builder';
+import FalconTransactionBuilder from './protocol/falcon-transaction-builder';
 
 // todo: split into separate files
-export { 
-    PWRWallet,
+export {
     Falcon512Wallet,
     PWRJS,
     TransactionDecoder,
-    TransactionBuilder
+    FalconTransactionBuilder as TransactionBuilder,
 };

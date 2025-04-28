@@ -2,17 +2,6 @@ import { describe, test, expect } from 'vitest';
 
 import PWRJS from '../../src/protocol/pwrjs';
 
-import WalletUtils from '../../src/wallet.utils';
-
-import { HttpTypes } from '../../src/entities/http.types';
-import {
-    AnyFalconTransaction,
-    SetGuardianTransaction,
-    SetPublicKeyTransaction,
-    Transactions,
-    TransferTransaction,
-} from '../../src/entities/falcon-transaction.entity';
-
 function sleep(timeMs: number) {
     return new Promise((resolve) => {
         setTimeout(resolve, timeMs);
@@ -98,9 +87,9 @@ describe('pwrjs core general', () => {
     // });
 
     test('Owner of vida', async () => {
-        const res = await pwrjs.getOwnerOfVida(BigInt(0));
+        const res = await pwrjs.getOwnerOfVida(456n);
 
-        expect(res?.toLowerCase()).toBe('0xffb927e3e1fd43fc47bd140c817af780241d1b31');
+        expect(res?.toLowerCase()).toBe('0xe68191b7913e72e6f1759531fbfaa089ff02308a');
     });
 
     // test('conduits of VM', async () => {

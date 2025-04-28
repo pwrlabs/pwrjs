@@ -2,14 +2,6 @@ import { describe, test, expect } from 'vitest';
 
 import PWRJS from '../../src/protocol/pwrjs';
 
-import WalletUtils from '../../src/wallet.utils';
-
-function sleep(timeMs: number) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, timeMs);
-    });
-}
-
 describe('pwrjs core blocks', () => {
     const url = 'http://46.101.151.203:8085';
 

@@ -2,9 +2,8 @@ import { describe, test, expect } from 'vitest';
 
 import PWRJS from '../../src/protocol/pwrjs';
 
-import WalletUtils from '../../src/wallet.utils';
-
 import { HttpTypes } from '../../src/entities/http.types';
+import Falcon512Wallet from '../../src/wallet/falcon-512-wallet';
 
 function sleep(timeMs: number) {
     return new Promise((resolve) => {
@@ -12,13 +11,15 @@ function sleep(timeMs: number) {
     });
 }
 
-describe('pwrjs core general', () => {
+describe('pwrjs core general', async () => {
     const url = 'http://46.101.151.203:8085';
 
-    const testAddress = '0x1f13a5331b56f4d84737308ca7ec337070fec6fd';
+    const testAddress = '0xe68191b7913e72e6f1759531fbfaa089ff02308a';
     const vmAddress = '0x1000000000000000000000000000000000010023';
 
     const pwrjs = new PWRJS(url);
+
+    const randomWallet = await Falcon512Wallet.new(pwrjs);
 
     // #region pwrjs props
 
@@ -57,20 +58,17 @@ describe('pwrjs core general', () => {
     // #region wallet methods
 
     test('PWRJS public key', async () => {
-        const randomWallet = WalletUtils.getRandomWallet();
-        const pk = await pwrjs.getPublicKeyOfAddress(randomWallet.getAddressString());
+        const pk = await pwrjs.getPublicKeyOfAddress(randomWallet.getAddress());
         expect(pk).toBeNull();
     });
 
     test('PWRJS nonce', async () => {
-        const randomWallet = WalletUtils.getRandomWallet();
-        const nonce = await pwrjs.getNonceOfAddress(randomWallet.getAddressString());
+        const nonce = await pwrjs.getNonceOfAddress(randomWallet.getAddress());
         expect(nonce).toBe(0);
     });
 
     test('PWRJS balance', async () => {
-        const randomWallet = WalletUtils.getRandomWallet();
-        const balanceOfRandom = await pwrjs.getBalanceOfAddress(randomWallet.getAddressString());
+        const balanceOfRandom = await pwrjs.getBalanceOfAddress(randomWallet.getAddress());
         const balanceOfTest = await pwrjs.getBalanceOfAddress(testAddress);
 
         console.log({ balanceOfRandom, balanceOfTest });

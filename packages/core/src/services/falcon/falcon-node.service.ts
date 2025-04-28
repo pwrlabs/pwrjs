@@ -7,9 +7,9 @@ export default class FalconServiceNode extends FalconService {
         return kemBuilder();
     }
 
-    private static async getFalcon1024() {
-        return kemBuilder1024();
-    }
+    // private static async getFalcon1024() {
+    //     return kemBuilder1024();
+    // }
 
     static async generateKeyPair(): Promise<FalconKeyPair> {
         const falcon = await FalconServiceNode.getFalcon512();
@@ -29,22 +29,22 @@ export default class FalconServiceNode extends FalconService {
         return falcon.verify(signature, message, pk);;
     }
 
-    // 1024
-    static async generateKeyPair1024(): Promise<FalconKeyPair> {
-        const falcon = await FalconServiceNode.getFalcon1024();
-        const { publicKey: pk, privateKey: sk } = await falcon.keypair();
-        return { pk, sk };
-    }
+    // // 1024
+    // static async generateKeyPair1024(): Promise<FalconKeyPair> {
+    //     const falcon = await FalconServiceNode.getFalcon1024();
+    //     const { publicKey: pk, privateKey: sk } = await falcon.keypair();
+    //     return { pk, sk };
+    // }
 
-    static async sign1024(message: Uint8Array, sk: Uint8Array): Promise<Uint8Array> {
-        const falcon = await FalconServiceNode.getFalcon1024();
-        const { signature } = await falcon.sign(message, sk);
-        return signature;
-    }
+    // static async sign1024(message: Uint8Array, sk: Uint8Array): Promise<Uint8Array> {
+    //     const falcon = await FalconServiceNode.getFalcon1024();
+    //     const { signature } = await falcon.sign(message, sk);
+    //     return signature;
+    // }
 
-    // prettier-ignore
-    static async verify1024(message: Uint8Array, pk: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const falcon = await FalconServiceNode.getFalcon1024();
-        return falcon.verify(signature, message, pk);
-    }
+    // // prettier-ignore
+    // static async verify1024(message: Uint8Array, pk: Uint8Array, signature: Uint8Array): Promise<boolean> {
+    //     const falcon = await FalconServiceNode.getFalcon1024();
+    //     return falcon.verify(signature, message, pk);
+    // }
 }
