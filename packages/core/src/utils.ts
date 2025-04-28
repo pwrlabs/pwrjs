@@ -22,17 +22,17 @@
 // }
 
 // // Helper: dynamically sized bigint to byte array
-// export function bigintToBytesDynamic(value: bigint): Uint8Array {
-//     const hex = value.toString(16);
-//     const paddedHex = hex.length % 2 === 0 ? hex : '0' + hex;
-//     const bytes = new Uint8Array(paddedHex.length / 2);
+export function bigintToBytesDynamic(value: bigint): Uint8Array {
+    const hex = value.toString(16);
+    const paddedHex = hex.length % 2 === 0 ? hex : '0' + hex;
+    const bytes = new Uint8Array(paddedHex.length / 2);
 
-//     for (let i = 0; i < bytes.length; i++) {
-//         bytes[i] = parseInt(paddedHex.substr(i * 2, 2), 16);
-//     }
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(paddedHex.substr(i * 2, 2), 16);
+    }
 
-//     return bytes;
-// }
+    return bytes;
+}
 
 // export function decToBytes2(decimalNumber, numberOfBytes) {
 //     let bigIntNum = BigInt(decimalNumber); // Convert number to BigInt
@@ -47,18 +47,18 @@
 //     return bytes;
 // }
 
-// export function decToBytes(decimalNumber: number, numberOfBytes: number) {
-//     // Create a Uint8Array of the specified size
-//     let bytes = new Uint8Array(numberOfBytes);
+export function decToBytes(decimalNumber: number, numberOfBytes: number) {
+    // Create a Uint8Array of the specified size
+    let bytes = new Uint8Array(numberOfBytes);
 
-//     // Start filling from the last position of the array
-//     for (let i = bytes.length - 1; i >= 0; i--) {
-//         bytes[i] = decimalNumber & 0xff; // Get the least significant byte
-//         decimalNumber >>= 8; // Right shift by 8 bits to move to the next byte
-//     }
+    // Start filling from the last position of the array
+    for (let i = bytes.length - 1; i >= 0; i--) {
+        bytes[i] = decimalNumber & 0xff; // Get the least significant byte
+        decimalNumber >>= 8; // Right shift by 8 bits to move to the next byte
+    }
 
-//     return bytes;
-// }
+    return bytes;
+}
 
 // export function BnToBytes(BN: BigNumber) {
 //     const buffer = new ArrayBuffer(8);

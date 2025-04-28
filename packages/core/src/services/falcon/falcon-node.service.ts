@@ -1,6 +1,5 @@
 import { FalconKeyPair, FalconService } from './c';
 import kemBuilder from '@dashlane/pqc-sign-falcon-512-node';
-import kemBuilder1024 from '@dashlane/pqc-sign-falcon-1024-node';
 
 export default class FalconServiceNode extends FalconService {
     private static async getFalcon512() {

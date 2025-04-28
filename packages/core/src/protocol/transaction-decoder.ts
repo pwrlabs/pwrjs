@@ -2,7 +2,8 @@ import { Log, ethers } from 'ethers';
 import { Transaction } from '../record/transaction';
 import { Transaction_ID } from '../static/enums/transaction.enum';
 import PWRJS from './pwrjs';
-import { HexToBytes, bytesToHex } from '../utils';
+
+import { hexToBytes, bytesToHex } from '@noble/hashes/utils';
 
 // import ethUtil from 'ethereumjs-util';
 
@@ -10,7 +11,7 @@ export default class TransactionDecoder {
     public decode(txn: Uint8Array) {
         const sender = this.getSender(txn);
 
-        const senderBytes = HexToBytes(sender.toLowerCase());
+        const senderBytes = hexToBytes(sender.toLowerCase());
         return this.decode2(txn, senderBytes);
     }
 
@@ -131,11 +132,7 @@ export default class TransactionDecoder {
             throw new Error('Invalid txn length for transfer txn');
         }
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const amount = dataView.getBigInt64(6, false); // Read amount as BigInt for precision
 
@@ -169,11 +166,7 @@ export default class TransactionDecoder {
 
         const ipStartIndex = 6; // After identifier (1), chain id (1), and nonce (4)
         const ipLength = txn.length - 71; // Total length minus the length of the other known components
-        const ipBytes = new Uint8Array(
-            txn.buffer,
-            txn.byteOffset + ipStartIndex,
-            ipLength
-        ); // Extract IP bytes
+        const ipBytes = new Uint8Array(txn.buffer, txn.byteOffset + ipStartIndex, ipLength); // Extract IP bytes
 
         // Convert IP byte array to UTF-8 string
         const textDecoder = new TextDecoder('utf-8');
@@ -193,8 +186,7 @@ export default class TransactionDecoder {
     }
 
     public decodeClaimSpot(txn: Uint8Array, sender: Uint8Array, nonce: number) {
-        if (txn.length != 71)
-            throw new Error('Invalid length for claim spot txn');
+        if (txn.length != 71) throw new Error('Invalid length for claim spot txn');
 
         /*
          * Identifier - 1
@@ -214,10 +206,7 @@ export default class TransactionDecoder {
     }
 
     public decodeDelegate(txn: Uint8Array, sender: Uint8Array, nonce: number) {
-        if (
-            txn.length != 34 /*Without Signature*/ &&
-            txn.length != 99 /*With Signature*/
-        )
+        if (txn.length != 34 /*Without Signature*/ && txn.length != 99 /*With Signature*/)
             throw new Error('Invalid length for delegate txn');
 
         /*
@@ -228,11 +217,7 @@ export default class TransactionDecoder {
          * validator - 20
          * signature - 65*/
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
         const amount = dataView.getBigInt64(6, false);
 
         // Extract validator address which starts at byte 14 and is 20 bytes long
@@ -256,10 +241,7 @@ export default class TransactionDecoder {
     }
 
     public decodeWithdraw(txn: Uint8Array, sender: Uint8Array, nonce: number) {
-        if (
-            txn.length != 34 /*Without Signature*/ &&
-            txn.length != 99 /*With Signature*/
-        )
+        if (txn.length != 34 /*Without Signature*/ && txn.length != 99 /*With Signature*/)
             throw new Error('Invalid length for withdraw txn');
 
         /*
@@ -270,11 +252,7 @@ export default class TransactionDecoder {
          * validator - 20
          * signature - 65*/
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const amount = dataView.getBigInt64(6, false);
 
@@ -312,11 +290,7 @@ export default class TransactionDecoder {
          * signature - 65
          * */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const externalVmId = dataView.getBigUint64(6, false); // Assuming little-endian
 
@@ -330,11 +304,7 @@ export default class TransactionDecoder {
             dataLength = txn.length - 79; // Adjusted for the presence of a signature
         }
 
-        const data = new Uint8Array(
-            txn.buffer,
-            txn.byteOffset + 14,
-            dataLength
-        ); // Data starts after the VM ID
+        const data = new Uint8Array(txn.buffer, txn.byteOffset + 14, dataLength); // Data starts after the VM ID
 
         return {
             sender: `0x${bytesToHex(sender)}`,
@@ -349,10 +319,7 @@ export default class TransactionDecoder {
     }
 
     public decodeClaimVmId(txn: Uint8Array, sender: Uint8Array, nonce: number) {
-        if (
-            txn.length != 14 /*Without Signature*/ &&
-            txn.length != 79 /*With Signature*/
-        )
+        if (txn.length != 14 /*Without Signature*/ && txn.length != 79 /*With Signature*/)
             throw new Error('Invalid length for claim vm id txn');
 
         /*
@@ -363,11 +330,7 @@ export default class TransactionDecoder {
          * signature - 65
          * */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const vmId = dataView.getBigUint64(6, false); // Assuming little-endian
 
@@ -382,13 +345,8 @@ export default class TransactionDecoder {
         };
     }
 
-    public decodeSetGuardian(
-        txn: Uint8Array,
-        sender: Uint8Array,
-        nonce: number
-    ) {
-        if (txn.length != 99)
-            throw new Error('Invalid length for set guardian txn');
+    public decodeSetGuardian(txn: Uint8Array, sender: Uint8Array, nonce: number) {
+        if (txn.length != 99) throw new Error('Invalid length for set guardian txn');
 
         /*
          * Identifier - 1
@@ -399,11 +357,7 @@ export default class TransactionDecoder {
          * signature - 65
          * */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         // get the expiry date
         const expiryDateMil = dataView.getBigInt64(6, false); // Little-endian
@@ -428,13 +382,8 @@ export default class TransactionDecoder {
         };
     }
 
-    public decodeRemoveGuardianTxn(
-        txn: Uint8Array,
-        sender: Uint8Array,
-        nonce: number
-    ) {
-        if (txn.length != 71)
-            throw new Error('Invalid length for remove guardian txn');
+    public decodeRemoveGuardianTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
+        if (txn.length != 71) throw new Error('Invalid length for remove guardian txn');
 
         /*
          * Identifier - 1
@@ -453,11 +402,7 @@ export default class TransactionDecoder {
         };
     }
 
-    public decodeGuardianApprovalTxn(
-        txn: Uint8Array,
-        sender: Uint8Array,
-        nonce: number
-    ) {
+    public decodeGuardianApprovalTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
         /*
          * Identifier - 1
          * chain id - 1
@@ -504,9 +449,7 @@ export default class TransactionDecoder {
         nonce: number
     ) {
         if (txn.length < 18)
-            throw new Error(
-                'Invalid length for change early withdraw penalty proposal txn'
-            );
+            throw new Error('Invalid length for change early withdraw penalty proposal txn');
 
         /*
         Identifier - 1
@@ -520,21 +463,14 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
 
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
         const title = new TextDecoder().decode(title_b);
 
-        const withdraWalPenaltyTime = dataView.getBigInt64(
-            10 + titleSize,
-            false
-        );
+        const withdraWalPenaltyTime = dataView.getBigInt64(10 + titleSize, false);
         const withdrawalPenalty = dataView.getInt32(18 + titleSize, false);
 
         const description_b = new Uint8Array(
@@ -559,15 +495,8 @@ export default class TransactionDecoder {
         };
     }
 
-    public decodeChangeFeePerByteProposalTxn(
-        txn: Uint8Array,
-        sender: Uint8Array,
-        nonce: number
-    ) {
-        if (txn.length < 16)
-            throw new Error(
-                'Invalid length for change fee per byte proposal txn'
-            );
+    public decodeChangeFeePerByteProposalTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
+        if (txn.length < 16) throw new Error('Invalid length for change fee per byte proposal txn');
 
         /*
         Identifier - 1
@@ -580,11 +509,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
@@ -613,15 +538,8 @@ export default class TransactionDecoder {
         };
     }
 
-    public decodeChangeMaxBlockSizeProposalTxn(
-        txn: Uint8Array,
-        sender: Uint8Array,
-        nonce: number
-    ) {
-        if (txn.length < 10)
-            throw new Error(
-                'Invalid length for change fee per byte proposal txn'
-            );
+    public decodeChangeMaxBlockSizeProposalTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
+        if (txn.length < 10) throw new Error('Invalid length for change fee per byte proposal txn');
 
         /*
         Identifier - 1
@@ -634,11 +552,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
@@ -667,15 +581,8 @@ export default class TransactionDecoder {
         };
     }
 
-    public decodeChangeMaxTxnSizeProposalTxn(
-        txn: Uint8Array,
-        sender: Uint8Array,
-        nonce: number
-    ) {
-        if (txn.length < 10)
-            throw new Error(
-                'Invalid length for change fee per byte proposal txn'
-            );
+    public decodeChangeMaxTxnSizeProposalTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
+        if (txn.length < 10) throw new Error('Invalid length for change fee per byte proposal txn');
         /*
         Identifier - 1
         chain id - 1
@@ -687,11 +594,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
@@ -725,9 +628,7 @@ export default class TransactionDecoder {
         nonce: number
     ) {
         if (txn.length < 10)
-            throw new Error(
-                'Invalid length for change overall burn percentage proposal txn'
-            );
+            throw new Error('Invalid length for change overall burn percentage proposal txn');
 
         /*
         Identifier - 1
@@ -740,11 +641,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
@@ -778,10 +675,7 @@ export default class TransactionDecoder {
         sender: Uint8Array,
         nonce: number
     ) {
-        if (txn.length < 14)
-            throw new Error(
-                'Invalid length for change fee per byte proposal txn'
-            );
+        if (txn.length < 14) throw new Error('Invalid length for change fee per byte proposal txn');
 
         /*
         Identifier - 1
@@ -794,11 +688,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
@@ -832,10 +722,7 @@ export default class TransactionDecoder {
         sender: Uint8Array,
         nonce: number
     ) {
-        if (txn.length < 10)
-            throw new Error(
-                'Invalid length for change fee per byte proposal txn'
-            );
+        if (txn.length < 10) throw new Error('Invalid length for change fee per byte proposal txn');
 
         /*
         Identifier - 1
@@ -848,11 +735,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
@@ -885,10 +768,7 @@ export default class TransactionDecoder {
         sender: Uint8Array,
         nonce: number
     ) {
-        if (txn.length < 14)
-            throw new Error(
-                'Invalid length for change fee per byte proposal txn'
-            );
+        if (txn.length < 14) throw new Error('Invalid length for change fee per byte proposal txn');
 
         /*
         Identifier - 1
@@ -901,11 +781,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
@@ -940,9 +816,7 @@ export default class TransactionDecoder {
         nonce: number
     ) {
         if (txn.length < 18)
-            throw new Error(
-                'Invalid length for change vm id claiming fee proposal txn'
-            );
+            throw new Error('Invalid length for change vm id claiming fee proposal txn');
 
         /*
         Identifier - 1
@@ -955,11 +829,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
@@ -994,9 +864,7 @@ export default class TransactionDecoder {
         nonce: number
     ) {
         if (txn.length < 10)
-            throw new Error(
-                'Invalid length for change vm owner txn fee share proposal txn'
-            );
+            throw new Error('Invalid length for change vm owner txn fee share proposal txn');
         /*
         Identifier - 1
         chain id - 1
@@ -1008,11 +876,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
@@ -1041,15 +905,9 @@ export default class TransactionDecoder {
         };
     }
 
-    public decodeOtherProposalTxn(
-        txn: Uint8Array,
-        sender: Uint8Array,
-        nonce: number
-    ) {
+    public decodeOtherProposalTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
         if (txn.length < 6)
-            throw new Error(
-                'Invalid length for change vm owner txn fee share proposal txn'
-            );
+            throw new Error('Invalid length for change vm owner txn fee share proposal txn');
 
         /*
         Identifier - 1
@@ -1061,11 +919,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const titleSize = dataView.getInt32(6, false);
         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
@@ -1090,15 +944,9 @@ export default class TransactionDecoder {
         };
     }
 
-    public decodeVoteOnProposalTxn(
-        txn: Uint8Array,
-        sender: Uint8Array,
-        nonce: number
-    ) {
+    public decodeVoteOnProposalTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
         if (txn.length < 6)
-            throw new Error(
-                'Invalid length for change vm owner txn fee share proposal txn'
-            );
+            throw new Error('Invalid length for change vm owner txn fee share proposal txn');
 
         /*
         Identifier - 1
@@ -1109,11 +957,7 @@ export default class TransactionDecoder {
         signature - 65
         */
 
-        const dataView = new DataView(
-            txn.buffer,
-            txn.byteOffset,
-            txn.byteLength
-        );
+        const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
         const proposalHash = new Uint8Array(txn.buffer, 6, 32);
 
@@ -1142,9 +986,7 @@ export default class TransactionDecoder {
         txnData.set(new Uint8Array(txn.buffer, txn.byteOffset, txnData.length));
 
         // Copy the last 65 bytes of txn to signature
-        signature.set(
-            new Uint8Array(txn.buffer, txn.byteOffset + txnData.length, 65)
-        );
+        signature.set(new Uint8Array(txn.buffer, txn.byteOffset + txnData.length, 65));
 
         return TransactionDecoder.getSigner(txnData, signature);
     }
@@ -1166,10 +1008,7 @@ export default class TransactionDecoder {
         const messageHash = ethers.keccak256(txn);
 
         // Recover the address
-        const recoveredAddress = ethers.recoverAddress(
-            messageHash,
-            fullSignature
-        );
+        const recoveredAddress = ethers.recoverAddress(messageHash, fullSignature);
 
         return recoveredAddress;
     }

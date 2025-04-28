@@ -58,12 +58,11 @@ export class VidaTransactionSubscription {
                 }
 
                 if (effectiveLatestBlock >= currentBlock) {
-                    const transactions =
-                        await this.pwrjs.getVidaDataTransactions(
-                            currentBlock.toString(),
-                            effectiveLatestBlock.toString(),
-                            this.vmId.toString()
-                        );
+                    const transactions = await this.pwrjs.getVidaDataTransactions(
+                        currentBlock.toString(),
+                        effectiveLatestBlock.toString(),
+                        this.vmId
+                    );
 
                     transactions.forEach((transaction) => {
                         this.handler(transaction);
@@ -76,13 +75,8 @@ export class VidaTransactionSubscription {
                 // print trace
                 console.log(error.stack);
 
-                console.error(
-                    'Failed to fetch and process VM data transactions: ' +
-                        error.message
-                );
-                console.error(
-                    'Fetching and processing VM data transactions has stopped'
-                );
+                console.error('Failed to fetch and process VM data transactions: ' + error.message);
+                console.error('Fetching and processing VM data transactions has stopped');
                 break;
             } finally {
                 await this.sleep(this.pollInterval);
