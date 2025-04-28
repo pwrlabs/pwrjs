@@ -6,10 +6,18 @@ import PWRJS from './protocol/pwrjs';
 import TransactionDecoder from './protocol/transaction-decoder';
 import FalconTransactionBuilder from './protocol/falcon-transaction-builder';
 
+// export services
+import DeterministicSecureRandom from './services/secure-random.service';
+
+const services = {
+    DeterministicSecureRandom,
+};
+
 // todo: split into separate files add package.json for each module
 export {
     Falcon512Wallet,
     PWRJS,
     TransactionDecoder,
     FalconTransactionBuilder as TransactionBuilder,
+    services,
 };
