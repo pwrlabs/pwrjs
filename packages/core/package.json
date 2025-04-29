@@ -32,7 +32,7 @@
         }
     },
     "scripts": {
-        "build": "npm build:ts",
+        "build": "npm run build:ts",
         "dev": "npm build:ts --watch",
         "build:ts": "tsc -p tsconfig.json",
         "dev:browser": "vite",
