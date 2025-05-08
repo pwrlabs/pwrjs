@@ -1,6 +1,3 @@
-// third party
-import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
-
 // entities
 import { Block } from '../entities/block.entity';
 import { Validator } from '../entities/validator.entity';
@@ -16,6 +13,7 @@ import { Transaction_ID } from '../static/enums/transaction.enum';
 import { VmDataTransaction } from '../record/vmDataTransaction';
 import TransactionDecoder from './transaction-decoder';
 import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
+import { bytesToHex, hexToBytes } from '../utils';
 
 // shared
 import api from '../shared/api/api';

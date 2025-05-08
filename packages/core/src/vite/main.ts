@@ -1,4 +1,3 @@
-import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import FalconServiceBrowser from '../services/falcon/falcon-browser.service';
 import PWRFaconl512Wallet from '../wallet/falcon-512-wallet';
 import PWRJS from '../protocol/pwrjs';
@@ -7,6 +6,7 @@ import { hkdfSync } from 'crypto';
 import { getKernel } from 'falcon-sign';
 
 import { falconKeypair } from 'rust-falcon';
+import { bytesToHex, hexToBytes } from '../utils';
 
 // cheerpjInit();
 // const javaSign = {

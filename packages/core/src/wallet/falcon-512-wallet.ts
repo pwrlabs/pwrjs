@@ -1,6 +1,3 @@
-// 3rd party
-import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
-
 // protocol
 import PWRJS from '../protocol/pwrjs';
 
@@ -15,6 +12,7 @@ import CryptoService from '../services/crypto.service';
 import { TransactionResponse } from './wallet.types';
 import TransactionBuilder from '../protocol/falcon-transaction-builder';
 import { FalconKeyPair } from '../services/falcon/c';
+import { bytesToHex, hexToBytes } from 'src/utils';
 
 export default class Falcon512Wallet {
     public _addressHex: string;

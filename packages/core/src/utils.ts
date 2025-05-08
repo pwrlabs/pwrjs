@@ -1,3 +1,5 @@
+import { hexToBytes as oHexToBytes, bytesToHex as oBytesToHex } from '@noble/hashes/utils';
+
 // import BigNumber from 'bignumber.js';
 
 // // export function decodeHex(hex: string): Uint8Array {
@@ -76,3 +78,16 @@ export function decToBytes(decimalNumber: number, numberOfBytes: number) {
 
 //     return r;
 // }
+
+export function hexToBytes(hex: string): Uint8Array {
+    // Check if the hex string starts with '0x' and remove it if necessary
+    const hexString = hex.startsWith('0x') ? hex.slice(2) : hex;
+
+    // Convert the hex string to a byte array
+    return oHexToBytes(hexString);
+}
+
+export function bytesToHex(bytes: Uint8Array): string {
+    // Convert the byte array to a hex string
+    return oBytesToHex(bytes);
+}

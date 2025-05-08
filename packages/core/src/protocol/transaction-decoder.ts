@@ -3,8 +3,7 @@ import { Transaction } from '../record/transaction';
 import { Transaction_ID } from '../static/enums/transaction.enum';
 import PWRJS from './pwrjs';
 
-import { hexToBytes, bytesToHex } from '@noble/hashes/utils';
-
+import { hexToBytes, bytesToHex } from '../utils';
 // import ethUtil from 'ethereumjs-util';
 
 export default class TransactionDecoder {
