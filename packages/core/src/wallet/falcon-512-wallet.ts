@@ -184,13 +184,12 @@ export default class Falcon512Wallet {
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
-        const receiverHex = to.startsWith('0x') ? to.substring(2) : to;
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getTransferTransaction(
             BigInt(_feePerByte),
             this._addressBytes,
-            hexToBytes(receiverHex),
+            hexToBytes(to),
             amount,
             _nonce,
             _chainId,

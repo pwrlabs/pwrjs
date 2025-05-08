@@ -14,7 +14,8 @@ import * as bip39 from 'bip39';
 const path = require('path') as typeof import('path');
 const fs = require('fs') as typeof import('fs');
 
-const RPC = 'http://46.101.151.203:8085';
+// const RPC = 'http://46.101.151.203:8085';
+const RPC = 'https://pwrrpc.pwrlabs.io';
 
 // http://104.248.38.152:8085/giveTokensToValidatorNode/?validatorAddress=0x7D55953FF7572C32AF4EC31D2AD6E8E70F61F874
 
@@ -167,7 +168,7 @@ describe('wallet core', async () => {
         let to = '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
 
         try {
-            const amount = 100n;
+            const amount = 1200000000n;
             const tx = await falconWallet.transferPWR(to, amount);
             console.log('tx', tx);
             console.log('Txn hash:', tx.transactionHash);
