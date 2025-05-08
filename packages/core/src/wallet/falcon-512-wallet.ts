@@ -1254,7 +1254,7 @@ export default class Falcon512Wallet {
 
     private async signAndSend(transaction: Uint8Array): Promise<TransactionResponse> {
         const signedTransaction = await this.getSignedTransaction(transaction); //sign the hash of the data of txn
-        const txnHex = bytesToHex(signedTransaction); //
+        const txnHex = bytesToHex(signedTransaction);
         const txnHash = bytesToHex(HashService.hashTransaction(signedTransaction));
 
         const res = await this.s_httpSvc.broadcastTxn(this.pwrjs.getRpcNodeUrl(), txnHex, txnHash);
