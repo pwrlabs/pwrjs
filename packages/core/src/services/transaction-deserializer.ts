@@ -1,4 +1,4 @@
-import { Transactions, AnyFalconTransaction } from 'src/entities/falcon-transaction.entity'; // importa tus enums y tipos
+import { Transactions, AnyFalconTransaction } from '../entities/falcon-transaction.entity'; // importa tus enums y tipos
 
 export function deserializeTransaction(transaction: any): AnyFalconTransaction {
     switch (transaction.identifier) {
