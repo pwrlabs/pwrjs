@@ -15,20 +15,20 @@
     ],
     "exports": {
         ".": {
-            "import": "./lib/entry/index.js",
-            "types": "./lib/entry/types.d.ts"
+            "import": "./lib/exports/main.js",
+            "types": "./lib/exports/main.d.ts"
         },
         "./types": {
-            "import": "./lib/entry/types.js",
-            "types": "./lib/types.d.ts"
+            "import": "./lib/exports/types.js",
+            "types": "./lib/exports/types.d.ts"
         },
         "./util": {
-            "import": "./lib/entry/util.js",
-            "types": "./lib/util.d.ts"
+            "import": "./lib/exports/util.js",
+            "types": "./lib/exports/util.d.ts"
         },
         "./services": {
-            "import": "./lib/entry/services.js",
-            "types": "./lib/services.d.ts"
+            "import": "./lib/exports/services.js",
+            "types": "./lib/exports/services.d.ts"
         }
     },
     "scripts": {
