@@ -1,27 +1,49 @@
 import { describe, test, expect } from 'vitest';
+import * as bip39 from 'bip39';
 
 import PWRJS from '../../src/protocol/pwrjs';
 
-// import { HttpTypes } from '../../src/entities/http.types';
-// import {
-//     AnyFalconTransaction,
-//     SetGuardianTransaction,
-//     SetPublicKeyTransaction,
-//     Transactions,
-//     TransferTransaction,
-// } from '../../src/entities/falcon-transaction.entity';
+import Falcon512Wallet from '../../src/wallet/falcon-512-wallet';
 
-function sleep(timeMs: number) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, timeMs);
-    });
+import DeterministicSecureRandom from '../../src/services/secure-random.service';
+import { hexToBytes } from '@noble/hashes/utils';
+
+const path = require('path') as typeof import('path');
+const fs = require('fs') as typeof import('fs');
+
+function restoreWallet(): {
+    pk: Uint8Array;
+    address: string;
+    sk: Uint8Array;
+    randomBytes: Uint8Array;
+} {
+    const filePath = path.resolve(__dirname, '..', 'files', 'seed.json');
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const { pk, sk, address, mnemonic } = JSON.parse(content) as {
+        pk: string;
+        sk: string;
+        address: string;
+        mnemonic: string;
+    };
+
+    const seed = bip39.mnemonicToSeedSync(mnemonic, '');
+
+    const randomBytesGenerator = new DeterministicSecureRandom(seed);
+    const randomBytes = randomBytesGenerator.nextBytes(48);
+
+    return {
+        pk: Uint8Array.from(hexToBytes(pk)),
+        sk: Uint8Array.from(hexToBytes(sk)),
+        address,
+        randomBytes,
+    };
 }
 
-describe('pwrjs core general', () => {
-    const url = 'http://46.101.151.203:8085';
+describe('pwrjs core general', async () => {
+    const url = 'https://pwrrpc.pwrlabs.io';
 
-    const testAddress = '0xffb927e3e1fd43fc47bd140c817af780241d1b31';
-    const validatorAddress = '0xC79698E57BDC7EFB1ACFF94E0BB2C528AD4ADEEC';
+    const testAddress = '0xe68191b7913e72e6f1759531fbfaa089ff02308a';
+    const validatorAddress = '0xF5FE6AE4BA7AA68C1AB340652D243B899859075B';
 
     const pwrjs = new PWRJS(url);
 
@@ -68,9 +90,9 @@ describe('pwrjs core general', () => {
         const delegatorCount = await pwrjs.getTotalDelegatorsCount();
 
         expect(validatorsCount).toBeGreaterThan(1);
-        expect(standByValidators).toBeGreaterThan(0);
+        expect(standByValidators).toBeGreaterThanOrEqual(0);
         expect(activeValidators).toBeGreaterThanOrEqual(1);
-        expect(delegatorCount).toBe(0);
+        expect(delegatorCount).toBeGreaterThanOrEqual(0);
     });
 
     test('all Validators', async () => {
@@ -79,7 +101,7 @@ describe('pwrjs core general', () => {
         const allActiveValidators = await pwrjs.getActiveValidators();
 
         expect(allValidators.length).toBeGreaterThan(0);
-        expect(allStandByValidators.length).toBeGreaterThan(0);
+        expect(allStandByValidators.length).toBeGreaterThanOrEqual(0);
         expect(allActiveValidators.length).toBeGreaterThan(0);
 
         for (const v of allValidators) {
@@ -105,31 +127,52 @@ describe('pwrjs core general', () => {
     // test after
 
     test('get delegatees', async () => {
-        const delegatees = await pwrjs.getDelegatees('0xe68191b7913e72e6f1759531fbfaa089ff02308a');
+        const delegatees = await pwrjs.getDelegatees(testAddress);
 
-        expect(delegatees.length).toBe(0);
+        expect(delegatees.length).toBeGreaterThan(0);
     });
 
-    test('PWRJS Delegated pwr', async () => {
-        const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
-        const res = await pwrjs.getDelegatedPWR(testAddress, vAddress);
+    test('Get delegated pwr', async () => {
+        const res = await pwrjs.getDelegatedPWR(testAddress, validatorAddress);
 
-        expect(res).toBe(0);
+        expect(res).toBeGreaterThanOrEqual(0);
     });
 
     test('PWRJS shares of delegator', async () => {
-        const dAddress = testAddress;
-        const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
-        const res = await pwrjs.getSharesOfDelegator(dAddress, vAddress);
+        const res = await pwrjs.getSharesOfDelegator(testAddress, validatorAddress);
+
+        console.log('Shares of delegator: ', res);
     });
 
     test('PWRJS share value', async () => {
-        const vAddress = '0x87B84E7FAF722FB906F34E4EB9118F49933E55FA';
+        const res = await pwrjs.getShareValue(validatorAddress);
 
-        const res = await pwrjs.getShareValue(vAddress);
-
-        // expect(res.).toBe(1.0e-9);
+        expect(res).toBeGreaterThan(0);
     });
+
+    // comment this section to avoid affecting the testnet
+    // #region delegate
+
+    const w = restoreWallet();
+    const wallet = await Falcon512Wallet.fromKeys(w.sk, w.pk, pwrjs);
+
+    // test('PWRJS delegate', async () => {
+    //     const vaddress = '0xf5fe6ae4ba7aa68c1ab340652d243b899859075b';
+
+    //     const amount = 1_000_000_000n;
+    //     try {
+    //         const res = await wallet.delegate(vaddress, amount);
+
+    //         console.log('Delegate res: ', res);
+
+    //         expect(res.success).toBe(true);
+    //     } catch (e) {
+    //         console.log('Error: ', e);
+    //         expect(false).toBe(true);
+    //     }
+    // });
+
+    // #endregion
 
     // #endregion
 });

@@ -192,7 +192,7 @@ export namespace HttpTypes {
     };
 
     export type allDelegateesOfUserResponse = {
-        delegatees: {
+        validators: {
             votingPower: number;
             address: string;
             ip: string;

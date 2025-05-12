@@ -428,7 +428,7 @@ export default class PWRJS {
         const url = api.rpc.validators.delegateesOfUser.replace(':userAddress', address);
         const res = await this.httpSvc.get<HttpTypes.allDelegateesOfUserResponse>(url);
 
-        const validatorsData = res.delegatees;
+        const validatorsData = res.validators;
         const validatorsList = [];
 
         for (let i = 0; i < validatorsData.length; i++) {

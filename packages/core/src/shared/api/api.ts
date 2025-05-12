@@ -72,7 +72,7 @@ const api = {
             delegatedPwr:
                 '/validator/delegator/delegatedPWROfAddress?userAddress=:userAddress&validatorAddress=:validatorAddress',
             sharesOfDelegator:
-                '/validator/delegator/sharesOfAddress?userAddress=:userAddress&validatorAddress=validatorAddress',
+                '/validator/delegator/sharesOfAddress?userAddress=:userAddress&validatorAddress=:validatorAddress',
             shareValue: '/validator/shareValue?validatorAddress=:validatorAddress',
         },
 
