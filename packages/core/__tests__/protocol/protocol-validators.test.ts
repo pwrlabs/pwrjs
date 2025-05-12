@@ -124,8 +124,6 @@ describe('pwrjs core general', async () => {
         expect(validator.address.toLowerCase()).toBe(validatorAddress.toLowerCase());
     });
 
-    // test after
-
     test('get delegatees', async () => {
         const delegatees = await pwrjs.getDelegatees(testAddress);
 
