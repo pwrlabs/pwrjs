@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        // "module": "NodeNext",
+        // "target": "ESNext",
+        // "moduleResolution": "nodenext",
+        "outDir": "./lib",
+        "baseUrl": "."
+    },
+    "include": ["./src/**/*"],
+    "exclude": ["./src/vite/**/*"]
+}

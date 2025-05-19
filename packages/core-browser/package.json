@@ -1,0 +1,35 @@
+{
+    "name": "core-browser",
+    "version": "0.8.19",
+    "description": "PWRJS is a javascript library for interacting with the PWR network",
+    "keywords": [
+        "web3",
+        "cryptocurrency",
+        "tokens",
+        "pwr",
+        "pwrchain",
+        "blockchain",
+        "secure"
+    ],
+    "author": "pwrlabs <devservices@pwrlabs.io>",
+    "homepage": "https://www.pwrlabs.io",
+    "license": "ISC",
+    "main": "lib/core-browser.js",
+    "directories": {
+        "lib": "lib",
+        "test": "__tests__"
+    },
+    "files": [
+        "lib"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pwrlabs/pwrjs.git"
+    },
+    "scripts": {
+        "test": "node ./__tests__/core-browser.test.js"
+    },
+    "bugs": {
+        "url": "https://github.com/pwrlabs/pwrjs/issues"
+    }
+}
