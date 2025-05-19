@@ -1,5 +1,5 @@
 import { Transaction_ID } from '../static/enums/transaction.enum';
-import { bigintToBytesDynamic, decToBytes } from '../utils';
+import { bigintToBytesDynamic } from '../utils';
 import { BigNumber } from 'bignumber.js';
 import { bytesToHex } from '../utils';
 
@@ -144,17 +144,18 @@ export default class FalconTransactionBuilder {
             sender,
         );
 
-        const newIpBytes = new Uint8Array(Buffer.from(newIp, 'utf-8'));
-        const newIpBytesLength = decToBytes(newIpBytes.length, 2);
+        const enconder = new TextEncoder();
+        const newIpBytes = enconder.encode(newIp);
 
-        const buffer = new Uint8Array(base.length + 2 + newIpBytes.length);
+        const totalLength = base.length + 2 + newIpBytes.length;
+        const buffer = new Uint8Array(totalLength);
         const dataView = new DataView(buffer.buffer);
         let offset = 0;
 
         buffer.set(base, offset);
         offset += base.length;
 
-        buffer.set(newIpBytesLength, offset);
+        dataView.setUint16(offset, newIpBytes.length, false);
         offset += 2;
 
         buffer.set(newIpBytes, offset);

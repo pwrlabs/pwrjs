@@ -14,11 +14,11 @@ import TransactionBuilder from '../protocol/falcon-transaction-builder';
 import { FalconKeyPair } from '../services/falcon/c';
 import { bytesToHex, hexToBytes } from '../utils';
 
-export default class Falcon512Wallet {
+export default abstract class AbstractWallet {
     public _addressHex: string;
-    private _addressBytes: Uint8Array;
-    private _publicKey: Uint8Array;
-    private _privateKey: Uint8Array;
+    protected _addressBytes: Uint8Array;
+    protected _publicKey: Uint8Array;
+    protected _privateKey: Uint8Array;
 
     private keypair: FalconKeyPair;
 
@@ -44,29 +44,37 @@ export default class Falcon512Wallet {
         this.pwrjs = pwr;
     }
 
-    static async new(pwr: PWRJS): Promise<Falcon512Wallet> {
-        if (typeof window === 'undefined') {
-            // node
-            const m = await import('../services/falcon/falcon-node.service');
-            const keys = await m.default.generateKeyPair();
-            return Falcon512Wallet.fromKeys(keys.sk, keys.pk, pwr);
-        } else {
-            // browser
-            const m = await import('../services/falcon/falcon-browser.service');
-            const keys = await m.default.generateKeyPair();
-            return Falcon512Wallet.fromKeys(keys.sk, keys.pk, pwr);
-        }
+    static new(pwr: PWRJS): Promise<AbstractWallet> {
+        throw new Error('Not implemented. Please implement in subclass.');
     }
 
-    static fromKeys(privateKey: Uint8Array, publicKey: Uint8Array, pwr: PWRJS): Falcon512Wallet {
-        return new Falcon512Wallet(privateKey, publicKey, pwr);
+    static fromKeys(privateKey: Uint8Array, publicKey: Uint8Array, pwr: PWRJS): AbstractWallet {
+        throw new Error('Not implemented. Please implement in subclass.');
     }
+
+    // static async new(pwr: PWRJS): Promise<Falcon512Wallet> {
+    //     if (typeof window === 'undefined') {
+    //         // node
+    //         const m = await import('../services/falcon/falcon-node.service');
+    //         const keys = await m.default.generateKeyPair();
+    //         return Falcon512Wallet.fromKeys(keys.sk, keys.pk, pwr);
+    //     } else {
+    //         // browser
+    //         const m = await import('../services/falcon/falcon-browser.service');
+    //         const keys = await m.default.generateKeyPair();
+    //         return Falcon512Wallet.fromKeys(keys.sk, keys.pk, pwr);
+    //     }
+    // }
+
+    // static fromKeys(privateKey: Uint8Array, publicKey: Uint8Array, pwr: PWRJS): AbstractWallet {
+    //     return new AbstractWallet(privateKey, publicKey, pwr);
+    // }
 
     // #endregion
 
     // #region wallet props
 
-    getKeyPair(): FalconKeyPair {
+    public getKeyPair(): FalconKeyPair {
         return this.keypair;
     }
 
@@ -103,17 +111,19 @@ export default class Falcon512Wallet {
         return res;
     }
 
-    async sign(data: Uint8Array): Promise<Uint8Array> {
-        if (typeof window === 'undefined') {
-            // node
-            const m = await import('../services/falcon/falcon-node.service');
-            return m.default.sign(data, this._privateKey);
-        } else {
-            // browser
-            const m = await import('../services/falcon/falcon-browser.service');
-            return m.default.sign(data, this._privateKey);
-        }
-    }
+    // async sign(data: Uint8Array): Promise<Uint8Array> {
+    //     if (typeof window === 'undefined') {
+    //         // node
+    //         const m = await import('../services/falcon/falcon-node.service');
+    //         return m.default.sign(data, this._privateKey);
+    //     } else {
+    //         // browser
+    //         const m = await import('../services/falcon/falcon-browser.service');
+    //         return m.default.sign(data, this._privateKey);
+    //     }
+    // }
+
+    abstract sign(data: Uint8Array): Promise<Uint8Array>;
 
     async getSignedTransaction(transaction: Uint8Array): Promise<Uint8Array> {
         const txnHash = HashService.hashTransaction(transaction);
@@ -136,17 +146,19 @@ export default class Falcon512Wallet {
         return full;
     }
 
-    async verifySignature(message: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        if (typeof window === 'undefined') {
-            // node
-            const m = await import('../services/falcon/falcon-node.service');
-            return m.default.verify(message, this._publicKey, signature);
-        } else {
-            // browser
-            const m = await import('../services/falcon/falcon-browser.service');
-            return m.default.verify(message, this._publicKey, signature);
-        }
-    }
+    abstract verifySignature(message: Uint8Array, signature: Uint8Array): Promise<boolean>;
+
+    // async verifySignature(message: Uint8Array, signature: Uint8Array): Promise<boolean> {
+    //     if (typeof window === 'undefined') {
+    //         // node
+    //         const m = await import('../services/falcon/falcon-node.service');
+    //         return m.default.verify(message, this._publicKey, signature);
+    //     } else {
+    //         // browser
+    //         const m = await import('../services/falcon/falcon-browser.service');
+    //         return m.default.verify(message, this._publicKey, signature);
+    //     }
+    // }
 
     // #endregion
 
@@ -1163,7 +1175,7 @@ export default class Falcon512Wallet {
         }
     }
 
-    static async loadWalletNode(pwr: PWRJS, filePath: string): Promise<Falcon512Wallet> {
+    static async loadWalletNode(pwr: PWRJS, filePath: string): Promise<AbstractWallet> {
         try {
             if (typeof window !== 'undefined')
                 throw new Error(
@@ -1199,7 +1211,9 @@ export default class Falcon512Wallet {
 
             const privateKeyBytes = data.slice(offset, offset + secLength);
 
-            return new Falcon512Wallet(privateKeyBytes, publicKeyBytes, pwr);
+            return AbstractWallet.fromKeys(privateKeyBytes, publicKeyBytes, pwr);
+
+            // return new AbstractWallet(privateKeyBytes, publicKeyBytes, pwr);
             // } else {
             //     throw new Error('This method cannot be called on the client-side (browser)');
             // }
@@ -1225,7 +1239,8 @@ export default class Falcon512Wallet {
 
             const { pk, sk } = BytesService.arrayBufferToKeypair(decrypted);
 
-            return new Falcon512Wallet(sk, pk, pwr);
+            // return new AbstractWallet(sk, pk, pwr);
+            return AbstractWallet.fromKeys(sk, pk, pwr);
         } catch (e) {
             console.error(e);
             throw new Error('Failed to load wallet');

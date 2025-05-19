@@ -5,7 +5,7 @@
     "author": "pwrlabs <devservices@pwrlabs.io>",
     "homepage": "",
     "license": "ISC",
-    "main": "lib/index.js",
+    "main": "./lib/exports/main.js",
     "directories": {
         "lib": "lib",
         "test": "__tests__"
@@ -15,20 +15,24 @@
     ],
     "exports": {
         ".": {
-            "import": "./lib/exports/main.js",
-            "types": "./lib/exports/main.d.ts"
+            "import": "./lib/exports/main/index.js",
+            "types": "./lib/exports/main/index.d.ts"
         },
         "./types": {
-            "import": "./lib/exports/types.js",
-            "types": "./lib/exports/types.d.ts"
+            "import": "./lib/exports/types/index.js",
+            "types": "./lib/exports/types/index.d.ts"
         },
         "./util": {
-            "import": "./lib/exports/util.js",
-            "types": "./lib/exports/util.d.ts"
+            "import": "./lib/exports/util/index.js",
+            "types": "./lib/exports/util/index.d.ts"
         },
         "./services": {
-            "import": "./lib/exports/services.js",
-            "types": "./lib/exports/services.d.ts"
+            "import": "./lib/exports/services/index.js",
+            "types": "./lib/exports/services/index.d.ts"
+        },
+        "./wallet": {
+            "import": "./lib/exports/wallet/index.js",
+            "types": "./lib/exports/wallet/index.d.ts"
         }
     },
     "scripts": {

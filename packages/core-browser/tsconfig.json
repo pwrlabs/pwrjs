@@ -5,7 +5,14 @@
         // "target": "ESNext",
         // "moduleResolution": "nodenext",
         "outDir": "./lib",
-        "baseUrl": "."
+        "baseUrl": ".",
+        "paths": {
+            "@pwrjs/core-beta": ["../core/lib/exports/main"], // or .js if .ts is not available
+            "@pwrjs/core-beta/services": ["../core/lib/exports/services"], // or .js if .ts is not available
+            "@pwrjs/core-beta/types": ["../core/lib/exports/types"],
+            "@pwrjs/core-beta/utils": ["../core/lib/exports/utils"],
+            "@pwrjs/core-beta/wallet": ["../core/lib/exports/wallet"]
+        }
     },
     "include": ["./src/**/*"],
     "exclude": ["./src/vite/**/*"]

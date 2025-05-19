@@ -1,5 +1,5 @@
 {
-    "name": "core-browser",
+    "name": "@pwrjs/core-browser",
     "version": "0.8.19",
     "description": "PWRJS is a javascript library for interacting with the PWR network",
     "keywords": [
@@ -14,22 +14,54 @@
     "author": "pwrlabs <devservices@pwrlabs.io>",
     "homepage": "https://www.pwrlabs.io",
     "license": "ISC",
-    "main": "lib/core-browser.js",
+    "main": "./lib/exports/main.js",
     "directories": {
-        "lib": "lib",
-        "test": "__tests__"
+        "lib": "lib"
     },
     "files": [
         "lib"
     ],
+    "exports": {
+        ".": {
+            "import": "./lib/exports/main/index.js",
+            "types": "./lib/exports/main/index.d.ts"
+        },
+        "./types": {
+            "import": "./lib/exports/types/index.js",
+            "types": "./lib/exports/types/index.d.ts"
+        },
+        "./util": {
+            "import": "./lib/exports/util/index.js",
+            "types": "./lib/exports/util/index.d.ts"
+        },
+        "./services": {
+            "import": "./lib/exports/services/index.js",
+            "types": "./lib/exports/services/index.d.ts"
+        },
+        "./wallet": {
+            "import": "./lib/exports/wallet/index.js",
+            "types": "./lib/exports/wallet/index.d.ts"
+        }
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/pwrlabs/pwrjs.git"
     },
     "scripts": {
-        "test": "node ./__tests__/core-browser.test.js"
+        "build": "npm run build:ts",
+        "dev": "npm build:ts --watch",
+        "build:ts": "tsc -p tsconfig.json",
+        "dev:browser": "vite",
+        "test:browser": "npx playwright test"
+    },
+    "dependencies": {
+        "@dashlane/pqc-sign-falcon-512-browser": "^1.0.0",
+        "@pwrjs/core-beta": "^0.8.19"
     },
     "bugs": {
         "url": "https://github.com/pwrlabs/pwrjs/issues"
+    },
+    "devDependencies": {
+        "rust-falcon": "^0.2.6"
     }
 }
