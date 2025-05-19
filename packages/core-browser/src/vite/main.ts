@@ -1,6 +1,7 @@
-import FalconServiceBrowser from '../services/falcon/falcon-browser.service';
-import PWRFaconl512Wallet from '../wallet/falcon-512-wallet';
-import PWRJS from '../protocol/pwrjs';
+import FalconServiceBrowser from '../services/falcon-browser.service';
+import PWRFaconl512Wallet from '../wallet/falcon-wallet';
+import { PWRJS } from '@pwrjs/core-beta';
+
 import { hkdfSync } from 'crypto';
 
 import { getKernel } from 'falcon-sign';

@@ -1,7 +1,7 @@
 {
     "name": "pwrlabs-sdk",
     "description": "PWR Labs SDK workspace",
-    "private": false,
+    "private": true,
     "scripts": {
         "build": "npm run build",
         "dev": "npm run dev",
@@ -17,5 +17,8 @@
         "eslint-plugin-promise": "^6.1.1",
         "lerna": "^7.4.1",
         "typescript": "^5.2.2"
-    }
+    },
+    "workspaces": [
+        "packages/*"
+    ]
 }
