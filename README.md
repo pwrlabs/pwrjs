@@ -2,19 +2,21 @@
 
 PWRJS is a JavaScript library for interacting with the PWR blobkchain. It provides an interface for wallet management and sending transactions on PWR.
 
+
 <div align="center">
 <!-- markdownlint-restore -->
 
 [![Pull Requests welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg?style=flat-square)](https://github.com/pwrlabs/pwrjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
 <a href="https://www.npmjs.com/package/@pwrjs/core">
-  <img src='https://img.shields.io/npm/v/@pwrjs/core' />
+<img src='https://img.shields.io/npm/v/@pwrjs/core' />
 </a>
 <a href="https://www.npmjs.com/package/@pwrjs/core">
-  <img src='https://img.shields.io/npm/dt/@pwrjs/core?color=blueviolet' />
+<img src='https://img.shields.io/npm/dt/@pwrjs/core?color=blueviolet' />
 </a>
 <a href="https://github.com/pwrlabs/pwrjs/blob/main/LICENSE/">
-  <img src="https://img.shields.io/badge/license-MIT-black">
+<img src="https://img.shields.io/badge/license-MIT-black">
 </a>
+
 <!-- <a href="https://github.com/pwrlabs/pwrjs/stargazers">
   <img src='https://img.shields.io/github/stars/pwrlabs/pwrjs?color=yellow' />
 </a> -->
@@ -68,7 +70,7 @@ const pwrjs = new PWRJS('https://pwrrpc.pwrlabs.io/');
 **Generate a new wallet:**
 
 ```ts
-const privateKey = "0xac0974bec...f80";
+const privateKey = '0xac0974bec...f80';
 const wallet = new PWRWallet(privateKey);
 ```
 
@@ -101,13 +103,13 @@ If the transaction was a success, you can retrieive the transaction hash, if it 
 
 ```ts
 try {
-  const r = await wallet.transferPWR('recipientAddress', 1000);
+    const r = await wallet.transferPWR('recipientAddress', 1000);
 
-  if (r.status == true) {
-    console.log('Transcation Hash: ' + r.data);
-  }
+    if (r.status == true) {
+        console.log('Transcation Hash: ' + r.data);
+    }
 } catch (e) {
-  console.log(e);
+    console.log(e);
 }
 ```
 
@@ -118,12 +120,12 @@ const vmId = 123;
 const dataBytes = Buffer.from('Hello World!');
 
 try {
-  const r = await wallet.sendVMDataTxn(vmId, dataBytes);
-  if (r.status == true) {
-    console.log('Transcation Hash: ' + r.data);
-  }
+    const r = await wallet.sendVMDataTxn(vmId, dataBytes);
+    if (r.status == true) {
+        console.log('Transcation Hash: ' + r.data);
+    }
 } catch (e) {
-  console.log(e);
+    console.log(e);
 }
 ```
 
@@ -166,7 +168,7 @@ const nonce = await PWRJS.getNonceOfAddress('0x...');
 Broadcasts a signed transaction to the network.
 
 ```ts
-const signedTransaction = "...";
+const signedTransaction = '...';
 const broadcast = await PWRJS.broadcastTxn(signedTransaction);
 ```
 
