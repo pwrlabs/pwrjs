@@ -1,1 +1,3 @@
-export * from '@pwrjs/core-beta';
+import { PWRJS } from '@pwrjs/core-beta';
+
+export { PWRJS };

@@ -44,14 +44,11 @@
         "test:browser": "npx playwright test"
     },
     "dependencies": {
-        "@dashlane/pqc-sign-falcon-512-browser": "^1.0.0",
-        "@dashlane/pqc-sign-falcon-512-node": "^1.0.0",
         "@noble/hashes": "^1.7.1",
         "axios": "^1.6.7",
         "bignumber.js": "^9.1.2",
         "ethereumjs-wallet": "^1.0.2",
-        "ethers": "^6.12.1",
-        "secp256k1": "^5.0.0"
+        "ethers": "^6.12.1"
     },
     "devDependencies": {
         "@playwright/test": "^1.51.0",

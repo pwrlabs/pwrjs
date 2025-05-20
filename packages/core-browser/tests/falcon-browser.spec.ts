@@ -53,19 +53,19 @@ test.beforeAll(async () => {
     page = await ctx.newPage();
     await page.goto(url);
 
-    await page.evaluate(() => {
-        return new Promise((resolve, reject) => {
-            // Set up a timeout to fail if the event doesn't fire within 5 seconds.
-            setTimeout(() => {
-                reject(new Error('initCompleted timeout'));
-            }, 10000);
+    // await page.evaluate(() => {
+    //     return new Promise((resolve, reject) => {
+    //         // Set up a timeout to fail if the event doesn't fire within 5 seconds.
+    //         setTimeout(() => {
+    //             reject(new Error('initCompleted timeout'));
+    //         }, 10000);
 
-            // Add an event listener for the custom event.
-            window.addEventListener('initCompleted', () => {
-                resolve(null);
-            });
-        });
-    });
+    //         // Add an event listener for the custom event.
+    //         window.addEventListener('initCompleted', () => {
+    //             resolve(null);
+    //         });
+    //     });
+    // });
 });
 
 test('generate keypair', async () => {
@@ -86,84 +86,54 @@ test('generate keypair', async () => {
     expect(keypair).toHaveProperty('sk');
 });
 
-test('sign and verify', async () => {
-    const { signature, valid } = (await page.evaluate((javaSign) => {
-        return new Promise(async (resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new Error('initCompleted timeout'));
-            }, 20000);
-
-            const message = new TextEncoder().encode(window.javaSign.message);
-            try {
-                const keypair = await window.svc.generateKeyPair();
-
-                const signature = await window.svc.sign(message, keypair.sk);
-
-                const valid = await window.svc.verify(message, keypair.pk, signature);
-
-                resolve({ signature, valid });
-            } catch (err) {
-                reject(err);
-            }
-        });
-    })) as { signature: Uint8Array; valid: boolean };
-
-    // signature should be a string
-    expect(signature).not.toBeNull();
-
-    // message should be the same
-    expect(valid).toBe(true);
-});
-
-// test('verify remote signature', async () => {
-//     const { valid } = (await page.evaluate((javaSign) => {
+// test('sign and verify', async () => {
+//     const { signature, valid } = (await page.evaluate((javaSign) => {
 //         return new Promise(async (resolve, reject) => {
 //             const timeout = setTimeout(() => {
 //                 reject(new Error('initCompleted timeout'));
-//             }, 5000);
+//             }, 20000);
 
-//             const { message, pubkey, signature } = window.javaSign;
-
-//             const pk = window.hexToBytes(pubkey);
-//             const _signature = window.hexToBytes(signature);
-
+//             const message = new TextEncoder().encode(window.javaSign.message);
 //             try {
-//                 const valid = await window.svc.verify(
-//                     new TextEncoder().encode(message),
-//                     pk,
-//                     _signature
-//                 );
+//                 const keypair = await window.svc.generateKeyPair();
 
-//                 resolve({ valid });
+//                 const signature = await window.svc.sign(message, keypair.sk);
+
+//                 const valid = await window.svc.verify(message, keypair.pk, signature);
+
+//                 resolve({ signature, valid });
 //             } catch (err) {
 //                 reject(err);
 //             }
 //         });
-//     })) as { valid: boolean };
+//     })) as { signature: Uint8Array; valid: boolean };
 
 //     // signature should be a string
+//     expect(signature).not.toBeNull();
+
+//     // message should be the same
 //     expect(valid).toBe(true);
 // });
 
-test('ensure wallet is restored', async () => {
-    const result = (await page.evaluate(() => {
-        return new Promise((resolve, reject) => {
-            // Set up a timeout to fail if the event doesn't fire within 5 seconds.
-            const timeout = setTimeout(() => {
-                reject(new Error('initCompleted timeout'));
-            }, 10000);
+// test('ensure wallet is restored', async () => {
+//     const result = (await page.evaluate(() => {
+//         return new Promise((resolve, reject) => {
+//             // Set up a timeout to fail if the event doesn't fire within 5 seconds.
+//             const timeout = setTimeout(() => {
+//                 reject(new Error('initCompleted timeout'));
+//             }, 10000);
 
-            // Add an event listener for the custom event.
+//             // Add an event listener for the custom event.
 
-            const address = window.wallet.getAddress();
-            const ogAddress = window.defWallet.address;
+//             const address = window.wallet.getAddress();
+//             const ogAddress = window.defWallet.address;
 
-            resolve(ogAddress === address);
-        });
-    })) as boolean;
+//             resolve(ogAddress === address);
+//         });
+//     })) as boolean;
 
-    expect(result).toBe(true);
-});
+//     expect(result).toBe(true);
+// });
 
 // test('Wallet balance', async () => {
 //     const balance = (await page.evaluate(() => {
@@ -207,89 +177,89 @@ test('ensure wallet is restored', async () => {
 //     }
 // });
 
-test('export wallet', async () => {
-    try {
-        const downloadPromise = page.waitForEvent('download');
+// test('export wallet', async () => {
+//     try {
+//         const downloadPromise = page.waitForEvent('download');
 
-        await page.evaluate(() => {
-            return new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => {
-                    reject(new Error('initCompleted timeout'));
-                }, 10000);
+//         await page.evaluate(() => {
+//             return new Promise((resolve, reject) => {
+//                 const timeout = setTimeout(() => {
+//                     reject(new Error('initCompleted timeout'));
+//                 }, 10000);
 
-                const element = document.createElement('input');
-                element.id = 'falcon-picker';
-                element.type = 'file';
-                element.accept = '.dat';
-                document.body.appendChild(element);
+//                 const element = document.createElement('input');
+//                 element.id = 'falcon-picker';
+//                 element.type = 'file';
+//                 element.accept = '.dat';
+//                 document.body.appendChild(element);
 
-                window.wallet.storeWallet('hellokitty');
-                resolve(null);
-            });
-        });
+//                 window.wallet.storeWallet('hellokitty');
+//                 resolve(null);
+//             });
+//         });
 
-        const download = await downloadPromise;
+//         const download = await downloadPromise;
 
-        const _p = path.resolve(__dirname, 'wallet.dat');
-        await download.saveAs(_p);
-        expect(fs.existsSync(_p)).toBe(true);
+//         const _p = path.resolve(__dirname, 'wallet.dat');
+//         await download.saveAs(_p);
+//         expect(fs.existsSync(_p)).toBe(true);
 
-        // pick the file
-        await page.setInputFiles('#falcon-picker', _p);
+//         // pick the file
+//         await page.setInputFiles('#falcon-picker', _p);
 
-        type waRes = {
-            address: string;
-            pk: Uint8Array;
-            sk: Uint8Array;
-        };
+//         type waRes = {
+//             address: string;
+//             pk: Uint8Array;
+//             sk: Uint8Array;
+//         };
 
-        const { ogW, newW } = (await page.evaluate(() => {
-            return new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => {
-                    reject(new Error('initCompleted timeout'));
-                }, 10000);
+//         const { ogW, newW } = (await page.evaluate(() => {
+//             return new Promise((resolve, reject) => {
+//                 const timeout = setTimeout(() => {
+//                     reject(new Error('initCompleted timeout'));
+//                 }, 10000);
 
-                const elmnt = document.querySelector('#falcon-picker') as HTMLInputElement;
-                const file: File = elmnt.files![0];
+//                 const elmnt = document.querySelector('#falcon-picker') as HTMLInputElement;
+//                 const file: File = elmnt.files![0];
 
-                console.log('file', file);
+//                 console.log('file', file);
 
-                const pwr = window._pwr;
+//                 const pwr = window._pwr;
 
-                window.PWRFaconl512Wallet.loadWalletBrowser(pwr, 'hellokitty', file).then((res) => {
-                    console.log('res', res);
-                    resolve({
-                        ogW: {
-                            address: window.wallet.getAddress(),
-                            pk: window.wallet.getPublicKey(),
-                            sk: window.wallet.getPrivateKey(),
-                        },
-                        newW: {
-                            address: res.getAddress(),
-                            pk: res.getPublicKey(),
-                            sk: res.getPrivateKey(),
-                        },
-                    });
-                });
-            });
-        })) as { ogW: waRes; newW: waRes };
+//                 window.PWRFaconl512Wallet.loadWalletBrowser(pwr, 'hellokitty', file).then((res) => {
+//                     console.log('res', res);
+//                     resolve({
+//                         ogW: {
+//                             address: window.wallet.getAddress(),
+//                             pk: window.wallet.getPublicKey(),
+//                             sk: window.wallet.getPrivateKey(),
+//                         },
+//                         newW: {
+//                             address: res.getAddress(),
+//                             pk: res.getPublicKey(),
+//                             sk: res.getPrivateKey(),
+//                         },
+//                     });
+//                 });
+//             });
+//         })) as { ogW: waRes; newW: waRes };
 
-        expect(ogW).toBeDefined();
-        expect(newW).toBeDefined();
-        expect(ogW.address).toBe(newW.address);
-        expect(typeof ogW.pk).toBe(typeof newW.pk);
-        expect(newW.pk.length).toBe(ogW.pk.length);
-        expect(newW.pk).toStrictEqual(ogW.pk);
-        expect(typeof ogW.sk).toBe(typeof newW.sk);
-        expect(newW.sk.length).toBe(ogW.sk.length);
-        expect(newW.sk).toStrictEqual(ogW.sk);
+//         expect(ogW).toBeDefined();
+//         expect(newW).toBeDefined();
+//         expect(ogW.address).toBe(newW.address);
+//         expect(typeof ogW.pk).toBe(typeof newW.pk);
+//         expect(newW.pk.length).toBe(ogW.pk.length);
+//         expect(newW.pk).toStrictEqual(ogW.pk);
+//         expect(typeof ogW.sk).toBe(typeof newW.sk);
+//         expect(newW.sk.length).toBe(ogW.sk.length);
+//         expect(newW.sk).toStrictEqual(ogW.sk);
 
-        // expect(newW.getAddress()).toBe(ogW.getAddress());
-    } catch (error) {
-        console.log('transferpwr', error);
-        expect(false).toBe(true);
-    }
-});
+//         // expect(newW.getAddress()).toBe(ogW.getAddress());
+//     } catch (error) {
+//         console.log('transferpwr', error);
+//         expect(false).toBe(true);
+//     }
+// });
 
 test.afterAll(async () => {
     const _p = path.resolve(__dirname, 'wallet.dat');

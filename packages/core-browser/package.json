@@ -1,69 +1,73 @@
 {
-  "name": "@pwrjs/core-browser",
-  "version": "0.8.20",
-  "description": "PWRJS is a javascript library for interacting with the PWR network",
-  "keywords": [
-    "web3",
-    "cryptocurrency",
-    "tokens",
-    "pwr",
-    "pwrchain",
-    "blockchain",
-    "secure"
-  ],
-  "author": "pwrlabs <devservices@pwrlabs.io>",
-  "homepage": "https://www.pwrlabs.io",
-  "license": "ISC",
-  "main": "./lib/exports/main.js",
-  "directories": {
-    "lib": "lib"
-  },
-  "files": [
-    "lib"
-  ],
-  "exports": {
-    ".": {
-      "import": "./lib/exports/main/index.js",
-      "types": "./lib/exports/main/index.d.ts"
+    "name": "@pwrjs/core-browser",
+    "version": "0.8.20",
+    "description": "PWRJS is a javascript library for interacting with the PWR network",
+    "keywords": [
+        "web3",
+        "cryptocurrency",
+        "tokens",
+        "pwr",
+        "pwrchain",
+        "blockchain",
+        "secure"
+    ],
+    "author": "pwrlabs <devservices@pwrlabs.io>",
+    "homepage": "https://www.pwrlabs.io",
+    "license": "ISC",
+    "main": "./lib/exports/main.js",
+    "directories": {
+        "lib": "lib"
     },
-    "./types": {
-      "import": "./lib/exports/types/index.js",
-      "types": "./lib/exports/types/index.d.ts"
+    "files": [
+        "lib"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/exports/main/index.js",
+            "types": "./lib/exports/main/index.d.ts"
+        },
+        "./types": {
+            "import": "./lib/exports/types/index.js",
+            "types": "./lib/exports/types/index.d.ts"
+        },
+        "./util": {
+            "import": "./lib/exports/util/index.js",
+            "types": "./lib/exports/util/index.d.ts"
+        },
+        "./services": {
+            "import": "./lib/exports/services/index.js",
+            "types": "./lib/exports/services/index.d.ts"
+        },
+        "./wallet": {
+            "import": "./lib/exports/wallet/index.js",
+            "types": "./lib/exports/wallet/index.d.ts"
+        }
     },
-    "./util": {
-      "import": "./lib/exports/util/index.js",
-      "types": "./lib/exports/util/index.d.ts"
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pwrlabs/pwrjs.git"
     },
-    "./services": {
-      "import": "./lib/exports/services/index.js",
-      "types": "./lib/exports/services/index.d.ts"
+    "scripts": {
+        "build": "npm run build:ts",
+        "dev": "npm build:ts --watch",
+        "build:ts": "tsc -p tsconfig.json",
+        "dev:browser": "vite",
+        "test": "npx playwright test"
     },
-    "./wallet": {
-      "import": "./lib/exports/wallet/index.js",
-      "types": "./lib/exports/wallet/index.d.ts"
+    "dependencies": {
+        "@dashlane/pqc-sign-falcon-512-browser": "^1.0.0",
+        "@pwrjs/core-beta": "^0.8.20"
+    },
+    "bugs": {
+        "url": "https://github.com/pwrlabs/pwrjs/issues"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.52.0",
+        "@types/node": "^22.15.19",
+        "rust-falcon": "^0.2.6",
+        "vite": "^6.3.5"
+    },
+    "publishConfig": {
+        "access": "public"
     }
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pwrlabs/pwrjs.git"
-  },
-  "scripts": {
-    "build": "npm run build:ts",
-    "dev": "npm build:ts --watch",
-    "build:ts": "tsc -p tsconfig.json",
-    "dev:browser": "vite",
-    "test:browser": "npx playwright test"
-  },
-  "dependencies": {
-    "@dashlane/pqc-sign-falcon-512-browser": "^1.0.0",
-    "@pwrjs/core-beta": "^0.8.20"
-  },
-  "bugs": {
-    "url": "https://github.com/pwrlabs/pwrjs/issues"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.52.0",
-    "@types/node": "^22.15.19",
-    "rust-falcon": "^0.2.6"
-  }
 }
