@@ -1,9 +1,8 @@
 {
-  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
-  "version": "0.8.23",
-  "hoist": "true",
-  "packages": [
-    "packages/*"
-  ],
-  "npmClient": "npm"
+    "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+    "version": "0.8.23",
+    "hoist": "true",
+    "packages": ["packages/*"],
+
+    "npmClient": "npm"
 }
