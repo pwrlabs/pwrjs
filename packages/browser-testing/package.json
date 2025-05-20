@@ -1,6 +1,6 @@
 {
     "name": "browser-testing",
-    "version": "0.8.26",
+    "version": "0.8.27",
     "description": "testing for core-browser",
     "author": "loque18 <madridx2017@gmail.com>",
     "homepage": "https://github.com/pwrlabs/pwrjs#readme",
@@ -25,6 +25,6 @@
         "url": "https://github.com/pwrlabs/pwrjs/issues"
     },
     "dependencies": {
-        "@pwrjs/core-browser": "0.8.26"
+        "@pwrjs/core-browser": "^0.8.27"
     }
 }

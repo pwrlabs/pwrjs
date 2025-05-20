@@ -1,6 +1,6 @@
 {
     "name": "core-node",
-    "version": "0.8.26",
+    "version": "0.8.27",
     "description": "> TODO: description",
     "author": "loque18 <madridx2017@gmail.com>",
     "homepage": "https://github.com/pwrlabs/pwrjs#readme",
@@ -28,7 +28,7 @@
     },
     "dependencies": {
         "@dashlane/pqc-sign-falcon-512-node": "^1.0.0",
-        "@pwrjs/core-beta": "^0.8.26"
+        "@pwrjs/core-beta": "^0.8.27"
     },
     "devDependencies": {
         "bip39": "^3.1.0",
