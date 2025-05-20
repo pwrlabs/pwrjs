@@ -1,7 +1,7 @@
 import { PWRJS } from '@pwrjs/core-beta';
 import { AbstractWallet } from '@pwrjs/core-beta/wallet';
 
-import FalconSvc from 'src/services/falcon-browser.service';
+import FalconSvc from '../services/falcon-browser.service';
 
 export default class Falcon512Wallet extends AbstractWallet {
     constructor(privateKey: Uint8Array, publicKey: Uint8Array, pwr: PWRJS) {

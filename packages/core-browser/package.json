@@ -30,9 +30,9 @@
             "import": "./lib/exports/types/index.js",
             "types": "./lib/exports/types/index.d.ts"
         },
-        "./util": {
-            "import": "./lib/exports/util/index.js",
-            "types": "./lib/exports/util/index.d.ts"
+        "./utils": {
+            "import": "./lib/exports/utils/index.js",
+            "types": "./lib/exports/utils/index.d.ts"
         },
         "./services": {
             "import": "./lib/exports/services/index.js",
