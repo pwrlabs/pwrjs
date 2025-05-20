@@ -1,6 +1,6 @@
 {
     "name": "@pwrjs/core-browser",
-    "version": "0.8.22",
+    "version": "0.8.23",
     "description": "PWRJS is a javascript library for interacting with the PWR network",
     "keywords": [
         "web3",
