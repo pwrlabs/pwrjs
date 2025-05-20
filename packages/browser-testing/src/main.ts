@@ -1,6 +1,6 @@
-import FalconServiceBrowser from '../services/falcon-browser.service';
-import PWRFaconl512Wallet from '../wallet/falcon-wallet';
-import { PWRJS } from '../exports/main/index';
+import FalconServiceBrowser from '../../core-browser/src/services/falcon-browser.service';
+import PWRFaconl512Wallet from '../../core-browser/src/wallet/falcon-wallet';
+import { FalconService } from '@pwrjs/core-beta/services';
 import { bytesToHex, hexToBytes } from '@pwrjs/core-beta/utils';
 
 // import { hkdfSync } from 'crypto';
@@ -17,7 +17,7 @@ const defWallet = {
 
 declare global {
     interface Window {
-        _pwr: PWRJS;
+        // _pwr: PWRJS;
         svc: typeof FalconServiceBrowser;
         hexToBytes: typeof hexToBytes;
         PWRFaconl512Wallet: typeof PWRFaconl512Wallet;
@@ -98,8 +98,8 @@ async function init() {
     // window.PWRFaconl512Wallet = PWRFaconl512Wallet;
     window.defWallet = defWallet;
 
-    const pwr = new PWRJS('https://pwrrpc.pwrlabs.io');
-    window._pwr = pwr;
+    // const pwr = new PWRJS('https://pwrrpc.pwrlabs.io');
+    // window._pwr = pwr;
 
     // const pk = hexToBytes(defWallet.pk);
     // const sk = hexToBytes(defWallet.sk);
@@ -110,5 +110,7 @@ async function init() {
     // window.svc = svc;
 
     // window.dispatchEvent(new Event('initCompleted'));
+    console.log('initCompleted');
+    console.log(pwr);
 }
 init();

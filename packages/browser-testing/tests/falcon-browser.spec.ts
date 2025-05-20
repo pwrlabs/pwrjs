@@ -2,8 +2,8 @@ import { test, expect, BrowserContext, chromium, Page } from '@playwright/test';
 import BigNumber from 'bignumber.js';
 import { PWRJS } from '@pwrjs/core-beta';
 
-import FalconServiceBrowser from '../src/services/falcon-browser.service';
-import PWRFalconl512Wallet from '../src/wallet/falcon-wallet';
+import FalconServiceBrowser from '../../core-browser/src/services/falcon-browser.service';
+import PWRFalconl512Wallet from '../../core-browser/src/wallet/falcon-wallet';
 // import { TransactionResponse } from '../src/wallet/wallet.types';
 
 type TransactionResponse = {

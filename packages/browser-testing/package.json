@@ -1,0 +1,30 @@
+{
+    "name": "browser-testing",
+    "version": "0.8.26",
+    "description": "testing for core-browser",
+    "author": "loque18 <madridx2017@gmail.com>",
+    "homepage": "https://github.com/pwrlabs/pwrjs#readme",
+    "license": "ISC",
+    "main": "lib/browser-testing.js",
+    "directories": {
+        "lib": "lib",
+        "test": "tests"
+    },
+    "files": [
+        "lib"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pwrlabs/pwrjs.git"
+    },
+    "scripts": {
+        "test": "node ./__tests__/browser-testing.test.js",
+        "dev": "vite"
+    },
+    "bugs": {
+        "url": "https://github.com/pwrlabs/pwrjs/issues"
+    },
+    "dependencies": {
+        "@pwrjs/core-browser": "0.8.26"
+    }
+}
