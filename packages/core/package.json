@@ -16,23 +16,33 @@
     "exports": {
         ".": {
             "import": "./lib/exports/main/index.js",
-            "types": "./lib/exports/main/index.d.ts"
+            "types": "./lib/exports/main/index.d.ts",
+            "require": "./lib/exports/main/index.js",
+            "default": "./lib/exports/main/index.js"
         },
         "./types": {
             "import": "./lib/exports/types/index.js",
-            "types": "./lib/exports/types/index.d.ts"
+            "types": "./lib/exports/types/index.d.ts",
+            "require": "./lib/exports/types/index.js",
+            "default": "./lib/exports/types/index.js"
         },
         "./utils": {
             "import": "./lib/exports/utils/index.js",
-            "types": "./lib/exports/utils/index.d.ts"
+            "types": "./lib/exports/utils/index.d.ts",
+            "require": "./lib/exports/utils/index.js",
+            "default": "./lib/exports/utils/index.js"
         },
         "./services": {
             "import": "./lib/exports/services/index.js",
-            "types": "./lib/exports/services/index.d.ts"
+            "types": "./lib/exports/services/index.d.ts",
+            "require": "./lib/exports/services/index.js",
+            "default": "./lib/exports/services/index.js"
         },
         "./wallet": {
             "import": "./lib/exports/wallet/index.js",
-            "types": "./lib/exports/wallet/index.d.ts"
+            "types": "./lib/exports/wallet/index.d.ts",
+            "require": "./lib/exports/wallet/index.js",
+            "default": "./lib/exports/wallet/index.js"
         }
     },
     "scripts": {
