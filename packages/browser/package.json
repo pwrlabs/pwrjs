@@ -1,6 +1,6 @@
 {
     "name": "@pwrjs/browser",
-    "version": "0.8.27",
+    "version": "0.8.29",
     "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
     "author": "pwrlabs <devservices@pwrlabs.io>",
     "homepage": "",
