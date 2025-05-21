@@ -8,8 +8,8 @@ import PWRFalconl512Wallet from '../../packages/core-browser/src/wallet/falcon-w
 
 type TransactionResponse = {
     success: boolean;
-    hash: string;
-    error: string;
+    transactionHash: string;
+    message: string;
 };
 
 import path from 'path';
@@ -21,6 +21,9 @@ declare global {
     interface Window {
         _pwr: PWRJS;
         svc: typeof FalconServiceBrowser;
+        testing: {
+            message: string;
+        };
         javaSign: {
             message: string;
             pubkey: string;
@@ -86,96 +89,135 @@ test('generate keypair', async () => {
     expect(keypair).toHaveProperty('sk');
 });
 
-// test('sign and verify', async () => {
-//     const { signature, valid } = (await page.evaluate((javaSign) => {
-//         return new Promise(async (resolve, reject) => {
-//             const timeout = setTimeout(() => {
-//                 reject(new Error('initCompleted timeout'));
-//             }, 20000);
+test('sign and verify', async () => {
+    const { signature, valid } = (await page.evaluate(() => {
+        return new Promise(async (resolve, reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error('initCompleted timeout'));
+            }, 20000);
 
-//             const message = new TextEncoder().encode(window.javaSign.message);
-//             try {
-//                 const keypair = await window.svc.generateKeyPair();
+            const message = new TextEncoder().encode(window.testing.message);
+            try {
+                const keypair = await window.svc.generateKeyPair();
 
-//                 const signature = await window.svc.sign(message, keypair.sk);
+                const signature = await window.svc.sign(message, keypair.sk);
 
-//                 const valid = await window.svc.verify(message, keypair.pk, signature);
+                const valid = await window.svc.verify(message, keypair.pk, signature);
 
-//                 resolve({ signature, valid });
-//             } catch (err) {
-//                 reject(err);
-//             }
-//         });
-//     })) as { signature: Uint8Array; valid: boolean };
+                resolve({ signature, valid });
+            } catch (err) {
+                reject(err);
+            }
+        });
+    })) as { signature: Uint8Array; valid: boolean };
 
-//     // signature should be a string
-//     expect(signature).not.toBeNull();
+    // signature should be a string
+    expect(signature).not.toBeNull();
 
-//     // message should be the same
-//     expect(valid).toBe(true);
-// });
+    // message should be the same
+    expect(valid).toBe(true);
+});
 
-// test('ensure wallet is restored', async () => {
-//     const result = (await page.evaluate(() => {
-//         return new Promise((resolve, reject) => {
-//             // Set up a timeout to fail if the event doesn't fire within 5 seconds.
-//             const timeout = setTimeout(() => {
-//                 reject(new Error('initCompleted timeout'));
-//             }, 10000);
+test('ensure wallet is restored', async () => {
+    const result = (await page.evaluate(() => {
+        return new Promise((resolve, reject) => {
+            // Set up a timeout to fail if the event doesn't fire within 5 seconds.
+            const timeout = setTimeout(() => {
+                reject(new Error('initCompleted timeout'));
+            }, 10000);
 
-//             // Add an event listener for the custom event.
+            // Add an event listener for the custom event.
 
-//             const address = window.wallet.getAddress();
-//             const ogAddress = window.defWallet.address;
+            const address = window.wallet.getAddress();
+            const ogAddress = window.defWallet.address;
 
-//             resolve(ogAddress === address);
-//         });
-//     })) as boolean;
+            resolve(ogAddress === address);
+        });
+    })) as boolean;
 
-//     expect(result).toBe(true);
-// });
+    expect(result).toBe(true);
+});
 
-// test('Wallet balance', async () => {
-//     const balance = (await page.evaluate(() => {
-//         return new Promise(async (resolve, reject) => {
-//             const timeout = setTimeout(() => {
-//                 reject(new Error('initCompleted timeout'));
-//             }, 10000);
+test('Wallet balance', async () => {
+    const balance = (await page.evaluate(() => {
+        return new Promise(async (resolve, reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error('initCompleted timeout'));
+            }, 10000);
+            window.wallet
+                .getBalance()
+                .then((v) => resolve(v.toString()))
+                .catch(reject);
+        });
+    })) as string;
 
-//             window.wallet.getBalance().then(resolve).catch(reject);
-//         });
-//     })) as string;
+    const balanceBN = new BigNumber(balance);
+    console.log(`Balance: ${balanceBN.shiftedBy(-9).toNumber()} PWR`);
+    const comp = balanceBN.comparedTo(BigNumber(5).shiftedBy(9));
+    expect(comp).toBeGreaterThanOrEqual(0);
+    // expect(balance).toBeGreaterThan(BigNumber(5).shiftedBy(9).toNumber());
+});
 
-//     const balanceBN = new BigNumber(balance);
-//     console.log(`Balance: ${balanceBN.shiftedBy(-9).toNumber()} PWR`);
-//     expect(balance).toBeGreaterThan(BigNumber(5).shiftedBy(9).toNumber());
-// });
+test('Wallet transfer', async () => {
+    try {
+        const tx = (await page.evaluate(() => {
+            return new Promise(async (resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('initCompleted timeout'));
+                }, 10000);
 
-// test('Wallet transfer', async () => {
-//     try {
-//         const tx = (await page.evaluate(() => {
-//             return new Promise((resolve, reject) => {
-//                 const timeout = setTimeout(() => {
-//                     reject(new Error('initCompleted timeout'));
-//                 }, 10000);
+                const randomBal = Math.round(Math.random() * 10);
+                const amount = BigInt(randomBal) * BigInt(10 ** 7); //0.0X PWR
 
-//                 const randomBal = Math.round(Math.random() * 10);
-//                 const amount = BigInt(randomBal) * BigInt(10 ** 7); //0.0X PWR
+                let to = '0xbc53be623039d659292b80be5b5d1319a44e9d49';
 
-//                 let to = '0x8cc1d696a9a69d6345ad2de0a9d9fadecc6ba767';
+                window.wallet.transferPWR(to, amount).then(resolve).catch(reject);
+            });
+        })) as TransactionResponse;
 
-//                 window.wallet.transferPWR(to, amount.toString()).then(resolve).catch(reject);
-//             });
-//         })) as TransactionResponse;
+        console.log('transfer txn:', tx);
 
-//         console.log('transfer txn:', tx);
+        expect(tx.success).toBe(true);
+    } catch (error) {
+        console.log('transferpwr', error);
+        expect(false).toBe(true);
+    }
+});
 
-//         expect(tx.success).toBe(true);
-//     } catch (error) {
-//         console.log('transferpwr', error);
-//         expect(false).toBe(true);
-//     }
-// });
+test('Wallet vida data txn', async () => {
+    try {
+        const tx = (await page.evaluate(() => {
+            return new Promise(async (resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('initCompleted timeout'));
+                }, 10000);
+
+                const randomBal = Math.round(Math.random() * 10);
+                const amount = BigInt(randomBal) * BigInt(10 ** 7); //0.0X PWR
+
+                const data = new TextEncoder().encode('PWR Hello for all the listeners!');
+
+                // try {
+                //     const tx = await falconWallet.submitPayableVidaData(1n, data, 100n);
+
+                //     console.log('vida data txn:', tx);
+                //     expect(tx.success).toBe(true);
+                // } catch (error) {
+                //     expect(false).toBe(true);
+                // }
+
+                window.wallet.submitPayableVidaData(1n, data, amount).then(resolve).catch(reject);
+            });
+        })) as TransactionResponse;
+
+        console.log('transfer txn:', tx);
+
+        expect(tx.success).toBe(true);
+    } catch (error) {
+        console.log('transferpwr', error);
+        expect(false).toBe(true);
+    }
+});
 
 // test('export wallet', async () => {
 //     try {

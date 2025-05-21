@@ -25,6 +25,6 @@
         "url": "https://github.com/pwrlabs/pwrjs/issues"
     },
     "dependencies": {
-        "@pwrjs/core-browser": "^0.8.27"
+        "@pwrjs/core-browser": "^0.8.28"
     }
 }
