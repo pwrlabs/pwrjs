@@ -18,7 +18,7 @@
         "url": "git+https://github.com/pwrlabs/pwrjs.git"
     },
     "scripts": {
-        "test": "node ./__tests__/browser-testing.test.js",
+        "test": "npx playwright test",
         "dev": "vite"
     },
     "bugs": {

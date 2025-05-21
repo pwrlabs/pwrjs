@@ -2,8 +2,8 @@ import { test, expect, BrowserContext, chromium, Page } from '@playwright/test';
 import BigNumber from 'bignumber.js';
 import { PWRJS } from '@pwrjs/core-beta';
 
-import FalconServiceBrowser from '../../core-browser/src/services/falcon-browser.service';
-import PWRFalconl512Wallet from '../../core-browser/src/wallet/falcon-wallet';
+import FalconServiceBrowser from '../../packages/core-browser/src/services/falcon-browser.service';
+import PWRFalconl512Wallet from '../../packages/core-browser/src/wallet/falcon-wallet';
 // import { TransactionResponse } from '../src/wallet/wallet.types';
 
 type TransactionResponse = {
@@ -47,25 +47,25 @@ test.describe.configure({
 
 test.beforeAll(async () => {
     ctx = await chromium.launchPersistentContext('', {
-        headless: true,
+        headless: false,
     });
 
     page = await ctx.newPage();
     await page.goto(url);
 
-    // await page.evaluate(() => {
-    //     return new Promise((resolve, reject) => {
-    //         // Set up a timeout to fail if the event doesn't fire within 5 seconds.
-    //         setTimeout(() => {
-    //             reject(new Error('initCompleted timeout'));
-    //         }, 10000);
+    await page.evaluate(() => {
+        return new Promise((resolve, reject) => {
+            // Set up a timeout to fail if the event doesn't fire within 5 seconds.
+            setTimeout(() => {
+                reject(new Error('initCompleted timeout'));
+            }, 10000);
 
-    //         // Add an event listener for the custom event.
-    //         window.addEventListener('initCompleted', () => {
-    //             resolve(null);
-    //         });
-    //     });
-    // });
+            // Add an event listener for the custom event.
+            window.addEventListener('initCompleted', () => {
+                resolve(null);
+            });
+        });
+    });
 });
 
 test('generate keypair', async () => {

@@ -1,6 +1,9 @@
-import FalconServiceBrowser from '../../core-browser/src/services/falcon-browser.service';
-import PWRFaconl512Wallet from '../../core-browser/src/wallet/falcon-wallet';
-import { FalconService } from '@pwrjs/core-beta/services';
+// import FalconServiceBrowser from '../../packages/core-browser/src/exports/main';
+// import PWRFaconl512Wallet from '../../core-browser/src/wallet/falcon-wallet';
+// import FalconServiceBrowser from '../../packages/core-browser/src/services/falcon-browser.service';
+// import { FalconService } from '@pwrjs/core-browser/services';
+import { Falcon512Wallet } from '@pwrjs/core-browser/wallet';
+import { PWRJS } from '@pwrjs/core-browser';
 import { bytesToHex, hexToBytes } from '@pwrjs/core-beta/utils';
 
 // import { hkdfSync } from 'crypto';
@@ -17,12 +20,12 @@ const defWallet = {
 
 declare global {
     interface Window {
-        // _pwr: PWRJS;
+        _pwr: PWRJS;
         svc: typeof FalconServiceBrowser;
         hexToBytes: typeof hexToBytes;
-        PWRFaconl512Wallet: typeof PWRFaconl512Wallet;
+        PWRFaconl512Wallet: typeof Falcon512Wallet;
         defWallet: typeof defWallet;
-        wallet: PWRFaconl512Wallet;
+        wallet: Falcon512Wallet;
     }
 }
 
@@ -98,19 +101,17 @@ async function init() {
     // window.PWRFaconl512Wallet = PWRFaconl512Wallet;
     window.defWallet = defWallet;
 
-    // const pwr = new PWRJS('https://pwrrpc.pwrlabs.io');
-    // window._pwr = pwr;
+    const pwr = new PWRJS('https://pwrrpc.pwrlabs.io');
+    window._pwr = pwr;
 
     // const pk = hexToBytes(defWallet.pk);
     // const sk = hexToBytes(defWallet.sk);
     // window.wallet = PWRFaconl512Wallet.fromKeys(pwr, pk, sk);
 
-    // let svc = FalconServiceBrowser;
-    // // svc = interceptMethods(svc);
-    // window.svc = svc;
+    let svc = FalconServiceBrowser;
+    // svc = interceptMethods(svc);s
+    window.svc = svc;
 
-    // window.dispatchEvent(new Event('initCompleted'));
-    console.log('initCompleted');
-    console.log(pwr);
+    window.dispatchEvent(new Event('initCompleted'));
 }
 init();
