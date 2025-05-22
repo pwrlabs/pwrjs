@@ -1,0 +1,7 @@
+/node_modules
+/src
+index.*
+services.*
+types.*
+utils.*
+wallet.*
