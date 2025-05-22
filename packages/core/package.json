@@ -2,8 +2,21 @@
     "name": "@pwrjs/core",
     "version": "0.8.30",
     "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
+    "keywords": [
+        "web3",
+        "cryptocurrency",
+        "tokens",
+        "pwr",
+        "pwrchain",
+        "blockchain",
+        "secure"
+    ],
     "author": "pwrlabs <devservices@pwrlabs.io>",
-    "homepage": "",
+    "homepage": "https://www.pwrlabs.io",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pwrlabs/pwrjs.git"
+    },
     "license": "ISC",
     "main": "./index.js",
     "files": [
@@ -20,10 +33,11 @@
         "wallet.d.ts"
     ],
     "scripts": {
-        "build": "npm run build:ts",
+        "build": "npm run clean && npm run build:ts && npm run build:post",
         "dev": "npm build:ts --watch",
         "build:ts": "tsc -p tsconfig.json",
-        "test": "vitest"
+        "clean": "node ../../scripts/clean.js packages/core",
+        "build:post": "node ../../scripts/post-build.js packages/core"
     },
     "dependencies": {
         "@noble/hashes": "^1.7.1",
@@ -40,6 +54,9 @@
         "ts-jest": "^29.1.1",
         "typescript": "^5.2.2",
         "vitest": "^3.0.8"
+    },
+    "bugs": {
+        "url": "https://github.com/pwrlabs/pwrjs/issues"
     },
     "publishConfig": {
         "access": "public"

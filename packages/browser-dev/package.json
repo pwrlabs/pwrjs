@@ -1,5 +1,5 @@
 {
-    "name": "@pwrjs/browser",
+    "name": "@pwrjs/browser-dev",
     "version": "0.8.30",
     "description": "PWRJS is a javascript library for interacting with the PWR network",
     "keywords": [
@@ -18,20 +18,6 @@
         "url": "git+https://github.com/pwrlabs/pwrjs.git"
     },
     "license": "ISC",
-    "main": "./index.js",
-    "files": [
-        "src",
-        "index.js",
-        "index.d.ts",
-        "services.js",
-        "services.d.ts",
-        "types.js",
-        "types.d.ts",
-        "utils.js",
-        "utils.d.ts",
-        "wallet.js",
-        "wallet.d.ts"
-    ],
     "scripts": {
         "build": "npm run clean && npm run build:ts && npm run build:post",
         "dev": "npm build:ts --watch",

@@ -2,21 +2,28 @@
     "name": "@pwrjs/core-dev",
     "version": "0.8.30",
     "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
-    "author": "pwrlabs <devservices@pwrlabs.io>",
-    "homepage": "",
-    "license": "ISC",
-    "main": "./lib/index.js",
-    "types": "./lib/index.d.ts",
-    "files": [
-        "u",
-        "services"
+    "keywords": [
+        "web3",
+        "cryptocurrency",
+        "tokens",
+        "pwr",
+        "pwrchain",
+        "blockchain",
+        "secure"
     ],
+    "author": "pwrlabs <devservices@pwrlabs.io>",
+    "homepage": "https://www.pwrlabs.io",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pwrlabs/pwrjs.git"
+    },
+    "license": "ISC",
     "scripts": {
-        "build": "npm run build:src",
+        "build": "npm run clean && npm run build:ts && npm run build:post",
         "dev": "npm build:ts --watch",
-        "build:src": "tsc -p tsconfig.json",
-        "test": "vitest",
-        "clean": "node ./scripts/clean.js"
+        "build:ts": "tsc -p tsconfig.json",
+        "clean": "node ../../scripts/clean.js packages/core",
+        "build:post": "node ../../scripts/post-build.js packages/core"
     },
     "dependencies": {
         "@noble/hashes": "^1.7.1",
@@ -33,6 +40,9 @@
         "ts-jest": "^29.1.1",
         "typescript": "^5.2.2",
         "vitest": "^3.0.8"
+    },
+    "bugs": {
+        "url": "https://github.com/pwrlabs/pwrjs/issues"
     },
     "publishConfig": {
         "access": "public"
