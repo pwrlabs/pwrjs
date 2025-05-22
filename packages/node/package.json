@@ -1,0 +1,56 @@
+{
+    "name": "@pwrjs/node",
+    "version": "0.9.0",
+    "description": "PWRJS is a javascript library for interacting with the PWR network",
+    "keywords": [
+        "web3",
+        "cryptocurrency",
+        "tokens",
+        "pwr",
+        "pwrchain",
+        "blockchain",
+        "secure"
+    ],
+    "author": "pwrlabs <devservices@pwrlabs.io>",
+    "homepage": "https://github.com/pwrlabs/pwrjs#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pwrlabs/pwrjs.git"
+    },
+    "license": "ISC",
+    "main": "./index.js",
+    "files": [
+        "src",
+        "index.js",
+        "index.d.ts",
+        "services.js",
+        "services.d.ts",
+        "types.js",
+        "types.d.ts",
+        "utils.js",
+        "utils.d.ts",
+        "wallet.js",
+        "wallet.d.ts"
+    ],
+    "scripts": {
+        "build": "npm run clean && npm run build:ts && npm run build:post",
+        "dev": "npm build:ts --watch",
+        "build:ts": "tsc -p tsconfig.json",
+        "clean": "node ../../scripts/clean.js packages/node",
+        "build:post": "node ../../scripts/post-build.js packages/node"
+    },
+    "dependencies": {
+        "@dashlane/pqc-sign-falcon-512-node": "^1.0.0",
+        "@pwrjs/core": "^0.9.0"
+    },
+    "devDependencies": {
+        "bip39": "^3.1.0",
+        "vitest": "^3.1.4"
+    },
+    "bugs": {
+        "url": "https://github.com/pwrlabs/pwrjs/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

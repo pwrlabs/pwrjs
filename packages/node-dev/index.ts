@@ -1,1 +1,2 @@
-export * from '@pwrjs/core-beta';
+import PWRJS from '@pwrjs/core';
+export default PWRJS;
