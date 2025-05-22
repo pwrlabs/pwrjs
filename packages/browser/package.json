@@ -1,29 +1,52 @@
 {
-    "name": "@pwrjs/browser",
-    "version": "0.8.29",
-    "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
+    "name": "@pwrjs/core-browser",
+    "version": "0.8.30",
+    "description": "PWRJS is a javascript library for interacting with the PWR network",
+    "keywords": [
+        "web3",
+        "cryptocurrency",
+        "tokens",
+        "pwr",
+        "pwrchain",
+        "blockchain",
+        "secure"
+    ],
     "author": "pwrlabs <devservices@pwrlabs.io>",
-    "homepage": "",
+    "homepage": "https://www.pwrlabs.io",
     "license": "ISC",
-    "main": "lib/index.js",
+    "main": "./lib/index.js",
+    "types": "./lib/index.d.ts",
     "directories": {
         "lib": "lib"
     },
     "files": [
         "lib"
     ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pwrlabs/pwrjs.git"
+    },
     "scripts": {
-        "build": "pnpm build:ts",
-        "dev": "pnpm build:ts --watch",
-        "build:ts": "tsc -p tsconfig.json"
+        "build": "npm run build:ts",
+        "dev": "npm build:ts --watch",
+        "build:ts": "tsc -p tsconfig.json",
+        "dev:browser": "vite",
+        "test": "npx playwright test"
     },
     "dependencies": {
-        "bignumber.js": "^9.1.2"
+        "@dashlane/pqc-sign-falcon-512-browser": "^1.0.0",
+        "@pwrjs/core": "^0.8.30"
+    },
+    "bugs": {
+        "url": "https://github.com/pwrlabs/pwrjs/issues"
     },
     "devDependencies": {
-        "@playwright/test": "^1.51.0",
-        "ts-jest": "^29.1.1",
-        "typescript": "^5.7.2",
+        "@playwright/test": "^1.52.0",
+        "@types/node": "^22.15.19",
+        "rust-falcon": "^0.2.6",
         "vite": "^6.3.5"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

@@ -1,29 +1,22 @@
 {
-    "name": "@pwrjs/core",
+    "name": "@pwrjs/core-dev",
     "version": "0.8.30",
     "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
     "author": "pwrlabs <devservices@pwrlabs.io>",
     "homepage": "",
     "license": "ISC",
-    "main": "./index.js",
+    "main": "./lib/index.js",
+    "types": "./lib/index.d.ts",
     "files": [
-        "src",
-        "index.js",
-        "index.d.ts",
-        "services.js",
-        "services.d.ts",
-        "types.js",
-        "types.d.ts",
-        "utils.js",
-        "utils.d.ts",
-        "wallet.js",
-        "wallet.d.ts"
+        "u",
+        "services"
     ],
     "scripts": {
-        "build": "npm run build:ts",
+        "build": "npm run build:src",
         "dev": "npm build:ts --watch",
-        "build:ts": "tsc -p tsconfig.json",
-        "test": "vitest"
+        "build:src": "tsc -p tsconfig.json",
+        "test": "vitest",
+        "clean": "node ./scripts/clean.js"
     },
     "dependencies": {
         "@noble/hashes": "^1.7.1",

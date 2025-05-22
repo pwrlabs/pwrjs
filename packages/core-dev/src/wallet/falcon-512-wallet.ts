@@ -11,7 +11,7 @@ import CryptoService from '../services/crypto.service';
 // utils
 import { TransactionResponse } from './wallet.types';
 import TransactionBuilder from '../protocol/falcon-transaction-builder';
-import { FalconKeyPair } from '../services/falcon/c';
+import { FalconKeyPair } from '../services/falcon-service';
 import { bytesToHex, hexToBytes } from '../utils';
 
 export default abstract class AbstractWallet {

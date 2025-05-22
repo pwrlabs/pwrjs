@@ -8,7 +8,7 @@
 /node_modules
 /dist
 **/lib/
-/packages/core/node_modules
+/packages/core
 
 # misc
 .DS_Store
