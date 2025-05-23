@@ -43,8 +43,5 @@
     },
     "bugs": {
         "url": "https://github.com/pwrlabs/pwrjs/issues"
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }
