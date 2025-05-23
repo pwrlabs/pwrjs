@@ -6,7 +6,7 @@ const targetFolderArg = process.argv[2] || 'core'; // Default: 'core'
 
 // Paths base
 const filesToCopy = ['README.md'];
-const fromDir = path.resolve(__dirname, '..');
+const fromDir = path.resolve(__dirname, '..', targetFolderArg + '-dev');
 const toDir = path.resolve(__dirname, '..', targetFolderArg);
 
 filesToCopy.forEach((file) => {
