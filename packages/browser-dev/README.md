@@ -35,22 +35,19 @@ PWRJS is a JavaScript library for interacting with the PWR blobkchain. It provid
 
 install the package according to your environment. (nodejs or browser)
 
-```bash
+```sh
 # latest official release (main branch)
 $ npm install @pwrjs/browser
-
 #or
 $ npm install @pwrjs/node
 
-# or for latest pre-release version (develop branch)
+# for latest pre-release version (develop branch)
 $ npm install @pwrjs/browsere@next
-
 # or
 $ npm install @pwrjs/node@next
 
-# or for latest beta release version (beta branch)
+# for latest beta release version (beta branch)
 $ npm install @pwrjs/browser@beta
-
 # or
 $ npm install @pwrjs/node@beta
 ```

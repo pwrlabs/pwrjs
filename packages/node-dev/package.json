@@ -23,7 +23,8 @@
         "dev": "npm build:ts --watch",
         "build:ts": "tsc -p tsconfig.json",
         "clean": "node ../../scripts/clean.js packages/node",
-        "build:post": "node ../../scripts/post-build.js packages/node"
+        "build:post": "node ../../scripts/post-build.js packages/node",
+        "test": "vitest run"
     },
     "dependencies": {
         "@dashlane/pqc-sign-falcon-512-node": "^1.0.0",

@@ -1,4 +1,4 @@
-import { FalconKeyPair, FalconService } from '@pwrjs/core-beta/services';
+import { FalconKeyPair, FalconService } from '@pwrjs/core/services';
 import kemBuilder from '@dashlane/pqc-sign-falcon-512-browser';
 
 export default class FalconServiceBrowser extends FalconService {
