@@ -1,5 +1,5 @@
 import PWRJS from '@pwrjs/core';
-import { AbstractWallet } from '@pwrjs/core/wallet';
+import AbstractWallet from '@pwrjs/core/wallet';
 
 import FalconSvc from '../services/falcon-browser.service';
 
