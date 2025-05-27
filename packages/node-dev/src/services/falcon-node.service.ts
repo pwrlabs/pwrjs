@@ -1,9 +1,10 @@
 import { FalconKeyPair, FalconService } from '@pwrjs/core/services';
-import kemBuilder from '@dashlane/pqc-sign-falcon-512-node';
 
 export default class FalconServiceNode extends FalconService {
     private static async getFalcon512() {
-        return kemBuilder();
+        // Use dynamic import to load the ESM-only package
+        const kemBuilderModule = await import('@dashlane/pqc-sign-falcon-512-node');
+        return kemBuilderModule.default(); // because it's a default export
     }
 
     static async generateKeyPair(): Promise<FalconKeyPair> {
