@@ -1,3 +1,7 @@
 import PWRJS from '@pwrjs/core';
-export default PWRJS;
-//
+
+const exported = PWRJS;
+
+// @ts-ignore
+export default exported;
+module.exports = exported;
