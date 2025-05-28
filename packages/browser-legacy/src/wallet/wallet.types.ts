@@ -1,6 +1,6 @@
 export type TransactionResponse = {
     success: boolean;
-    transactionHash: string;
+    hash: string;
     message: string;
 };
 

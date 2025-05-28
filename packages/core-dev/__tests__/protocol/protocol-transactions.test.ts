@@ -18,7 +18,7 @@ describe('pwrjs core general', () => {
     const pwrjs = new PWRJS(url);
 
     function checkBaseTxn(transaction: AnyFalconTransaction) {
-        expect(transaction).toHaveProperty('transactionHash');
+        expect(transaction).toHaveProperty('hash');
         expect(transaction).toHaveProperty('sender');
         expect(transaction).toHaveProperty('nonce');
         expect(transaction).toHaveProperty('size');
@@ -34,9 +34,9 @@ describe('pwrjs core general', () => {
     // #region transactions
 
     test('retrieve transaction by hash', async () => {
-        const transactionHash =
+        const hash =
             '0x4858df364241221c2914907dce78dd2e98be880afae370af80d646b6e2753764';
-        const res = await pwrjs.getTransactionByHash(transactionHash);
+        const res = await pwrjs.getTransactionByHash(hash);
 
         const tx = res as TransferTransaction;
 

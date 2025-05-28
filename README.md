@@ -2,7 +2,6 @@
 
 PWRJS is a JavaScript library for interacting with the PWR blobkchain. It provides an interface for wallet management and sending transactions on PWR.
 
-
 <div align="center">
 <!-- markdownlint-restore -->
 
@@ -34,14 +33,16 @@ PWRJS is a JavaScript library for interacting with the PWR blobkchain. It provid
 
 ## Installation
 
-```bash
+install the package according to your environment. (nodejs or browser)
+
+```sh
 # latest official release (main branch)
 $ npm install @pwrjs/core
 
-# or for latest pre-release version (develop branch)
+# for latest pre-release version (develop branch)
 $ npm install @pwrjs/core@next
 
-# or for latest beta release version (beta branch)
+# for latest beta release version (beta branch)
 $ npm install @pwrjs/core@beta
 ```
 
@@ -56,28 +57,43 @@ Play with [Code Examples](https://github.com/keep-pwr-strong/pwr-examples/) 🎮
 **Import the library:**
 
 ```ts
-import { PWRJS, PWRWallet } from '@pwrjs/core';
+import PWRJS from "@pwrjs/core";
+import Wallet from "@pwrjs/core/wallet";
+
 // or
-const { PWRJS, PWRWallet } = require('@pwrjs/core');
+const PWRJS = require('@pwrjs/core');
+const Wallet = require('@pwrjs/core/wallet');
 ```
 
 **Create a new instance**
 
 ```ts
-const pwrjs = new PWRJS('https://pwrrpc.pwrlabs.io/');
+const pwrjs = new PWRJS('https://pwrrpc.pwrlabs.io');
 ```
 
-**Generate a new wallet:**
+**Generate a new random wallet:**
 
 ```ts
-const privateKey = '0xac0974bec...f80';
-const wallet = new PWRWallet(privateKey);
+const wallet = Wallet.newRandom(12);
+```
+
+**Import wallet by Seed Phrase:**
+
+```ts
+const seedPhrase = "your seed phrase here";
+const wallet = Wallet.new(seedPhrase);
 ```
 
 **Get wallet address:**
 
 ```ts
-const address = await wallet.getAddress();
+const address = wallet.getAddress();
+```
+
+**Get wallet seed phrase:**
+
+```ts
+const seedPhrase = wallet.getSeedPhrase();
 ```
 
 **Get wallet balance:**
@@ -86,16 +102,12 @@ const address = await wallet.getAddress();
 const balance = await wallet.getBalance();
 ```
 
-**Get private key:**
-
-```ts
-const privateKey = await wallet.getPrivateKey();
-```
-
 **Transfer PWR tokens:**
 
 ```ts
-await wallet.transferPWR('recipientAddress', '100');
+const recipientAddress = '0x...';
+const pwrAmount = '1000000000'; // 1 PWR = 10^9
+await wallet.transferPWR(recipientAddress, BigInt(pwrAmount));
 ```
 
 Sending a transcation to the PWR Chain returns a Response object, which specified if the transaction was a success, and returns relevant data.
@@ -103,26 +115,26 @@ If the transaction was a success, you can retrieive the transaction hash, if it 
 
 ```ts
 try {
-    const r = await wallet.transferPWR('recipientAddress', 1000);
+    const response = await wallet.transferPWR(recipientAddress, BigInt(pwrAmount));
 
-    if (r.status == true) {
-        console.log('Transcation Hash: ' + r.data);
+    if (response.sucess) {
+        console.log('Transcation Hash: ' + response.hash);
     }
 } catch (e) {
     console.log(e);
 }
 ```
 
-**Send data to a VM:**
+**Send data to a vida:**
 
 ```ts
-const vmId = 123;
-const dataBytes = Buffer.from('Hello World!');
+const vidaId = BigInt('123');
+const data = new TextEncoder().encode('Hello world');
 
 try {
-    const r = await wallet.sendVMDataTxn(vmId, dataBytes);
-    if (r.status == true) {
-        console.log('Transcation Hash: ' + r.data);
+    const response = await wallet.sendVidaData(vidaId, data);
+    if (response.sucess) {
+        console.log('Transcation Hash: ' + response.hash);
     }
 } catch (e) {
     console.log(e);
@@ -136,15 +148,15 @@ try {
 Returns currently set RPC node URL.
 
 ```ts
-const url = await PWRJS.getRpcNodeUrl();
+const url = await pwrjs.getRpcNodeUrl();
 ```
 
-**Get Fee Per Byte: **
+**Get Fee Per Byte:**
 
 Gets the latest fee-per-byte rate.
 
 ```ts
-const fee = await PWRJS.getFeePerByte();
+const fee = await pwrjs.getFeePerByte();
 ```
 
 **Get Balance Of Address:**
@@ -152,7 +164,7 @@ const fee = await PWRJS.getFeePerByte();
 Gets the balance of a specific address.
 
 ```ts
-const balance = await PWRJS.getBalanceOfAddress('0x...');
+const balance = await pwrjs.getBalanceOfAddress('0x...');
 ```
 
 **Get Nonce Of Address:**
@@ -160,7 +172,7 @@ const balance = await PWRJS.getBalanceOfAddress('0x...');
 Gets the nonce/transaction count of a specific address.
 
 ```ts
-const nonce = await PWRJS.getNonceOfAddress('0x...');
+const nonce = await pwrjs.getNonceOfAddress('0x...');
 ```
 
 **Broadcast Txn:**
@@ -169,7 +181,7 @@ Broadcasts a signed transaction to the network.
 
 ```ts
 const signedTransaction = '...';
-const broadcast = await PWRJS.broadcastTxn(signedTransaction);
+const broadcast = await pwrjs.broadcastTxn(signedTransaction);
 ```
 
 ## ✏️ Contributing

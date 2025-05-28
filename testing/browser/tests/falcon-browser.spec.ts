@@ -8,7 +8,7 @@ import PWRWallet from '@pwrjs/core/wallet';
 
 type TransactionResponse = {
     success: boolean;
-    transactionHash: string;
+    hash: string;
     message: string;
 };
 
@@ -198,7 +198,7 @@ test('Wallet vida data txn', async () => {
                 const data = new TextEncoder().encode('PWR Hello for all the listeners!');
 
                 // try {
-                //     const tx = await falconWallet.submitPayableVidaData(1n, data, 100n);
+                //     const tx = await falconWallet.sendPayableVidaData(1n, data, 100n);
 
                 //     console.log('vida data txn:', tx);
                 //     expect(tx.success).toBe(true);
@@ -206,7 +206,7 @@ test('Wallet vida data txn', async () => {
                 //     expect(false).toBe(true);
                 // }
 
-                window.wallet.submitPayableVidaData(1n, data, amount).then(resolve).catch(reject);
+                window.wallet.sendPayableVidaData(1n, data, amount).then(resolve).catch(reject);
             });
         })) as TransactionResponse;
 

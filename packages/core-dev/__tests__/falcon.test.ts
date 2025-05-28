@@ -108,7 +108,7 @@ describe('wallet core', async () => {
     const encoder = new TextEncoder();
 
     test('init wallet', async () => {
-        wallet0 = await PWRWallet.new(pwr);
+        wallet0 = PWRWallet.newRandom(12, pwr);
 
         const address = falconWallet.getAddress();
         expect(address).toMatch(/[0-9A-Fa-f]{40}/g);
@@ -155,7 +155,7 @@ describe('wallet core', async () => {
                 console.log('set pubkey');
                 const tx = await falconWallet.setPublicKey(falconWallet.getPublicKey());
                 console.log(tx);
-                // console.log('Txn Hash:', tx.transactionHash);
+                // console.log('Txn Hash:', tx.hash);
                 expect(tx.success).toBe(true);
             }
         } catch (error) {
@@ -171,7 +171,7 @@ describe('wallet core', async () => {
             const amount = 1200000000n;
             const tx = await falconWallet.transferPWR(to, amount);
             console.log('tx', tx);
-            console.log('Txn hash:', tx.transactionHash);
+            console.log('Txn hash:', tx.hash);
             expect(tx.success).toBe(true);
         } catch (error) {
             console.log('Error:', error);
@@ -193,7 +193,7 @@ describe('wallet core', async () => {
         const data = encoder.encode('PWR Hello for all the listeners!');
 
         try {
-            const tx = await falconWallet.submitPayableVidaData(1n, data, 100n);
+            const tx = await falconWallet.sendPayableVidaData(1n, data, 100n);
 
             console.log('vida data txn:', tx);
             expect(tx.success).toBe(true);
@@ -217,13 +217,13 @@ describe('wallet core', async () => {
     });
 
     test('exports a wallet', async () => {
-        falconWallet.storeWallet('wallet.dat');
+        falconWallet.storeWallet('wallet.dat', "password");
     });
 
     test('imports a wallet', async () => {
         const path = require('path');
         // prettier-ignore
-        const wallet = await PWRWallet.loadWalletNode(pwr, "wallet.dat");
+        const wallet = await PWRWallet.loadWallet("wallet.dat", "password", pwr);
 
         expect(bytesToHex(falconWallet.getPrivateKey())).toStrictEqual(
             bytesToHex(wallet.getPrivateKey())

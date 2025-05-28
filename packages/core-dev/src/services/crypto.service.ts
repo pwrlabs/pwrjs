@@ -46,7 +46,7 @@ export default class CryptoService {
         const encryptedBuffer = await crypto.subtle.encrypt(
             { name: 'AES-GCM', iv: iv },
             derivedKey,
-            data
+            new Uint8Array(data)
         );
 
         // Combine salt + iv + ciphertext for storage/transport.
@@ -150,7 +150,7 @@ export default class CryptoService {
      * @param {string} password - The password used for key derivation.
      * @returns {Uint8Array} The decrypted private key bytes.
      */
-    static decryptPrivateKeyNode(
+    static decryptNode(
         encryptedBytes: Uint8Array,
         password: string
     ): Uint8Array {

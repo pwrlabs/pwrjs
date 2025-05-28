@@ -56,14 +56,14 @@ class HttpService {
             if (!raw.ok) {
                 return {
                     success: false,
-                    transactionHash: '0x' + txnHash,
+                    hash: '0x' + txnHash,
                     message: res.message,
                 };
             }
 
             return {
                 success: true,
-                transactionHash: '0x' + txnHash,
+                hash: '0x' + txnHash,
                 message: null,
             };
         } catch (err) {
