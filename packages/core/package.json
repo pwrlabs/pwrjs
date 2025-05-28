@@ -19,6 +19,13 @@
     },
     "license": "ISC",
     "main": "./index.js",
+    "exports": {
+        ".": "./index.js",
+        "./wallet": "./wallet.js",
+        "./services": "./services.js",
+        "./types": "./types.js",
+        "./utils": "./utils.js"
+    },
     "files": [
         "src",
         "wallet",
