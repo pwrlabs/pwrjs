@@ -11,7 +11,6 @@ import HttpService from '../services/http.service';
 import { Transaction_ID } from '../static/enums/transaction.enum';
 
 import { VmDataTransaction } from '../record/vmDataTransaction';
-import TransactionDecoder from './transaction-decoder';
 import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
 import { bytesToHex, hexToBytes } from '../utils';
 
@@ -87,34 +86,35 @@ export default class PWRJS {
     // #region fee
 
     async getFee(txn: Uint8Array) {
-        const feePerByte = await this.getFeePerByte();
-        const ecdsaVerificationFee = await this.getEcdsaVerificationFee();
+        // const feePerByte = await this.getFeePerByte();
+        // const ecdsaVerificationFee = await this.getEcdsaVerificationFee();
 
-        const decoder = new TransactionDecoder();
-        const transaction = decoder.decode(txn) as unknown as {
-            sender: string;
-            nonce: string;
-            size: number;
-            rawTransaction: Uint8Array;
-            chainId: number;
-            transactions: { size: number }[];
-            type: number;
-        };
+        // const decoder = new TransactionDecoder();
+        // const transaction = decoder.decode(txn) as unknown as {
+        //     sender: string;
+        //     nonce: string;
+        //     size: number;
+        //     rawTransaction: Uint8Array;
+        //     chainId: number;
+        //     transactions: { size: number }[];
+        //     type: number;
+        // };
 
-        if (transaction.type === Transaction_ID.GUARDIAN_TXN) {
-            const guardianApprovalTransaction = transaction;
+        // if (transaction.type === Transaction_ID.GUARDIAN_TXN) {
+        //     const guardianApprovalTransaction = transaction;
 
-            const sizeOfAllTransactions = guardianApprovalTransaction.transactions.reduce(
-                (acc, curr) => acc + curr.size,
-                0
-            );
+        //     const sizeOfAllTransactions = guardianApprovalTransaction.transactions.reduce(
+        //         (acc, curr) => acc + curr.size,
+        //         0
+        //     );
 
-            let fee = txn.length * feePerByte + ecdsaVerificationFee;
-            fee += sizeOfAllTransactions * ecdsaVerificationFee;
-            return fee;
-        } else {
-            return txn.length * feePerByte + ecdsaVerificationFee;
-        }
+        //     let fee = txn.length * feePerByte + ecdsaVerificationFee;
+        //     fee += sizeOfAllTransactions * ecdsaVerificationFee;
+        //     return fee;
+        // } else {
+        //     return txn.length * feePerByte + ecdsaVerificationFee;
+        // }
+        return null;
     }
 
     public async getEcdsaVerificationFee(): Promise<number> {

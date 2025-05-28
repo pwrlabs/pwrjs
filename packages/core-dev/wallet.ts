@@ -1,2 +1,2 @@
-import AbstractWallet from './src/wallet/falcon-512-wallet';
-export default AbstractWallet;
+import PWRWallet from './src/wallet/pwr-wallet';
+export default PWRWallet;

@@ -1,30 +1,23 @@
-// import { FalconKeyPair, FalconService } from './c';
-// import kemBuilder from '@dashlane/pqc-sign-falcon-512-node';
+// import { FalconKeyPair, FalconService } from '../falcon-service';
+// // import kemBuilder from '@dashlane/pqc-sign-falcon-512-node';
+// import { falconKeypair, sign, verify } from 'rust-falcon';
 
 // export default class FalconServiceNode extends FalconService {
-//     private static async getFalcon512() {
-//         return kemBuilder();
-//     }
-
-//     // private static async getFalcon1024() {
-//     //     return kemBuilder1024();
-//     // }
-
 //     static async generateKeyPair(): Promise<FalconKeyPair> {
-//         const falcon = await FalconServiceNode.getFalcon512();
-//         const { publicKey: pk, privateKey: sk } = await falcon.keypair();
+//         const randomBytes = crypto.getRandomValues(new Uint8Array(48));
+//         const { public: pk, secret: sk } = falconKeypair(randomBytes);
 //         return { pk, sk };
 //     }
 
 //     static async sign(message: Uint8Array, sk: Uint8Array): Promise<Uint8Array> {
-//         const falcon = await FalconServiceNode.getFalcon512();
-//         const { signature } = await falcon.sign(message, sk);
-//         return signature;
+//         // const zeroSeed = new Uint8Array(48).fill(0);
+//         const randomSeed = crypto.getRandomValues(new Uint8Array(48));
+//         const signature = sign(message, sk, randomSeed);
+//         return signature.sign;
 //     }
 
 //     // prettier-ignore
 //     static async verify(message: Uint8Array, pk: Uint8Array, signature: Uint8Array): Promise<boolean> {
-//         const falcon = await FalconServiceNode.getFalcon512();
-//         return falcon.verify(signature, message, pk);;
+//         return verify(signature, message, pk);;
 //     }
 // }

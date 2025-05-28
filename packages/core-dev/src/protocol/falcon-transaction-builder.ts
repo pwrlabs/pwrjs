@@ -17,7 +17,7 @@ export default class FalconTransactionBuilder {
         const buffer = new Uint8Array(37);
         const view = new DataView(buffer.buffer);
 
-        const feePerByteBN = BigNumber(feePerByte);
+        const feePerByteBN = BigNumber(feePerByte.toString());
 
         if (feePerByteBN.comparedTo(0) < 0) {
             throw new Error('Fee cannot be negative');
@@ -99,7 +99,7 @@ export default class FalconTransactionBuilder {
     static getDelegateTransaction(validator: Uint8Array, pwrAmount: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         assetAddressValidity(bytesToHex(validator));
 
-        const amountBN = BigNumber(pwrAmount);
+        const amountBN = BigNumber(pwrAmount.toString());
 
         if (amountBN.comparedTo(0) < 0) {
             throw new Error('Amount cannot be negative');
@@ -181,7 +181,7 @@ export default class FalconTransactionBuilder {
     static getTransferTransaction(feePerByte: bigint, sender: Uint8Array, receiver: Uint8Array, amount: bigint, nonce: number, chainId: number): Uint8Array {
         assetAddressValidity(bytesToHex(receiver));
 
-        const amountBN = BigNumber(amount);
+        const amountBN = BigNumber(amount.toString());
 
         if (amountBN.comparedTo(0) < 0) {
             throw new Error('Amount cannot be negative');

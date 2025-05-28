@@ -20,8 +20,5 @@
     },
     "workspaces": [
         "packages/*"
-    ],
-    "dependencies": {
-        "@dashlane/pqc-sign-falcon-512-node": "^1.0.0"
-    }
+    ]
 }
