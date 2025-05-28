@@ -2,10 +2,10 @@
 // import PWRFaconl512Wallet from '../../core-browser/src/wallet/falcon-wallet';
 // import FalconServiceBrowser from '../../packages/core-browser/src/services/falcon-browser.service';
 // import { FalconService } from '@pwrjs/core-browser/services';
-import { Falcon512Wallet } from '@pwrjs/browser/wallet';
-import { FalconService } from '@pwrjs/browser/services';
-import PWRJS from '@pwrjs/browser';
-import { bytesToHex, hexToBytes } from '@pwrjs/browser/utils';
+import PWRWallet from '@pwrjs/core/wallet';
+import { FalconService } from '@pwrjs/core/services';
+import PWRJS from '@pwrjs/core';
+import { bytesToHex, hexToBytes } from '@pwrjs/core/utils';
 
 // import { hkdfSync } from 'crypto';
 
@@ -30,9 +30,9 @@ declare global {
         _pwr: PWRJS;
         svc: typeof FalconService;
         hexToBytes: typeof hexToBytes;
-        PWRFaconl512Wallet: typeof Falcon512Wallet;
+        PWRFaconl512Wallet: typeof PWRWallet;
         defWallet: typeof defWallet;
-        wallet: Falcon512Wallet;
+        wallet: PWRWallet;
         testing: typeof testing;
     }
 }
@@ -116,7 +116,7 @@ async function init() {
 
     const pk = hexToBytes(defWallet.pk);
     const sk = hexToBytes(defWallet.sk);
-    window.wallet = Falcon512Wallet.fromKeys(sk, pk, pwr);
+    window.wallet = PWRWallet.fromKeys(sk, pk, pwr);
 
     let svc = FalconService;
     svc = interceptMethods(svc);

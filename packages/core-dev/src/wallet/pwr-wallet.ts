@@ -1,6 +1,6 @@
 import PWRJS from '../protocol/pwrjs';
 import AbstractWallet from './abstract-wallet';
-import FalconService from '../services/falcon-service';
+import { FalconService } from '../services/falcon-service';
 
 export default class PWRWallet extends AbstractWallet {
     constructor(privateKey: Uint8Array, publicKey: Uint8Array, pwr: PWRJS) {

@@ -1,2 +1,5 @@
 import PWRWallet from './src/wallet/pwr-wallet';
-export default PWRWallet;
+
+const exported = PWRWallet;
+export default exported;
+module.exports = exported;

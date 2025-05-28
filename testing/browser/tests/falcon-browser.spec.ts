@@ -1,9 +1,9 @@
 import { test, expect, BrowserContext, chromium, Page } from '@playwright/test';
 import BigNumber from 'bignumber.js';
-import { PWRJS } from '@pwrjs/core-beta';
+import PWRJS from '@pwrjs/core';
 
-import FalconServiceBrowser from '../../packages/core-browser/src/services/falcon-browser.service';
-import PWRFalconl512Wallet from '../../packages/core-browser/src/wallet/falcon-wallet';
+import { FalconService } from '@pwrjs/core/services';
+import PWRWallet from '@pwrjs/core/wallet';
 // import { TransactionResponse } from '../src/wallet/wallet.types';
 
 type TransactionResponse = {
@@ -20,7 +20,7 @@ const url = 'http://localhost:5173';
 declare global {
     interface Window {
         _pwr: PWRJS;
-        svc: typeof FalconServiceBrowser;
+        svc: typeof FalconService;
         testing: {
             message: string;
         };
@@ -35,8 +35,8 @@ declare global {
             address: string;
         };
         hexToBytes: (hex: string) => Uint8Array;
-        PWRFaconl512Wallet: typeof PWRFalconl512Wallet;
-        wallet: PWRFalconl512Wallet;
+        PWRFaconl512Wallet: typeof PWRWallet;
+        wallet: PWRWallet;
     }
 }
 

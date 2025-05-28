@@ -40,7 +40,7 @@ export type FalconKeyPair = {
 //     }
 // }
 
-export default class FalconService {
+export class FalconService {
     static async generateKeyPair(): Promise<FalconKeyPair> {
         const randomBytes = crypto.getRandomValues(new Uint8Array(48));
         const { public: pk, secret: sk } = falconKeypair(randomBytes);

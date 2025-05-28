@@ -1,2 +1,6 @@
 import PWRJS from './src/protocol/pwrjs';
-export default PWRJS;
+
+const exported = PWRJS;
+
+export default exported;
+module.exports = exported;
