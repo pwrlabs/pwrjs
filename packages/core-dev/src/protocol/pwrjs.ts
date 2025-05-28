@@ -297,7 +297,7 @@ export default class PWRJS {
 
     // #region transactions
     public async getTransactionByHash(hash: string): Promise<AnyFalconTransaction> {
-        const url = api.rpc.transactions.transactionByHash.replace(':transactionHash', hash);
+        const url = api.rpc.transactions.transactionByHash.replace(':hash', hash);
         const res = await this.httpSvc.get<HttpTypes.TransactionByHashResponse>(url);
         return res.transaction;
     }

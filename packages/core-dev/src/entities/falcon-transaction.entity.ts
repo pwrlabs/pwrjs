@@ -30,7 +30,7 @@ export enum Transactions {
 
 export type FalconTransaction = {
     identifier: string;
-    transactionHash: string;
+    hash: string;
     sender: string;
     nonce: number;
     size: number;

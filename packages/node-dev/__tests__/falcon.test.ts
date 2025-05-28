@@ -156,7 +156,7 @@ describe('wallet core', async () => {
                 console.log('set pubkey');
                 const tx = await falconWallet.setPublicKey(falconWallet.getPublicKey());
                 console.log(tx);
-                // console.log('Txn Hash:', tx.transactionHash);
+                // console.log('Txn Hash:', tx.hash);
                 expect(tx.success).toBe(true);
             }
         } catch (error) {
@@ -172,7 +172,7 @@ describe('wallet core', async () => {
             const amount = 1200000000n;
             const tx = await falconWallet.transferPWR(to, amount);
             console.log('tx', tx);
-            console.log('Txn hash:', tx.transactionHash);
+            console.log('Txn hash:', tx.hash);
             expect(tx.success).toBe(true);
         } catch (error) {
             console.log('Error:', error);
@@ -194,7 +194,7 @@ describe('wallet core', async () => {
         const data = encoder.encode('PWR Hello for all the listeners!');
 
         try {
-            const tx = await falconWallet.submitPayableVidaData(1n, data, 100n);
+            const tx = await falconWallet.sendPayableVidaData(1n, data, 100n);
 
             console.log('vida data txn:', tx);
             expect(tx.success).toBe(true);
@@ -224,7 +224,7 @@ describe('wallet core', async () => {
     test('imports a wallet', async () => {
         const path = require('path');
         // prettier-ignore
-        const wallet = await Falcon512Wallet.loadWalletNode(pwr, "wallet.dat");
+        const wallet = await Falcon512Wallet.loadWallet(pwr, "wallet.dat");
 
         expect(bytesToHex(falconWallet.getPrivateKey())).toStrictEqual(
             bytesToHex(wallet.getPrivateKey())

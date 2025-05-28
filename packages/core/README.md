@@ -37,19 +37,13 @@ install the package according to your environment. (nodejs or browser)
 
 ```sh
 # latest official release (main branch)
-$ npm install @pwrjs/browser
-#or
-$ npm install @pwrjs/node
+$ npm install @pwrjs/core
 
 # for latest pre-release version (develop branch)
-$ npm install @pwrjs/browsere@next
-# or
-$ npm install @pwrjs/node@next
+$ npm install @pwrjs/core@next
 
 # for latest beta release version (beta branch)
-$ npm install @pwrjs/browser@beta
-# or
-$ npm install @pwrjs/node@beta
+$ npm install @pwrjs/core@beta
 ```
 
 ## 🌐 Documentation
@@ -63,12 +57,12 @@ Play with [Code Examples](https://github.com/keep-pwr-strong/pwr-examples/) 🎮
 **Import the library:**
 
 ```ts
-import PWRJS from '@pwrjs/node';
-import PWRWallet from '@pwrjs/node/wallet';
+import PWRJS from "@pwrjs/core";
+import Wallet from "@pwrjs/core/wallet";
 
 // or
-const PWRJS = require('@pwrjs/node');
-const PWRWallet = require('@pwrjs/node/wallet');
+const PWRJS = require('@pwrjs/core');
+const Wallet = require('@pwrjs/core/wallet');
 ```
 
 **Create a new instance**
@@ -77,28 +71,29 @@ const PWRWallet = require('@pwrjs/node/wallet');
 const pwrjs = new PWRJS('https://pwrrpc.pwrlabs.io');
 ```
 
-**Generate a new wallet:**
+**Generate a new random wallet:**
 
 ```ts
-const wallet = await PWRWallet.new();
+const wallet = Wallet.newRandom(12);
 ```
 
-**Import an existing wallet:**
+**Import wallet by Seed Phrase:**
 
 ```ts
-const pwr = new PWRJS('https://pwrrpc.pwrlabs.io');
-
-// node
-const wallet = await PWRWallet.loadWallet(pwr, 'path/to/wallet.dat');
-
-// browser
-const wallet = await PWRWallet.loadWallet(pwr, file);
+const seedPhrase = "your seed phrase here";
+const wallet = Wallet.new(seedPhrase);
 ```
 
 **Get wallet address:**
 
 ```ts
-const address = await wallet.getAddress();
+const address = wallet.getAddress();
+```
+
+**Get wallet seed phrase:**
+
+```ts
+const seedPhrase = wallet.getSeedPhrase();
 ```
 
 **Get wallet balance:**
@@ -107,18 +102,12 @@ const address = await wallet.getAddress();
 const balance = await wallet.getBalance();
 ```
 
-**Get private key:**
-
-```ts
-const privateKey = await wallet.getPrivateKey();
-```
-
 **Transfer PWR tokens:**
 
 ```ts
-const destinyAddress = '0x...';
+const recipientAddress = '0x...';
 const pwrAmount = '1000000000'; // 1 PWR = 10^9
-await wallet.transferPWR(destinyAddress, BigInt(pwrAmount));
+await wallet.transferPWR(recipientAddress, BigInt(pwrAmount));
 ```
 
 Sending a transcation to the PWR Chain returns a Response object, which specified if the transaction was a success, and returns relevant data.
@@ -126,10 +115,10 @@ If the transaction was a success, you can retrieive the transaction hash, if it 
 
 ```ts
 try {
-    const r = await wallet.transferPWR(destinyAddress, BigInt(pwrAmount));
+    const response = await wallet.transferPWR(recipientAddress, BigInt(pwrAmount));
 
-    if (r.sucess) {
-        console.log('Transcation Hash: ' + r.transactionHash);
+    if (response.sucess) {
+        console.log('Transcation Hash: ' + response.hash);
     }
 } catch (e) {
     console.log(e);
@@ -139,14 +128,13 @@ try {
 **Send data to a vida:**
 
 ```ts
-const vidaId = BigInt('120');
-const data = new TextEncoder().encode('Hello, pwr!');
-const value = BigInt('1000000000'); // 1 PWR = 10^9
+const vidaId = BigInt('123');
+const data = new TextEncoder().encode('Hello world');
 
 try {
-    const r = await wallet.submitPayableVidaData(vidaId, data, value);
-    if (r.sucess) {
-        console.log('Transcation Hash: ' + r.transactionHash);
+    const response = await wallet.sendVidaData(vidaId, data);
+    if (response.sucess) {
+        console.log('Transcation Hash: ' + response.hash);
     }
 } catch (e) {
     console.log(e);

@@ -40,7 +40,7 @@ export type Block = {
     rootHash: string;
     proposer: string;
     transactions?: {
-        transactionHash: string;
+        hash: string;
         vidaId: number;
     }[];
     processedWithoutCriticalErrors: boolean;

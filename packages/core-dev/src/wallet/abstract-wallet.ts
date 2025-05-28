@@ -1,5 +1,6 @@
 // protocol
 import PWRJS from '../protocol/pwrjs';
+import PWRWallet from './pwr-wallet';
 
 // services
 import HttpService from '../services/http.service';
@@ -19,6 +20,7 @@ export default abstract class AbstractWallet {
     protected _addressBytes: Uint8Array;
     protected _publicKey: Uint8Array;
     protected _privateKey: Uint8Array;
+    protected _seedPhrase: string | null = null;
 
     private keypair: FalconKeyPair;
 
@@ -44,31 +46,13 @@ export default abstract class AbstractWallet {
         this.pwrjs = pwr;
     }
 
-    static new(pwr: PWRJS): Promise<AbstractWallet> {
+    static new(seedPhrase: string, pwr: PWRJS): AbstractWallet {
         throw new Error('Not implemented. Please implement in subclass.');
     }
 
     static fromKeys(privateKey: Uint8Array, publicKey: Uint8Array, pwr: PWRJS): AbstractWallet {
         throw new Error('Not implemented. Please implement in subclass.');
     }
-
-    // static async new(pwr: PWRJS): Promise<Falcon512Wallet> {
-    //     if (typeof window === 'undefined') {
-    //         // node
-    //         const m = await import('../services/falcon/falcon-node.service');
-    //         const keys = await m.default.generateKeyPair();
-    //         return Falcon512Wallet.fromKeys(keys.sk, keys.pk, pwr);
-    //     } else {
-    //         // browser
-    //         const m = await import('../services/falcon/falcon-browser.service');
-    //         const keys = await m.default.generateKeyPair();
-    //         return Falcon512Wallet.fromKeys(keys.sk, keys.pk, pwr);
-    //     }
-    // }
-
-    // static fromKeys(privateKey: Uint8Array, publicKey: Uint8Array, pwr: PWRJS): AbstractWallet {
-    //     return new AbstractWallet(privateKey, publicKey, pwr);
-    // }
 
     // #endregion
 
@@ -94,6 +78,14 @@ export default abstract class AbstractWallet {
         return this._privateKey;
     }
 
+    getSeedPhrase(): string | null {
+        return this._seedPhrase;
+    }
+
+    protected setSeedPhrase(seedPhrase: string) {
+        this._seedPhrase = seedPhrase;
+    }
+
     // #endregion
 
     // #region wallet api
@@ -110,18 +102,6 @@ export default abstract class AbstractWallet {
         const res = await this.pwrjs.getBalanceOfAddress(this._addressHex);
         return res;
     }
-
-    // async sign(data: Uint8Array): Promise<Uint8Array> {
-    //     if (typeof window === 'undefined') {
-    //         // node
-    //         const m = await import('../services/falcon/falcon-node.service');
-    //         return m.default.sign(data, this._privateKey);
-    //     } else {
-    //         // browser
-    //         const m = await import('../services/falcon/falcon-browser.service');
-    //         return m.default.sign(data, this._privateKey);
-    //     }
-    // }
 
     abstract sign(data: Uint8Array): Promise<Uint8Array>;
 
@@ -166,9 +146,9 @@ export default abstract class AbstractWallet {
 
     async setPublicKey(publicKey: Uint8Array): Promise<TransactionResponse>;
     // prettier-ignore
-    async setPublicKey(publicKey: Uint8Array, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async setPublicKey(publicKey: Uint8Array, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async setPublicKey(publicKey: Uint8Array, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async setPublicKey(publicKey: Uint8Array, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
@@ -186,16 +166,14 @@ export default abstract class AbstractWallet {
 
     async transferPWR(to: string, amount: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWR(to: string, amount: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async transferPWR(to: string, amount: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWR(to: string, amount: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async transferPWR(to: string, amount: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
-
         if (response != null && !response.success) { return response }
 
         const _nonce = nonce ?? (await this.getNonce());
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
-
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getTransferTransaction(
@@ -216,9 +194,9 @@ export default abstract class AbstractWallet {
 
     async joinAsValidator(ip: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async joinAsValidator(ip: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async joinAsValidator(ip: string, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async joinAsValidator(ip: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async joinAsValidator(ip: string, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -239,9 +217,9 @@ export default abstract class AbstractWallet {
 
     async delegate(validator: string, pwrAmount: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async delegate(validator: string, pwrAmount: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async delegate(validator: string, pwrAmount: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async delegate(validator: string, pwrAmount: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async delegate(validator: string, pwrAmount: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -263,9 +241,9 @@ export default abstract class AbstractWallet {
 
     async changeIp(newIp: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async changeIp(newIp: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async changeIp(newIp: string, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async changeIp(newIp: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async changeIp(newIp: string, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -286,9 +264,9 @@ export default abstract class AbstractWallet {
 
     async claimActiveNodeSpot(): Promise<TransactionResponse>;
     // prettier-ignore
-    async claimActiveNodeSpot(nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async claimActiveNodeSpot(feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async claimActiveNodeSpot(nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async claimActiveNodeSpot(feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -309,9 +287,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async moveStake(sharesAmount: bigint, fromValidator: string, toValidator: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async moveStake(sharesAmount: bigint, fromValidator: string, toValidator: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async moveStake(sharesAmount: bigint, fromValidator: string, toValidator: string, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async moveStake(sharesAmount: bigint, fromValidator: string, toValidator: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async moveStake(sharesAmount: bigint, fromValidator: string, toValidator: string, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -335,9 +313,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async removeValidator(validatorAddress: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeValidator(validatorAddress: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async removeValidator(validatorAddress: string, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeValidator(validatorAddress: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async removeValidator(validatorAddress: string, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -358,9 +336,9 @@ export default abstract class AbstractWallet {
 
     async withdraw(sharesAmount: bigint, validator: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async withdraw(sharesAmount: bigint, validator: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async withdraw(sharesAmount: bigint, validator: string, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async withdraw(sharesAmount: bigint, validator: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async withdraw(sharesAmount: bigint, validator: string, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -386,9 +364,9 @@ export default abstract class AbstractWallet {
 
     async claimVidaId(vidaId: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async claimVidaId(vidaId: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async claimVidaId(vidaId: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async claimVidaId(vidaId: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async claimVidaId(vidaId: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -408,11 +386,11 @@ export default abstract class AbstractWallet {
     }
 
     // prettier-ignore
-    async submitPayableVidaData(vidaId: bigint, data: Uint8Array, value: bigint): Promise<TransactionResponse>;
+    async sendPayableVidaData(vidaId: bigint, data: Uint8Array, value: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async submitPayableVidaData(vidaId: bigint, data: Uint8Array, value: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async sendPayableVidaData(vidaId: bigint, data: Uint8Array, value: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async submitPayableVidaData(vidaId: bigint, data: Uint8Array, value: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async sendPayableVidaData(vidaId: bigint, data: Uint8Array, value: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -433,12 +411,20 @@ export default abstract class AbstractWallet {
         return this.signAndSend(txn);
     }
 
+    async sendVidaData(vidaId: bigint, data: Uint8Array): Promise<TransactionResponse>;
+    // prettier-ignore
+    async sendVidaData(vidaId: bigint, data: Uint8Array, feePerByte: string, nonce: number): Promise<TransactionResponse>;
+    // prettier-ignore
+    async sendVidaData(vidaId: bigint, data: Uint8Array, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
+        return this.sendPayableVidaData(vidaId, data, BigInt(0), feePerByte, nonce);
+    }
+
     // prettier-ignore
     async addVidaAllowedSenders(vidaID: bigint, allowedSenders: string[]): Promise<TransactionResponse>;
     // prettier-ignore
-    async addVidaAllowedSenders(vidaID: bigint, allowedSenders: string[], nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async addVidaAllowedSenders(vidaID: bigint, allowedSenders: string[], feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async addVidaAllowedSenders(vidaID: bigint, allowedSenders: string[], nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async addVidaAllowedSenders(vidaID: bigint, allowedSenders: string[], feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -461,9 +447,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async addVidaSponsoredAddresses(vidaId: bigint, sponsoredAddresses: string[]): Promise<TransactionResponse>;
     // prettier-ignore
-    async addVidaSponsoredAddresses(vidaId: bigint, sponsoredAddresses: string[], nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async addVidaSponsoredAddresses(vidaId: bigint, sponsoredAddresses: string[], feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async addVidaSponsoredAddresses(vidaId: bigint, sponsoredAddresses: string[], nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async addVidaSponsoredAddresses(vidaId: bigint, sponsoredAddresses: string[], feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -486,9 +472,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async removeVidaSponsoredAddresses(vidaId: bigint, sponsoredAddresses: string[]): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeVidaSponsoredAddresses(vidaId: bigint, sponsoredAddresses: string[], nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async removeVidaSponsoredAddresses(vidaId: bigint, sponsoredAddresses: string[], feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeVidaSponsoredAddresses(vidaId: bigint, sponsoredAddresses: string[], nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async removeVidaSponsoredAddresses(vidaId: bigint, sponsoredAddresses: string[], feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -511,9 +497,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async removeVidaAllowedSenders(vidaId: bigint, allowedSenders: string[]): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeVidaAllowedSenders(vidaId: bigint, allowedSenders: string[], nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async removeVidaAllowedSenders(vidaId: bigint, allowedSenders: string[], feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeVidaAllowedSenders(vidaId: bigint, allowedSenders: string[], nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async removeVidaAllowedSenders(vidaId: bigint, allowedSenders: string[], feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -536,9 +522,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async setVidaPrivateState(vidaId: bigint, privateState: boolean): Promise<TransactionResponse>;
     // prettier-ignore
-    async setVidaPrivateState(vidaId: bigint, privateState: boolean, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async setVidaPrivateState(vidaId: bigint, privateState: boolean, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async setVidaPrivateState(vidaId: bigint, privateState: boolean, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async setVidaPrivateState(vidaId: bigint, privateState: boolean, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -560,9 +546,9 @@ export default abstract class AbstractWallet {
 
     async setVidaToAbsolutePublic(vidaId: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async setVidaToAbsolutePublic(vidaId: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async setVidaToAbsolutePublic(vidaId: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async setVidaToAbsolutePublic(vidaId: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async setVidaToAbsolutePublic(vidaId: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -584,9 +570,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async setPWRTransferRights(vidaId: bigint, ownerCanTransferPWR: boolean): Promise<TransactionResponse>;
     // prettier-ignore
-    async setPWRTransferRights(vidaId: bigint, ownerCanTransferPWR: boolean, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async setPWRTransferRights(vidaId: bigint, ownerCanTransferPWR: boolean, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async setPWRTransferRights(vidaId: bigint, ownerCanTransferPWR: boolean, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async setPWRTransferRights(vidaId: bigint, ownerCanTransferPWR: boolean, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -609,9 +595,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async transferPWRFromVida(vidaId: bigint, receiver: string, amount: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWRFromVida(vidaId: bigint, receiver: string, amount: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async transferPWRFromVida(vidaId: bigint, receiver: string, amount: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async transferPWRFromVida(vidaId: bigint, receiver: string, amount: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async transferPWRFromVida(vidaId: bigint, receiver: string, amount: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -638,13 +624,14 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: string[], conduitsWithVotingPower: Map<string, bigint>): Promise<TransactionResponse>;
     // prettier-ignore
-    async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: string[], conduitsWithVotingPower: Map<string, bigint>, feePerByte: string): Promise<TransactionResponse>;
+    async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: string[], conduitsWithVotingPower: Map<string, bigint>, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: string[], conduitsWithVotingPower: Map<string, bigint>, feePerByte?: string): Promise<TransactionResponse> {
+    async setConduitMode (vidaId: bigint, mode: number, conduitThreshold: number, conduits: string[], conduitsWithVotingPower: Map<string, bigint>, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
+        const _nonce = nonce ?? (await this.getNonce());
 
         const _chainId = await this.getChainId();
         // const txn = TransactionBuilder.getConduitModeTransaction(
@@ -664,16 +651,16 @@ export default abstract class AbstractWallet {
         return {
             message: '',
             success: true,
-            transactionHash: '',
+            hash: '',
         }// TODO: remove this line and uncomment the above code
     }
 
     // prettier-ignore
     async setConduitModeWithVidaBased(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Array<string>, stakingPowers: Array<bigint>): Promise<TransactionResponse>;
     // prettier-ignore
-    async setConduitModeWithVidaBased(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Array<string>, stakingPowers: Array<bigint>, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async setConduitModeWithVidaBased(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Array<string>, stakingPowers: Array<bigint>, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async setConduitModeWithVidaBased(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Array<string>, stakingPowers: Array<bigint>, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async setConduitModeWithVidaBased(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Array<string>, stakingPowers: Array<bigint>, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -699,9 +686,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async approveAsConduit(vidaId: bigint, wrappedTxns: string[]): Promise<TransactionResponse>;
     // prettier-ignore
-    async approveAsConduit(vidaId: bigint, wrappedTxns: string[], nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async approveAsConduit(vidaId: bigint, wrappedTxns: string[], feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async approveAsConduit(vidaId: bigint, wrappedTxns: string[], nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async approveAsConduit(vidaId: bigint, wrappedTxns: string[], feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -725,9 +712,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async removeConduits(vidaId: bigint, conduits: string[]): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeConduits(vidaId: bigint, conduits: string[], nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async removeConduits(vidaId: bigint, conduits: string[], feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeConduits(vidaId: bigint, conduits: string[], nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async removeConduits(vidaId: bigint, conduits: string[], feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -754,9 +741,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async approveAsGuardian(wrappedTxns: string[]): Promise<TransactionResponse>;
     // prettier-ignore
-    async approveAsGuardian(wrappedTxns: string[], nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async approveAsGuardian(wrappedTxns: string[], feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async approveAsGuardian(wrappedTxns: string[], nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async approveAsGuardian(wrappedTxns: string[], feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -779,9 +766,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async removeGuardian(): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeGuardian(nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async removeGuardian(feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async removeGuardian(nonce?: number, feePerByte?: string): Promise<TransactionResponse>{
+    async removeGuardian(feePerByte?: string, nonce?: number): Promise<TransactionResponse>{
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -803,9 +790,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async setGuardian(expiryDate: EpochTimeStamp, guardianAddress: string, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -835,9 +822,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: bigint, withdrawalPenalty: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: bigint, withdrawalPenalty: number, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: bigint, withdrawalPenalty: number, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: bigint, withdrawalPenalty: number, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeEarlyWithdrawPenalty(title: string, description: string, earlyWithdrawalTime: bigint, withdrawalPenalty: number, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -862,9 +849,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeChangeFeePerByte( title: string, description: string, newFeePerByte: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeFeePerByte(title: string, description: string, newFeePerByte: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeFeePerByte(title: string, description: string, newFeePerByte: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeFeePerByte(title: string, description: string, newFeePerByte: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeFeePerByte(title: string, description: string, newFeePerByte: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -888,9 +875,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeMaxBlockSize(title: string, description: string, maxBlockSize: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -914,9 +901,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeMaxTxnSize(title: string, description: string, maxTxnSize: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -940,9 +927,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeChangeOverallBurnPercentage(title: string, description: string, burnPercentage: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeOverallBurnPercentage(title: string, description: string, burnPercentage: number, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeOverallBurnPercentage(title: string, description: string, burnPercentage: number, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeOverallBurnPercentage(title: string, description: string, burnPercentage: number, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeOverallBurnPercentage(title: string, description: string, burnPercentage: number, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -967,11 +954,10 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeChangeRewardPerYear(title: string, description: string, rewardPerYear: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeRewardPerYear(title: string, description: string, rewardPerYear: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeRewardPerYear(title: string, description: string, rewardPerYear: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeRewardPerYear(title: string, description: string, rewardPerYear: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeRewardPerYear(title: string, description: string, rewardPerYear: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
-        
         if (response != null && !response.success) { return response }
 
         const _nonce = nonce ?? (await this.getNonce());
@@ -996,9 +982,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeChangeValidatorCountLimit(title: string, description: string, validatorCountLimit: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeValidatorCountLimit(title: string, description: string, validatorCountLimit: number, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeValidatorCountLimit(title: string, description: string, validatorCountLimit: number, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeValidatorCountLimit(title: string, description: string, validatorCountLimit: number, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeValidatorCountLimit(title: string, description: string, validatorCountLimit: number, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -1022,9 +1008,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeChangeValidatorJoiningFee(title: string, description: string, joiningFee: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeValidatorJoiningFee(title: string, description: string, joiningFee: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeValidatorJoiningFee(title: string, description: string, joiningFee: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeValidatorJoiningFee(title: string, description: string, joiningFee: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeValidatorJoiningFee(title: string, description: string, joiningFee: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -1048,9 +1034,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeChangeVidaIdClaimingFee(title: string, description: string, claimingFee: bigint): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeVidaIdClaimingFee(title: string, description: string, claimingFee: bigint, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeVidaIdClaimingFee(title: string, description: string, claimingFee: bigint, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeVidaIdClaimingFee(title: string, description: string, claimingFee: bigint, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeVidaIdClaimingFee(title: string, description: string, claimingFee: bigint, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -1074,9 +1060,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -1100,9 +1086,9 @@ export default abstract class AbstractWallet {
     // prettier-ignore
     async proposeOther(title: string, description: string): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeOther(title: string, description: string, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async proposeOther(title: string, description: string, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeOther(title: string, description: string, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async proposeOther(title: string, description: string, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -1124,9 +1110,9 @@ export default abstract class AbstractWallet {
 
     async voteOnProposal(proposalHash: string, vote: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async voteOnProposal(proposalHash: string, vote: number, nonce: number, feePerByte: string): Promise<TransactionResponse>;
+    async voteOnProposal(proposalHash: string, vote: number, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async voteOnProposal(proposalHash: string, vote: number, nonce?: number, feePerByte?: string): Promise<TransactionResponse> {
+    async voteOnProposal(proposalHash: string, vote: number, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -1148,24 +1134,24 @@ export default abstract class AbstractWallet {
 
     // #endregion
 
+    getRpc(): PWRJS {
+        return this.pwrjs;
+    }
+
     // #region wallet exporting
 
-    async storeWallet(filePath: string): Promise<boolean> {
+    async storeWallet(filePath: string, password: string): Promise<boolean> {
         try {
             if (typeof window === 'undefined') {
                 let buffer = Buffer.alloc(0);
 
-                const pubLengthBuffer = Buffer.alloc(4);
-                pubLengthBuffer.writeUInt32BE(this._publicKey.length, 0);
-                buffer = Buffer.concat([buffer, pubLengthBuffer, Buffer.from(this._publicKey)]);
+                const seedPhrase: Uint8Array = new TextEncoder().encode(this._seedPhrase);
 
-                const privLengthBuffer = Buffer.alloc(4);
-                privLengthBuffer.writeUInt32BE(this._privateKey.length, 0);
-                buffer = Buffer.concat([buffer, privLengthBuffer, Buffer.from(this._privateKey)]);
+                const encryptedSeedPhrase = CryptoService.encryptNode(seedPhrase, password);
 
                 const { writeFile } = require('fs/promises') as typeof import('fs/promises');
 
-                await writeFile(filePath, buffer);
+                await writeFile(filePath, encryptedSeedPhrase);
                 return true;
             } else {
                 throw new Error('This method cannot be called on the client-side (browser)');
@@ -1175,7 +1161,7 @@ export default abstract class AbstractWallet {
         }
     }
 
-    static async loadWalletNode(pwr: PWRJS, filePath: string): Promise<AbstractWallet> {
+    static async loadWallet(filePath: string, password: string, pwr?: PWRJS): Promise<AbstractWallet> {
         try {
             if (typeof window !== 'undefined')
                 throw new Error(
@@ -1184,39 +1170,14 @@ export default abstract class AbstractWallet {
 
             const { readFile } = require('fs/promises') as typeof import('fs/promises');
 
-            const data = await readFile(filePath);
+            const encryptedData = await readFile(filePath);
 
-            if (data.length < 8) throw new Error(`File too small: ${data.length} bytes`);
+            const decryptedSeedPhrase = CryptoService.decryptNode(encryptedData, password);
+            const seedPhrase: string = new TextDecoder().decode(decryptedSeedPhrase);
 
-            let offset = 0;
+            console.log(`seedPhrase: ${seedPhrase}`);
 
-            const pubLength = data.readUInt32BE(offset);
-            offset += 4;
-            if (pubLength === 0 || pubLength > 2048)
-                throw new Error(`Invalid public key length: ${pubLength}`);
-            if (offset + pubLength > data.length)
-                throw new Error(`File too small for public key of length ${pubLength}`);
-
-            const publicKeyBytes = data.slice(offset, offset + pubLength);
-            offset += pubLength;
-
-            if (offset + 4 > data.length) throw new Error('File too small for secret key length');
-
-            const secLength = data.readUInt32BE(offset);
-            offset += 4;
-            if (secLength === 0 || secLength > 4096)
-                throw new Error(`Invalid secret key length: ${secLength}`);
-            if (offset + secLength > data.length)
-                throw new Error(`File too small for secret key of length ${secLength}`);
-
-            const privateKeyBytes = data.slice(offset, offset + secLength);
-
-            return AbstractWallet.fromKeys(privateKeyBytes, publicKeyBytes, pwr);
-
-            // return new AbstractWallet(privateKeyBytes, publicKeyBytes, pwr);
-            // } else {
-            //     throw new Error('This method cannot be called on the client-side (browser)');
-            // }
+            return PWRWallet.new(seedPhrase, pwr);
         } catch (error) {
             throw new Error(`Failed to load wallet: ${error.message}`);
         }

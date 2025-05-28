@@ -129,7 +129,7 @@ try {
     const r = await wallet.transferPWR(destinyAddress, BigInt(pwrAmount));
 
     if (r.sucess) {
-        console.log('Transcation Hash: ' + r.transactionHash);
+        console.log('Transcation Hash: ' + r.hash);
     }
 } catch (e) {
     console.log(e);
@@ -144,9 +144,9 @@ const data = new TextEncoder().encode('Hello, pwr!');
 const value = BigInt('1000000000'); // 1 PWR = 10^9
 
 try {
-    const r = await wallet.submitPayableVidaData(vidaId, data, value);
+    const r = await wallet.sendPayableVidaData(vidaId, data, value);
     if (r.sucess) {
-        console.log('Transcation Hash: ' + r.transactionHash);
+        console.log('Transcation Hash: ' + r.hash);
     }
 } catch (e) {
     console.log(e);
