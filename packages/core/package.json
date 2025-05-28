@@ -17,6 +17,8 @@
         "type": "git",
         "url": "git+https://github.com/pwrlabs/pwrjs.git"
     },
+    "license": "ISC",
+    "main": "./index.js",
     "exports": {
         ".": {
             "import": "./index.js",
@@ -43,15 +45,6 @@
             "require": "./wallet/index.js",
             "types": "./wallet/index.d.ts"
         }
-    },
-    "license": "ISC",
-    "main": "./index.js",
-    "exports": {
-        ".": "./index.js",
-        "./wallet": "./wallet.js",
-        "./services": "./services.js",
-        "./types": "./types.js",
-        "./utils": "./utils.js"
     },
     "files": [
         "src",

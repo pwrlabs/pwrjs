@@ -4,5 +4,13 @@
         "outDir": "../core",
         "baseUrl": "."
     },
-    "include": ["./src/**/*", "index.ts", "services.ts", "types.ts", "utils.ts", "wallet.ts"]
+    "include": [
+        "./src/**/*",
+        "index.ts",
+        "services.ts",
+        "types.ts",
+        "utils.ts",
+        "wallet.ts",
+        "./wallet/**/*"
+    ]
 }
