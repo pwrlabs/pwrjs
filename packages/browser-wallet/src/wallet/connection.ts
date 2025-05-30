@@ -39,7 +39,7 @@ declare global {
 			addListener: (callback: (accounts: string[]) => void) => void;
 		};
         onConnect: {
-            addListener: (callback: (address: string) => void) => void;
+            addListener: (callback: (address: string[]) => void) => void;
         };
         onDisconnect: {
 			addListener: (callback: () => void) => void;
@@ -53,7 +53,7 @@ declare global {
 
 // Type definitions for callback handlers
 type AccountChangeCallback = (accounts: string[]) => void;
-type ConnectCallback = (address: string) => void;
+type ConnectCallback = (address: string[]) => void;
 type DisconnectCallback = () => void;
 
 // Utility function to check if PWR is installed
