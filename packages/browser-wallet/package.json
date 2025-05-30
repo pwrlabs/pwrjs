@@ -1,6 +1,6 @@
 {
-    "name": "@pwrjs/browser-legacy",
-    "version": "0.11.5-alpha1",
+    "name": "@pwrjs/browser-wallet",
+    "version": "0.0.0-alpha.2",
     "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
     "author": "pwrlabs <devservices@pwrlabs.io>",
     "homepage": "",
@@ -12,6 +12,9 @@
     "files": [
         "lib"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "build": "pnpm build:ts",
         "dev": "pnpm build:ts --watch",

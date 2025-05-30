@@ -3,7 +3,7 @@ import {
     VidaTransactionSubscription,
     ProcessVidaTransactions,
 } from '../src/protocol/vida';
-import { VmDataTransaction } from '../src/record/vmDataTransaction';
+import { VidaDataTransaction } from '../src/record/vidaDataTransaction';
 import { PWRJS } from '../src';
 
 describe('VidaTransactionSubscription Integration Test (Real Objects)', () => {
@@ -17,19 +17,19 @@ describe('VidaTransactionSubscription Integration Test (Real Objects)', () => {
             const pwrjs: PWRJS = new PWRJS(rpc);
 
             // Real handler that logs the transaction.
-            const handler: ProcessVidaTransactions = (transaction: VmDataTransaction): void => {
+            const handler: ProcessVidaTransactions = (transaction: VidaDataTransaction): void => {
                 // console.log('--------- txn ---------');
                 // console.log(transaction);
             };
 
-            const vmId = BigInt(705);
+            const vidaId = BigInt(705);
             const startingBlock = BigInt(460100);
             const pollInterval = 200; // short interval for testing
 
             // Create the subscription.
             const subscription = new VidaTransactionSubscription(
                 pwrjs,
-                vmId,
+                vidaId,
                 startingBlock,
                 handler,
                 pollInterval

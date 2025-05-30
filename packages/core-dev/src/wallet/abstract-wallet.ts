@@ -1,6 +1,5 @@
 // protocol
 import PWRJS from '../protocol/pwrjs';
-import PWRWallet from './pwr-wallet';
 
 // services
 import HttpService from '../services/http.service';
@@ -14,6 +13,7 @@ import { TransactionResponse } from './wallet.types';
 import TransactionBuilder from '../protocol/falcon-transaction-builder';
 import { FalconKeyPair } from '../services/falcon-service';
 import { bytesToHex, hexToBytes } from '../utils';
+import PWRWallet from './pwr-wallet';
 
 export default abstract class AbstractWallet {
     public _addressHex: string;
@@ -127,18 +127,6 @@ export default abstract class AbstractWallet {
     }
 
     abstract verifySignature(message: Uint8Array, signature: Uint8Array): Promise<boolean>;
-
-    // async verifySignature(message: Uint8Array, signature: Uint8Array): Promise<boolean> {
-    //     if (typeof window === 'undefined') {
-    //         // node
-    //         const m = await import('../services/falcon/falcon-node.service');
-    //         return m.default.verify(message, this._publicKey, signature);
-    //     } else {
-    //         // browser
-    //         const m = await import('../services/falcon/falcon-browser.service');
-    //         return m.default.verify(message, this._publicKey, signature);
-    //     }
-    // }
 
     // #endregion
 
@@ -1058,11 +1046,11 @@ export default abstract class AbstractWallet {
     }
 
     // prettier-ignore
-    async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number): Promise<TransactionResponse>;
+    async proposeChangeVidaOwnerTxnFeeShare(title: string, description: string, vidaOwnerTxnFeeShare: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number, feePerByte: string, nonce: number): Promise<TransactionResponse>;
+    async proposeChangeVidaOwnerTxnFeeShare(title: string, description: string, vidaOwnerTxnFeeShare: number, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
+    async proposeChangeVidaOwnerTxnFeeShare(title: string, description: string, vidaOwnerTxnFeeShare: number, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -1070,12 +1058,12 @@ export default abstract class AbstractWallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getChangeVmOwnerTxnFeeShareProposalTransaction(
+        const txn = TransactionBuilder.getChangeVidaOwnerTxnFeeShareProposalTransaction(
             BigInt(_feePerByte),
             this._addressBytes,
             title,
             description,
-            vmOwnerTxnFeeShare,
+            vidaOwnerTxnFeeShare,
             _nonce,
             _chainId,
         );
@@ -1174,8 +1162,6 @@ export default abstract class AbstractWallet {
 
             const decryptedSeedPhrase = CryptoService.decryptNode(encryptedData, password);
             const seedPhrase: string = new TextDecoder().decode(decryptedSeedPhrase);
-
-            console.log(`seedPhrase: ${seedPhrase}`);
 
             return PWRWallet.new(seedPhrase, pwr);
         } catch (error) {

@@ -152,12 +152,12 @@ describe('wallet_core', () => {
     // });
 
     it('sends VM data transaction', async () => {
-        const vmId = '100';
+        const vidaId = '100';
 
         const data = JSON.stringify({ setName: 'AhmadHassoun' });
 
         try {
-            const tx = await pwrWallet.sendVMStringDataTxn(vmId, data);
+            const tx = await pwrWallet.sendVMStringDataTxn(vidaId, data);
             // console.log('VM data txn:', tx);
             expect(tx.success).toBe(true);
         } catch (e) {
@@ -167,7 +167,7 @@ describe('wallet_core', () => {
     });
 
     it('sends vm data bytes transaction', async () => {
-        const vmId = '100';
+        const vidaId = '100';
         const data = {
             setName: 'AhmadHassoun',
         };
@@ -175,7 +175,7 @@ describe('wallet_core', () => {
         const dataBytes = new TextEncoder().encode(JSON.stringify(data));
 
         try {
-            const tx = await pwrWallet.sendVMDataTxn(vmId, dataBytes);
+            const tx = await pwrWallet.sendVMDataTxn(vidaId, dataBytes);
             // console.log('VM data bytes txn  :', tx);
             expect(tx.success).toBe(true);
         } catch (e) {
@@ -185,13 +185,13 @@ describe('wallet_core', () => {
     });
 
     it('sends payable VM data  transaction', async () => {
-        const vmId = '100';
+        const vidaId = '100';
         const data = '（づ￣3￣）づ╭❤️～';
 
         const dataBytes = new TextEncoder().encode(data);
 
         try {
-            const tx = await pwrWallet.sendPayableVmDataTransaction(vmId, '1', dataBytes);
+            const tx = await pwrWallet.sendPayableVidaDataTransaction(vidaId, '1', dataBytes);
             // console.log('payable VM data txn:', tx);
             expect(tx.success).toBe(true);
         } catch (e) {
@@ -304,7 +304,7 @@ describe('wallet_core', () => {
     // I checked and it's working
     // it('claims vmid', async () => {
     //     try {
-    //         const tx = await pwrWallet.claimVmId('20');
+    //         const tx = await pwrWallet.claimVidaId('20');
     //         console.log('claim vmid txn', tx);
     //         expect(tx.success).toBe(true);
     //     } catch (e) {
@@ -365,12 +365,12 @@ describe('wallet_core', () => {
     // // });
 
     // // it('sends a conduit transaction', async () => {
-    // //     const vmId = 100;
+    // //     const vidaId = 100;
     // //     const txnBytes = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
     // //     nonce += 1;
     // //     try {
     // //         const tx = await pwrWallet.sendConduitTransaction(
-    // //             vmId,
+    // //             vidaId,
     // //             txnBytes,
     // //             nonce
     // //         );
@@ -520,7 +520,7 @@ describe('wallet_core', () => {
     // it('Change vm id claiming fee proposal', async () => {
     //     try {
     //         const fee = '1';
-    //         const tx = await pwrWallet.createProposal_ChangeVmIdClaimingFee(
+    //         const tx = await pwrWallet.createProposal_ChangeVidaIdClaimingFee(
     //             fee,
     //             'example title',
     //             'lorem ipsum dolor sit amet'
@@ -536,7 +536,7 @@ describe('wallet_core', () => {
     // it('Change vm owner txn fee share proposal', async () => {
     //     try {
     //         const feeShare = 1;
-    //         const tx = await pwrWallet.createProposal_ChangeVmOwnerTxnFeeShare(
+    //         const tx = await pwrWallet.createProposal_ChangeVidaOwnerTxnFeeShare(
     //             feeShare,
     //             'example title',
     //             'lorem ipsum dolor sit amet'

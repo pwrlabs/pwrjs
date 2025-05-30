@@ -1,4 +1,4 @@
-import { VmDataTransaction } from '../record/vmDataTransaction';
+import { VidaDataTransaction } from '../record/vidaDataTransaction';
 
 import { Block } from './block.entity';
 import { Validator } from './validator.entity';
@@ -94,11 +94,11 @@ export namespace HttpTypes {
     };
 
     export type VidaDataTransactionsResponse = {
-        transactions: VmDataTransaction[];
+        transactions: VidaDataTransaction[];
     };
 
     export type VidaDataTransactionsFilteredResponse = {
-        transactions: VmDataTransaction[];
+        transactions: VidaDataTransaction[];
     };
 
     // #endregion

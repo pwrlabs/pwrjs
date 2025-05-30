@@ -35,7 +35,7 @@ const api = {
             blockTimestamp: '/blockTimestamp',
             block: '/block?blockNumber=:blockNumber',
             blockWithVidaDataTransactionsOnly:
-                '/blockWithVidaDataTransactions?blockNumber=:blockNumber&vmId=:vidaId',
+                '/blockWithVidaDataTransactions?blockNumber=:blockNumber&vidaId=:vidaId',
         },
 
         transactions: {
@@ -77,7 +77,7 @@ const api = {
         },
 
         vida: {
-            vidaOwnerTransactionFeeShare: '/vmOwnerTransactionFeeShare',
+            vidaOwnerTransactionFeeShare: '/vidaOwnerTransactionFeeShare',
             vidaIdClaimingFee: '/vidaIdClaimingFee',
             ownerOfVida: '/ownerOfVidaId?vidaId=:vidaId',
             sponsoredAddresses: '/vidaSponsoredAddresses?vidaId=:vidaId',
@@ -90,8 +90,8 @@ const api = {
                 '/areConduitsAllowedToTransferPWRFromVida?vidaId=:vidaId',
             vidaDataTransactions:
                 '/getVidaTransactions?startingBlock=:startingBlock&endingBlock=:endingBlock&vidaId=:vidaId',
-            VmTransactionsSortByBytePrefix:
-                '/getVmTransactionsSortByBytePrefix?startingBlock=:startingBlock&endingBlock=:endingBlock&vidaId=:vidaId&bytePrefix=:bytePrefix',
+            VidaTransactionsSortByBytePrefix:
+                '/getVidaTransactionsSortByBytePrefix?startingBlock=:startingBlock&endingBlock=:endingBlock&vidaId=:vidaId&bytePrefix=:bytePrefix',
         },
 
         // #region proposal

@@ -10,7 +10,7 @@ import HttpService from '../services/http.service';
 // static
 import { Transaction_ID } from '../static/enums/transaction.enum';
 
-import { VmDataTransaction } from '../record/vmDataTransaction';
+import { VidaDataTransaction } from '../record/vidaDataTransaction';
 import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
 import { bytesToHex, hexToBytes } from '../utils';
 
@@ -498,7 +498,7 @@ export default class PWRJS {
         startingBlock: string,
         endingBlock: string,
         vidaId: bigint
-    ): Promise<VmDataTransaction[]> {
+    ): Promise<VidaDataTransaction[]> {
         const url = api.rpc.vida.vidaDataTransactions
             .replace(':startingBlock', startingBlock)
             .replace(':endingBlock', endingBlock)
@@ -506,7 +506,13 @@ export default class PWRJS {
 
         const res = await this.httpSvc.get<HttpTypes.VidaDataTransactionsResponse>(url);
 
-        return res.transactions;
+        let txsArray: VidaDataTransaction[] = [];
+        (res.transactions).forEach((txn) => {
+            const txnData = typeof txn === 'string' ? JSON.parse(txn) : txn;
+            txsArray.push(txnData);
+        });
+
+        return txsArray;
     }
 
     public async getVidaDataTransactionsFilterByBytePrefix(
@@ -514,7 +520,7 @@ export default class PWRJS {
         endingBlock: string,
         vidaId: bigint,
         bytePrefix: Uint8Array
-    ): Promise<VmDataTransaction[]> {
+    ): Promise<VidaDataTransaction[]> {
         const url = api.rpc.vida.vidaDataTransactions
             .replace(':startingBlock', startingBlock)
             .replace(':endingBlock', endingBlock)
@@ -538,13 +544,13 @@ export default class PWRJS {
 
         if (vidaId < 0) vidaId = -vidaId;
 
-        const vmIdString: string = vidaId.toString();
+        const vidaIdString: string = vidaId.toString();
 
-        for (let i = 0; i < 39 - vmIdString.length; i++) {
+        for (let i = 0; i < 39 - vidaIdString.length; i++) {
             hexAddress += '0';
         }
 
-        hexAddress += vmIdString;
+        hexAddress += vidaIdString;
 
         return '0x' + hexAddress;
     }
@@ -570,17 +576,17 @@ export default class PWRJS {
         const maxLong = BigInt('9223372036854775807');
         const minLong = BigInt('-9223372036854775808');
 
-        let vmId;
+        let vidaId;
         try {
-            vmId = BigInt(address);
+            vidaId = BigInt(address);
             if (negative) {
-                vmId = -vmId;
+                vidaId = -vidaId;
             }
         } catch (error) {
             return false;
         }
 
-        if (vmId > maxLong || vmId < minLong) {
+        if (vidaId > maxLong || vidaId < minLong) {
             return false;
         }
 
@@ -724,15 +730,14 @@ export default class PWRJS {
 
     // #region iva
     subscribeToVidaTransactions(
-        pwrj: PWRJS,
-        vmId: bigint,
+        vidaId: bigint,
         startingBlock: bigint,
         handler: ProcessVidaTransactions,
         pollInterval: number = 100
     ): VidaTransactionSubscription {
         const subscription = new VidaTransactionSubscription(
-            pwrj,
-            vmId,
+            this,
+            vidaId,
             startingBlock,
             handler,
             pollInterval
