@@ -567,7 +567,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getChangeVmOwnerTxnFeeShareProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, vmOwnerTxnFeeShare: number, nonce: number, chainId: number): Uint8Array {
+    static getChangeVidaOwnerTxnFeeShareProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, vidaOwnerTxnFeeShare: number, nonce: number, chainId: number): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_VM_OWNER_TXN_FEE_SHARE_PROPOSAL,
             nonce,
@@ -594,7 +594,7 @@ export default class FalconTransactionBuilder {
         buffer.set(titleBytes, offset);
         offset += titleBytes.length;
 
-        dataView.setUint32(offset, vmOwnerTxnFeeShare, false);
+        dataView.setUint32(offset, vidaOwnerTxnFeeShare, false);
         offset += 4;
 
         buffer.set(descriptionBytes, offset);

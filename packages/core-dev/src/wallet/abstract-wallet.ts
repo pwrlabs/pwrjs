@@ -128,18 +128,6 @@ export default abstract class AbstractWallet {
 
     abstract verifySignature(message: Uint8Array, signature: Uint8Array): Promise<boolean>;
 
-    // async verifySignature(message: Uint8Array, signature: Uint8Array): Promise<boolean> {
-    //     if (typeof window === 'undefined') {
-    //         // node
-    //         const m = await import('../services/falcon/falcon-node.service');
-    //         return m.default.verify(message, this._publicKey, signature);
-    //     } else {
-    //         // browser
-    //         const m = await import('../services/falcon/falcon-browser.service');
-    //         return m.default.verify(message, this._publicKey, signature);
-    //     }
-    // }
-
     // #endregion
 
     // #region transactions base
@@ -1058,11 +1046,11 @@ export default abstract class AbstractWallet {
     }
 
     // prettier-ignore
-    async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number): Promise<TransactionResponse>;
+    async proposeChangeVidaOwnerTxnFeeShare(title: string, description: string, vidaOwnerTxnFeeShare: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number, feePerByte: string, nonce: number): Promise<TransactionResponse>;
+    async proposeChangeVidaOwnerTxnFeeShare(title: string, description: string, vidaOwnerTxnFeeShare: number, feePerByte: string, nonce: number): Promise<TransactionResponse>;
     // prettier-ignore
-    async proposeChangeVmOwnerTxnFeeShare(title: string, description: string, vmOwnerTxnFeeShare: number, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
+    async proposeChangeVidaOwnerTxnFeeShare(title: string, description: string, vidaOwnerTxnFeeShare: number, feePerByte?: string, nonce?: number): Promise<TransactionResponse> {
         const response = await this.makeSurePublicKeyIsSet();
         if (response != null && !response.success) { return response }
 
@@ -1070,12 +1058,12 @@ export default abstract class AbstractWallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getChangeVmOwnerTxnFeeShareProposalTransaction(
+        const txn = TransactionBuilder.getChangeVidaOwnerTxnFeeShareProposalTransaction(
             BigInt(_feePerByte),
             this._addressBytes,
             title,
             description,
-            vmOwnerTxnFeeShare,
+            vidaOwnerTxnFeeShare,
             _nonce,
             _chainId,
         );

@@ -181,28 +181,28 @@
 //     // #region vm
 
 //     test('PWRJS vm owner txn fee ', async () => {
-//         const vmOwnerTxnFee = await pwrjs.getVmOwnerTransactionFeeShare();
+//         const vmOwnerTxnFee = await pwrjs.getVidaOwnerTransactionFeeShare();
 //         expect(vmOwnerTxnFee).toBe(2500);
 //     });
 
 //     test('PWRJS vm claiming fee', async () => {
-//         const claimingFee = await pwrjs.getVmIdClaimingFee();
+//         const claimingFee = await pwrjs.getVidaIdClaimingFee();
 //         expect(claimingFee).toBe(100000000000);
 //     });
 
-//     test('PWRJS vmId', async () => {
-//         const vmId = pwrjs.getVmIdAddress(BigInt(10023));
+//     test('PWRJS vidaId', async () => {
+//         const vidaId = pwrjs.getVidaIdAddress(BigInt(10023));
 
-//         expect(vmId).toBe(vmAddress);
+//         expect(vidaId).toBe(vmAddress);
 //     });
 
-//     test('PWRJ isVm address', async () => {
-//         const notVmAddress = PWRJS.isVmAddress(testAddress);
-//         const _vmAddress = PWRJS.isVmAddress(vmAddress);
-//         const _vmAddress2 = PWRJS.isVmAddress('0x0000000000000000000007075656276978097000');
-//         const _vmAddress3 = PWRJS.isVmAddress('0x1000000000000000000007075656276978097000');
+//     test('PWRJ isVida address', async () => {
+//         const notVidaAddress = PWRJS.isVidaAddress(testAddress);
+//         const _vmAddress = PWRJS.isVidaAddress(vmAddress);
+//         const _vmAddress2 = PWRJS.isVidaAddress('0x0000000000000000000007075656276978097000');
+//         const _vmAddress3 = PWRJS.isVidaAddress('0x1000000000000000000007075656276978097000');
 
-//         expect(notVmAddress).toBe(false);
+//         expect(notVidaAddress).toBe(false);
 //         expect(_vmAddress).toBe(true);
 //         expect(_vmAddress2).toBe(true);
 //         expect(_vmAddress3).toBe(true);
@@ -218,7 +218,7 @@
 //     //     const TxnData = {
 //     //         receiver: '10023',
 //     //         data: '0x0000014ff9014c82064b843b9aca0082801f94119e7769552157edfc425c4d0667f3c6f56225a280b8e4f7742d2f00000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000008dc7e4a9bc0a0a00000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012c00000000000000000000000000000000000000000000000000000000000000183636353437666630333031393337386639313636323235640000000000000000824e71a0aaeca5c433f69f487d84cd423da6ed0df53a69a648795faddf543b5022fdfe75a044530d65c3d1eb00b16178df495557eea4710088de444d6a945c062be9b66d34',
-//     //         vmId: 10023,
+//     //         vidaId: 10023,
 //     //         fee: 51800,
 //     //         errorMessage: '',
 //     //         type: 'VM Data',
@@ -240,7 +240,7 @@
 //     // });
 
 //     // test('PWRJS Owner of VM', async () => {
-//     //     const res = await pwrjs.getOwnerOfVm('20');
+//     //     const res = await pwrjs.getOwnerOfVida('20');
 
 //     //     expect(res.toLowerCase()).toBe(
 //     //         '0xffb927e3e1fd43fc47bd140c817af780241d1b31'
@@ -248,7 +248,7 @@
 //     // });
 
 //     // test('conduits of VM', async () => {
-//     //     const conduits = await pwrjs.getConduitsOfVm('111');
+//     //     const conduits = await pwrjs.getConduitsOfVida('111');
 
 //     //     expect(conduits.length).toBeGreaterThan(0);
 //     // });

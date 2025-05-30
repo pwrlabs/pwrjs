@@ -1,4 +1,4 @@
-import { Transaction } from '../record/transaction';
+import { Transaction } from './transaction';
 
 export type VidaDataTransaction = Transaction & {
     vidaId: string;

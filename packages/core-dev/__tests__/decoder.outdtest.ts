@@ -59,18 +59,18 @@
 //         from: '0x0000000000000000000000000000000000000000',
 //     };
 
-//     const claimVmIdTxn = {
+//     const claimVidaIdTxn = {
 //         id: Transaction_ID.CLAIM_VM_ID,
 //         chainId: 0,
 //         nonce: 0,
-//         vmId: '100',
+//         vidaId: '100',
 //     };
 
 //     const vmDataTxn = {
 //         id: Transaction_ID.VM_DATA_TXN,
 //         chainId: 0,
 //         data: 'hola mundo',
-//         vmId: '100',
+//         vidaId: '100',
 //         nonce: 4,
 //     };
 
@@ -371,10 +371,10 @@
 //         //     dataAgain,
 //         // });
 
-//         const { id, chainId, vmId, data, nonce } = vmDataTxn;
+//         const { id, chainId, vidaId, data, nonce } = vmDataTxn;
 
-//         const txn = TransactionBuilder.getVmDataTransaction(
-//             vmId,
+//         const txn = TransactionBuilder.getVidaDataTransaction(
+//             vidaId,
 //             data,
 //             nonce,
 //             chainId
@@ -383,13 +383,13 @@
 //         const signature = signTxn(txn, pvk);
 //         const txnBytes = new Uint8Array([...txn, ...signature]);
 
-//         const result = decoder.decodeVmDataTxn(txnBytes, senderBytes, nonce);
+//         const result = decoder.decodeVidaDataTxn(txnBytes, senderBytes, nonce);
 
 //         expect(result).toEqual({
 //             sender: senderHex,
 //             nonce,
 //             size: txnBytes.length,
-//             vmId,
+//             vidaId,
 //             // data to hex
 //             data: `0x${bytesToHex(new TextEncoder().encode(data))}`,
 //             rawTransaction: txnBytes,
@@ -398,11 +398,11 @@
 //         });
 //     });
 
-//     it('decode claim vmId', () => {
-//         const { chainId, id, nonce, vmId } = claimVmIdTxn;
+//     it('decode claim vidaId', () => {
+//         const { chainId, id, nonce, vidaId } = claimVidaIdTxn;
 
-//         const txn = TransactionBuilder.getClaimVmIdTransaction(
-//             BigInt(vmId),
+//         const txn = TransactionBuilder.getClaimVidaIdTransaction(
+//             BigInt(vidaId),
 //             nonce,
 //             chainId
 //         );
@@ -411,13 +411,13 @@
 
 //         const txnBytes = new Uint8Array([...txn, ...signature]);
 
-//         const result = decoder.decodeClaimVmId(txnBytes, senderBytes, nonce);
+//         const result = decoder.decodeClaimVidaId(txnBytes, senderBytes, nonce);
 
 //         expect(result).toEqual({
 //             sender: senderHex,
 //             nonce,
 //             size: txnBytes.length,
-//             vmId,
+//             vidaId,
 //             rawTransaction: txnBytes,
 //             chainId,
 //             type: Transaction_ID.CLAIM_VM_ID,
@@ -830,7 +830,7 @@
 //     it('decode validator claiming fee proposal', () => {
 //         const { chainId, description, nonce, title, claimingFee } = proposal8;
 
-//         const txn = TransactionBuilder.getChangeVmIdClaimingFeeProposalTxn(
+//         const txn = TransactionBuilder.getChangeVidaIdClaimingFeeProposalTxn(
 //             claimingFee,
 //             title,
 //             description,
@@ -841,7 +841,7 @@
 //         const signature = signTxn(txn, pvk);
 //         const txnBytes = new Uint8Array([...txn, ...signature]);
 
-//         const result = decoder.decodeChangeVmIdClaimingFeeProposalTxn(
+//         const result = decoder.decodeChangeVidaIdClaimingFeeProposalTxn(
 //             txnBytes,
 //             senderBytes,
 //             nonce
@@ -863,7 +863,7 @@
 //     it('decode change fee share proposal', () => {
 //         const { chainId, description, nonce, title, feeShare } = proposal9;
 
-//         const txn = TransactionBuilder.getChangeVmOwnerTxnFeeShareProposalTxn(
+//         const txn = TransactionBuilder.getChangeVidaOwnerTxnFeeShareProposalTxn(
 //             feeShare,
 //             title,
 //             description,
@@ -874,7 +874,7 @@
 //         const signature = signTxn(txn, pvk);
 //         const txnBytes = new Uint8Array([...txn, ...signature]);
 
-//         const result = decoder.decodeChangeVmOwnerTxnFeeShareProposalTxn(
+//         const result = decoder.decodeChangeVidaOwnerTxnFeeShareProposalTxn(
 //             txnBytes,
 //             senderBytes,
 //             nonce

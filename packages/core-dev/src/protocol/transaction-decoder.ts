@@ -37,10 +37,10 @@
 //                 return this.decodeWithdraw(txn, sender, nonce);
 
 //             case Transaction_ID.VM_DATA_TXN:
-//                 return this.decodeVmDataTxn(txn, sender, nonce);
+//                 return this.decodeVidaDataTxn(txn, sender, nonce);
 
 //             case Transaction_ID.CLAIM_VM_ID:
-//                 return this.decodeClaimVmId(txn, sender, nonce);
+//                 return this.decodeClaimVidaId(txn, sender, nonce);
 
 //             case Transaction_ID.SET_GUARDIAN:
 //                 return this.decodeSetGuardian(txn, sender, nonce);
@@ -107,11 +107,11 @@
 
 //             case Transaction_ID.CHANGE_VM_ID_CLAIMING_FEE_PROPOSAL:
 //                 // prettier-ignore
-//                 return this.decodeChangeVmIdClaimingFeeProposalTxn(txn, sender, nonce);
+//                 return this.decodeChangeVidaIdClaimingFeeProposalTxn(txn, sender, nonce);
 
 //             case Transaction_ID.CHANGE_VM_OWNER_TXN_FEE_SHARE_PROPOSAL:
 //                 // prettier-ignore
-//                 return this.decodeChangeVmOwnerTxnFeeShareProposalTxn(txn, sender, nonce);
+//                 return this.decodeChangeVidaOwnerTxnFeeShareProposalTxn(txn, sender, nonce);
 
 //             case Transaction_ID.OTHER_PROPOSAL_TXN:
 //                 // prettier-ignore
@@ -275,7 +275,7 @@
 //         };
 //     }
 
-//     public decodeVmDataTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
+//     public decodeVidaDataTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
 //         if (txn.length < 14) {
 //             throw new Error('Invalid length for VM Data txn');
 //         }
@@ -291,13 +291,13 @@
 
 //         const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
-//         const externalVmId = dataView.getBigUint64(6, false); // Assuming little-endian
+//         const externalVidaId = dataView.getBigUint64(6, false); // Assuming little-endian
 
 //         let dataLength;
 //         const senderHex = bytesToHex(sender);
 
 //         if (PWRJS.isVidaAddress(senderHex)) {
-//             // Assuming `isVmAddress` checks if the address is a VM
+//             // Assuming `isVidaAddress` checks if the address is a VM
 //             dataLength = txn.length - 14;
 //         } else {
 //             dataLength = txn.length - 79; // Adjusted for the presence of a signature
@@ -309,7 +309,7 @@
 //             sender: `0x${bytesToHex(sender)}`,
 //             nonce: nonce,
 //             size: txn.length,
-//             vmId: externalVmId.toString(), // Converting BigInt to string for safety in JS environments
+//             vidaId: externalVidaId.toString(), // Converting BigInt to string for safety in JS environments
 //             data: `0x${bytesToHex(data)}`,
 //             rawTransaction: txn,
 //             chainId: txn[1],
@@ -317,9 +317,9 @@
 //         };
 //     }
 
-//     public decodeClaimVmId(txn: Uint8Array, sender: Uint8Array, nonce: number) {
+//     public decodeClaimVidaId(txn: Uint8Array, sender: Uint8Array, nonce: number) {
 //         if (txn.length != 14 /*Without Signature*/ && txn.length != 79 /*With Signature*/)
-//             throw new Error('Invalid length for claim vm id txn');
+//             throw new Error('Invalid length for claim vida id txn');
 
 //         /*
 //          * Identifier - 1
@@ -331,13 +331,13 @@
 
 //         const dataView = new DataView(txn.buffer, txn.byteOffset, txn.byteLength);
 
-//         const vmId = dataView.getBigUint64(6, false); // Assuming little-endian
+//         const vidaId = dataView.getBigUint64(6, false); // Assuming little-endian
 
 //         return {
 //             sender: `0x${bytesToHex(sender)}`,
 //             nonce: nonce,
 //             size: txn.length,
-//             vmId: vmId.toString(),
+//             vidaId: vidaId.toString(),
 //             rawTransaction: txn,
 //             chainId: txn[1],
 //             type: txn[0],
@@ -809,13 +809,13 @@
 //         };
 //     }
 
-//     public decodeChangeVmIdClaimingFeeProposalTxn(
+//     public decodeChangeVidaIdClaimingFeeProposalTxn(
 //         txn: Uint8Array,
 //         sender: Uint8Array,
 //         nonce: number
 //     ) {
 //         if (txn.length < 18)
-//             throw new Error('Invalid length for change vm id claiming fee proposal txn');
+//             throw new Error('Invalid length for change vida id claiming fee proposal txn');
 
 //         /*
 //         Identifier - 1
@@ -823,7 +823,7 @@
 //         nonce - 4
 //         title size identifier - 4
 //         title - x
-//         vm id claiming fee - 8
+//         vida id claiming fee - 8
 //         description - x
 //         signature - 65
 //         */
@@ -834,7 +834,7 @@
 //         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
 //         const title = new TextDecoder().decode(title_b);
 
-//         const vmIdClaimingFee = dataView.getBigInt64(10 + titleSize, false);
+//         const vidaIdClaimingFee = dataView.getBigInt64(10 + titleSize, false);
 
 //         const description_b = new Uint8Array(
 //             txn.buffer,
@@ -848,7 +848,7 @@
 //             sender: `0x${bytesToHex(sender)}`,
 //             nonce: nonce,
 //             size: txn.length,
-//             claimingFee: vmIdClaimingFee.toString(),
+//             claimingFee: vidaIdClaimingFee.toString(),
 //             description,
 //             title,
 //             rawTransaction: txn,
@@ -857,20 +857,20 @@
 //         };
 //     }
 
-//     public decodeChangeVmOwnerTxnFeeShareProposalTxn(
+//     public decodeChangeVidaOwnerTxnFeeShareProposalTxn(
 //         txn: Uint8Array,
 //         sender: Uint8Array,
 //         nonce: number
 //     ) {
 //         if (txn.length < 10)
-//             throw new Error('Invalid length for change vm owner txn fee share proposal txn');
+//             throw new Error('Invalid length for change vida owner txn fee share proposal txn');
 //         /*
 //         Identifier - 1
 //         chain id - 1
 //         nonce - 4
 //         title size identifier - 4
 //         title - x
-//         vm owner txn fee share - 4
+//         vida owner txn fee share - 4
 //         description - x
 //         signature - 65
 //         */
@@ -881,7 +881,7 @@
 //         const title_b = new Uint8Array(txn.buffer, 10, titleSize);
 //         const title = new TextDecoder().decode(title_b);
 
-//         const vmOwnerTxnFeeShare = dataView.getInt32(10 + titleSize, false);
+//         const vidaOwnerTxnFeeShare = dataView.getInt32(10 + titleSize, false);
 
 //         const description_b = new Uint8Array(
 //             txn.buffer,
@@ -895,7 +895,7 @@
 //             sender: `0x${bytesToHex(sender)}`,
 //             nonce: nonce,
 //             size: txn.length,
-//             feeShare: vmOwnerTxnFeeShare,
+//             feeShare: vidaOwnerTxnFeeShare,
 //             description,
 //             title,
 //             rawTransaction: txn,
@@ -906,7 +906,7 @@
 
 //     public decodeOtherProposalTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
 //         if (txn.length < 6)
-//             throw new Error('Invalid length for change vm owner txn fee share proposal txn');
+//             throw new Error('Invalid length for change vida owner txn fee share proposal txn');
 
 //         /*
 //         Identifier - 1
@@ -945,7 +945,7 @@
 
 //     public decodeVoteOnProposalTxn(txn: Uint8Array, sender: Uint8Array, nonce: number) {
 //         if (txn.length < 6)
-//             throw new Error('Invalid length for change vm owner txn fee share proposal txn');
+//             throw new Error('Invalid length for change vida owner txn fee share proposal txn');
 
 //         /*
 //         Identifier - 1

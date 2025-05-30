@@ -1,11 +1,11 @@
-import { VmDataTransaction } from '../record/vmDataTransaction';
+import { VidaDataTransaction } from '../record/vidaDataTransaction';
 import PWRJS from './pwrjs';
 
-export type ProcessVidaTransactions = (transaction: VmDataTransaction) => void;
+export type ProcessVidaTransactions = (transaction: VidaDataTransaction) => void;
 
 export class VidaTransactionSubscription {
     private pwrjs: PWRJS;
-    private vmId: bigint;
+    private vidaId: bigint;
     private startingBlock: bigint;
     private latestCheckedBlock: bigint;
     private handler: ProcessVidaTransactions;
@@ -17,14 +17,14 @@ export class VidaTransactionSubscription {
     private _running: boolean = false;
 
     constructor(
-        pwrj: PWRJS,
-        vmId: bigint,
+        pwrjs: PWRJS,
+        vidaId: bigint,
         startingBlock: bigint,
         handler: ProcessVidaTransactions,
         pollInterval: number = 100
     ) {
-        this.pwrjs = pwrj;
-        this.vmId = vmId;
+        this.pwrjs = pwrjs;
+        this.vidaId = vidaId;
         this.startingBlock = startingBlock;
         this.latestCheckedBlock = startingBlock;
         this.handler = handler;
@@ -61,7 +61,7 @@ export class VidaTransactionSubscription {
                     const transactions = await this.pwrjs.getVidaDataTransactions(
                         currentBlock.toString(),
                         effectiveLatestBlock.toString(),
-                        this.vmId
+                        this.vidaId
                     );
 
                     transactions.forEach((transaction) => {
@@ -75,8 +75,8 @@ export class VidaTransactionSubscription {
                 // print trace
                 console.log(error.stack);
 
-                console.error('Failed to fetch and process VM data transactions: ' + error.message);
-                console.error('Fetching and processing VM data transactions has stopped');
+                console.error('Failed to fetch and process VIDA data transactions: ' + error.message);
+                console.error('Fetching and processing VIDA data transactions has stopped');
                 break;
             } finally {
                 await this.sleep(this.pollInterval);
@@ -118,8 +118,8 @@ export class VidaTransactionSubscription {
         return this.startingBlock;
     }
 
-    public getVmId(): bigint {
-        return this.vmId;
+    public getVidaId(): bigint {
+        return this.vidaId;
     }
 
     public getHandler(): ProcessVidaTransactions {
