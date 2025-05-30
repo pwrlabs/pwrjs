@@ -1,5 +1,3 @@
-import { ConnectionTypes } from "./wallet.types";
-
 // Declaring global PWR interface for wallet interaction
 declare global {
     interface PWR {
@@ -7,23 +5,25 @@ declare global {
         name: string;
         version: string;
         // actions
-        restablishConnection: () => Promise<string>;
+        getConnections: () => Promise<string[]>;
         connect: () => Promise<any>;
         disconnect: (data: object) => Promise<any>;
-        getConnections: () => Promise<any>;
-        areAutomatedTransactionsEnabled: () => Promise<any>;
-        getFingerprints: () => Promise<any>;
+        getFingerprints: () => Promise<string>;
+        // sign message function
+        signMessage: (data: object) => Promise<any>;
+        // automated transactions
+        enableAutomatedTxns: () => Promise<any>;
+        areAutomatedTransactionsEnabled: () => Promise<boolean>;
+        disableAutomatedTxns: () => Promise<any>;
         // transactions
         transferPwr: (txnData: object) => Promise<string>;
-        dataTransaction: (txnData: object) => Promise<string>;
-        bytesDataTransaction: (txnData: object) => Promise<string>;
-        payableVmDataTransaction: (txnData: object) => Promise<string>;
-        claimIdVm: (txnData: object) => Promise<string>;
+        payableVidaDataTransaction: (txnData: object) => Promise<string>;
+        claimVidaId: (txnData: object) => Promise<string>;
         delegate: (txnData: object) => Promise<string>;
         withdraw: (txnData: object) => Promise<string>;
         moveStake: (txnData: object) => Promise<string>;
-        earlyWithdrawPenalty: (txnData: object) => Promise<string>;
-        feePerByte: (txnData: object) => Promise<string>;
+        proposeEarlyWithdrawPenalty: (txnData: object) => Promise<string>;
+        proposeChangefeePerByte: (txnData: object) => Promise<string>;
         otherProposal: (txnData: object) => Promise<string>;
         overallBurnPercentage: (txnData: object) => Promise<string>;
         rewardPerYear: (txnData: object) => Promise<string>;
@@ -75,16 +75,10 @@ export async function isConnected(): Promise<boolean> {
 }
 
 // Get the current connected account
-export async function getConnection(): Promise<ConnectionTypes> {
+export async function getConnection(): Promise<string | null> {
     if (await isConnected()) {
         const accounts = await window.pwr.getConnections();
-        return {
-            id: accounts[0].id,
-            name: accounts[0].name,
-            publicKey: accounts[0].publicKey,
-            privateKey: accounts[0].privateKey,
-            address: accounts[0].address,
-        };
+        return accounts[0];
     }
     return null;
 }
@@ -103,9 +97,9 @@ export async function connect() {
 // Function to disconnect the wallet
 export async function disconnect() {
     if (await isConnected()) {
-        const address = (await getConnection()).address;
+        const address = await getConnection();
         try {
-            await window.pwr.disconnect({ address: address });
+            await window.pwr.disconnect({ address });
         } catch (error) {
             console.error('Failed to disconnect PWR Chain Wallet:', error);
         }

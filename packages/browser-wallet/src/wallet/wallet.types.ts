@@ -5,9 +5,5 @@ export type TransactionResponse = {
 };
 
 export type ConnectionTypes = {
-    id: number;
-    name: string;
-    publicKey: string;
-    privateKey: string;
     address: string;
 };

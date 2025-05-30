@@ -27,18 +27,21 @@ Play with [Code Examples](https://github.com/keep-pwr-strong/pwr-examples/) 🎮
 import { 
     BrowserWallet, connect, disconnect, 
     getEvent, getConnection, isInstalled 
-} from "@pwrjs/browser";
+} from "@pwrjs/browser-wallet";
 // or
 const { 
 	BrowserWallet, connect, disconnect, 
 	getEvent, getConnection, isInstalled 
-} = require('@pwrjs/browser');
+} = require('@pwrjs/browser-wallet');
 ```
 
 **Simple Example:**
 
 ```js
-import { PWRWallet, connect, disconnect, getEvent } from "@pwrjs/core";
+import { 
+    BrowserWallet, connect, disconnect, 
+    getEvent, getConnection, isInstalled 
+} from "@pwrjs/browser-wallet";
 
 // connect pwr wallet in the browser
 connect().then();
@@ -46,8 +49,8 @@ connect().then();
 disconnect().then();
 
 // send txs from pwr wallet in the browser
-const wallet = new PWRWallet();
-wallet.transferPwr('recipientAddress', 1000, true).then(console.log);
+const wallet = new BrowserWallet();
+wallet.transferPWR('recipientAddress', 1000).then(console.log);
 
 // listen if the user changes accounts
 getEvent("onAccountChange", (accounts) => {
