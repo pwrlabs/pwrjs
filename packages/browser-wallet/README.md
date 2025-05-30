@@ -4,13 +4,13 @@ PWRJS is a JavaScript library for interacting with the PWR blobkchain. It provid
 
 ```bash
 # latest official release (main branch)
-$ npm install @pwrjs/browser
+$ npm install @pwrjs/browser-wallet
 
 # or for latest pre-release version (develop branch)
-$ npm install @pwrjs/browser@next
+$ npm install @pwrjs/browser-wallet@next
 
 # or for latest beta release version (beta branch)
-$ npm install @pwrjs/browser@beta
+$ npm install @pwrjs/browser-wallet@beta
 ```
 
 ## 🌐 Documentation
