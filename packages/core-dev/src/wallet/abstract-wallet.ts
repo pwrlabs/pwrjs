@@ -1,6 +1,5 @@
 // protocol
 import PWRJS from '../protocol/pwrjs';
-import PWRWallet from './pwr-wallet';
 
 // services
 import HttpService from '../services/http.service';
@@ -14,6 +13,7 @@ import { TransactionResponse } from './wallet.types';
 import TransactionBuilder from '../protocol/falcon-transaction-builder';
 import { FalconKeyPair } from '../services/falcon-service';
 import { bytesToHex, hexToBytes } from '../utils';
+import PWRWallet from './pwr-wallet';
 
 export default abstract class AbstractWallet {
     public _addressHex: string;
@@ -1162,8 +1162,6 @@ export default abstract class AbstractWallet {
 
             const decryptedSeedPhrase = CryptoService.decryptNode(encryptedData, password);
             const seedPhrase: string = new TextDecoder().decode(decryptedSeedPhrase);
-
-            console.log(`seedPhrase: ${seedPhrase}`);
 
             return PWRWallet.new(seedPhrase, pwr);
         } catch (error) {
