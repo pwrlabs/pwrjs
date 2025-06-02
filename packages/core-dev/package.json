@@ -1,6 +1,6 @@
 {
     "name": "@pwrjs/core-dev",
-    "version": "0.11.5",
+    "version": "0.11.6",
     "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
     "keywords": [
         "web3",

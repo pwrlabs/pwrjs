@@ -9,7 +9,7 @@ function assetAddressValidity(to: string): void {
     }
 }
 
-export default class FalconTransactionBuilder {
+export default class TransactionBuilder {
     // #region - falcon transactions
 
     // prettier-ignore
@@ -68,7 +68,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getJoinAsValidatorTransaction(ip: string, sender: Uint8Array, nonce: number, chainId: number, feePerByte: bigint): Uint8Array {
+    static getJoinAsValidatorTransaction(ip: string, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_JOIN_AS_VALIDATOR,
             nonce,
@@ -135,7 +135,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getFalconChangeIpTransaction(feePerByte: bigint, sender: Uint8Array, newIp: string, nonce: number, chainId: number): Uint8Array {
+    static getFalconChangeIpTransaction(newIp: string, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_IP,
             nonce,
@@ -165,7 +165,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getClaimActiveNodeSpotTransaction(feePerByte: bigint, sender: Uint8Array, nonce: number, chainId: number): Uint8Array {
+    static getClaimActiveNodeSpotTransaction(nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_ACTIVE_NODE_SPOT,
             nonce,
@@ -178,7 +178,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getTransferTransaction(feePerByte: bigint, sender: Uint8Array, receiver: Uint8Array, amount: bigint, nonce: number, chainId: number): Uint8Array {
+    static getTransferPWRTransaction(receiver: Uint8Array, amount: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         assetAddressValidity(bytesToHex(receiver));
 
         const amountBN = BigNumber(amount.toString());
@@ -217,7 +217,7 @@ export default class FalconTransactionBuilder {
     // #region proposal transactions
 
     // prettier-ignore
-    static getChangeEarlyWithdrawPenaltyProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, earlyWithdrawalTime: bigint, withdrawalPenalty: number, nonce: number, chainId: number): Uint8Array {
+    static getChangeEarlyWithdrawPenaltyProposalTransaction(title: string, description: string, earlyWithdrawalTime: bigint, withdrawalPenalty: number, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
 
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_EARLY_WITHDRAW_PENALTY_PROPOSAL,
@@ -256,7 +256,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getChangeFeePerByteProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, newFeePerByte: bigint, nonce: number, chainId: number): Uint8Array {
+    static getChangeFeePerByteProposalTransaction(title: string, description: string, newFeePerByte: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_FEE_PER_BYTE_PROPOSAL,
             nonce,
@@ -290,15 +290,7 @@ export default class FalconTransactionBuilder {
         return buffer;
     }
 
-    static getChangeMaxBlockSizeProposalTransaction(
-        feePerByte: bigint,
-        sender: Uint8Array,
-        title: string,
-        description: string,
-        newMaxBlockSize: bigint,
-        nonce: number,
-        chainId: number
-    ): Uint8Array {
+    static getChangeMaxBlockSizeProposalTransaction(title: string, description: string, newMaxBlockSize: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_MAX_BLOCK_SIZE_PROPOSAL,
             nonce,
@@ -334,15 +326,7 @@ export default class FalconTransactionBuilder {
         return buffer;
     }
 
-    static getChangeMaxTxnSizeProposalTransaction(
-        feePerByte: bigint,
-        sender: Uint8Array,
-        title: string,
-        description: string,
-        newMaxTxnSize: bigint,
-        nonce: number,
-        chainId: number
-    ): Uint8Array {
+    static getChangeMaxTxnSizeProposalTransaction(title: string, description: string, newMaxTxnSize: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_MAX_TXN_SIZE_PROPOSAL,
             nonce,
@@ -380,7 +364,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getChangeOverallBurnPercentageProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, burnPercentage: number, nonce: number, chainId: number): Uint8Array {
+    static getChangeOverallBurnPercentageProposalTransaction(title: string, description: string, burnPercentage: number, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_OVERALL_BURN_PERCENTAGE_PROPOSAL,
             nonce,
@@ -417,7 +401,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getChangeRewardPerYearProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, rewardPerYear: bigint, nonce: number, chainId: number): Uint8Array {
+    static getChangeRewardPerYearProposalTransaction(title: string, description: string, rewardPerYear: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_REWARD_PER_YEAR_PROPOSAL,
             nonce,
@@ -455,7 +439,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getChangeValidatorCountLimitProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, validatorCountLimit: number, nonce: number, chainId: number): Uint8Array {
+    static getChangeValidatorCountLimitProposalTransaction(title: string, description: string, validatorCountLimit: number, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_VALIDATOR_COUNT_LIMIT_PROPOSAL,
             nonce,
@@ -493,7 +477,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getChangeValidatorJoiningFeeProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, joiningFee: bigint, nonce: number, chainId: number): Uint8Array {
+    static getChangeValidatorJoiningFeeProposalTransaction(title: string, description: string, joiningFee: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_VALIDATOR_JOINING_FEE_PROPOSAL,
             nonce,
@@ -530,7 +514,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getChangeVidaIdClaimingFeeProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, vidaIdClaimingFee: bigint, nonce: number, chainId: number): Uint8Array {
+    static getChangeVidaIdClaimingFeeProposalTransaction(title: string, description: string, vidaIdClaimingFee: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_VIDA_ID_CLAIMING_FEE_PROPOSAL,
             nonce,
@@ -567,7 +551,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getChangeVidaOwnerTxnFeeShareProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, vidaOwnerTxnFeeShare: number, nonce: number, chainId: number): Uint8Array {
+    static getChangeVidaOwnerTxnFeeShareProposalTransaction(title: string, description: string, vidaOwnerTxnFeeShare: number, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CHANGE_VM_OWNER_TXN_FEE_SHARE_PROPOSAL,
             nonce,
@@ -604,7 +588,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getOtherProposalTransaction(feePerByte: bigint, sender: Uint8Array, title: string, description: string, nonce: number, chainId: number): Uint8Array {
+    static getOtherProposalTransaction(title: string, description: string, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_OTHER_PROPOSAL,
             nonce,
@@ -638,7 +622,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getVoteOnProposalTransaction(feePerByte: bigint, sender: Uint8Array, proposalHash: Uint8Array, vote: number, nonce: number, chainId: number): Uint8Array {
+    static getVoteOnProposalTransaction(proposalHash: Uint8Array, vote: number, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_VOTE_ON_PROPOSAL,
             nonce,
@@ -668,7 +652,7 @@ export default class FalconTransactionBuilder {
     // #region guardian
 
     // prettier-ignore
-    static getGuardianApprovalTransaction(feePerByte: bigint, sender: Uint8Array, wrappedTxns: Uint8Array[], nonce: number, chainId: number): Uint8Array {
+    static getGuardianApprovalTransaction(wrappedTxns: Uint8Array[], nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_GUARDIAN_APPROVAL,
@@ -705,7 +689,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getRemoveGuardianTransaction(feePerByte: bigint, sender: Uint8Array, nonce: number, chainId: number): Uint8Array {
+    static getRemoveGuardianTransaction(nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_REMOVE_GUARDIAN,
             nonce,
@@ -718,7 +702,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getSetGuardianTransaction(feePerByte: bigint, sender: Uint8Array, expiryDate: EpochTimeStamp, guardianAddress: Uint8Array, nonce: number, chainId: number): Uint8Array {
+    static getSetGuardianTransaction(expiryDate: EpochTimeStamp, guardianAddress: Uint8Array, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
 
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_SET_GUARDIAN,
@@ -748,12 +732,12 @@ export default class FalconTransactionBuilder {
 
     // #region validator
     // prettier-ignore
-    static getMoveStakeTxnTransaction(feePerByte: bigint, sender: Uint8Array, sharesAmount: bigint, fromValidator: Uint8Array, toValidator: Uint8Array, nonce: number, chainId: number): Uint8Array {
+    static getMoveStakeTxnTransaction(sharesAmount: bigint, fromValidator: Uint8Array, toValidator: Uint8Array, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         throw new Error('Method not implemented.');
     }
 
     // prettier-ignore
-    static getRemoveValidatorTransaction(feePerByte: bigint, sender: Uint8Array, validatorAddress: Uint8Array, nonce: number, chainId: number): Uint8Array {
+    static getRemoveValidatorTransaction(validatorAddress: Uint8Array, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_REMOVE_VALIDATOR,
             nonce,
@@ -776,7 +760,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getWithdrawTransaction(feePerByte: bigint, sender: Uint8Array, sharesAmount: bigint, validator: Uint8Array, nonce: number, chainId: number): Uint8Array {
+    static getWithdrawTransaction(sharesAmount: bigint, validator: Uint8Array, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_WITHDRAW,
             nonce,
@@ -811,7 +795,7 @@ export default class FalconTransactionBuilder {
     // #region vida transactions
 
     // prettier-ignore
-    static getClaimVidaIdTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, nonce: number, chainId: number): Uint8Array {
+    static getClaimVidaIdTransaction(vidaId: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
 
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CLAIM_VIDA_ID,
@@ -837,7 +821,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getPayableVidaDataTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, data: Uint8Array, value: bigint, nonce: number, chainId: number): Uint8Array {
+    static getPayableVidaDataTransaction(vidaId: bigint, data: Uint8Array, value: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
 
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_PAYABLE_VIDA_DATA,
@@ -870,7 +854,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getSetVidaPrivateStateTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, privateState: boolean, nonce: number, chainId: number): Uint8Array {
+    static getSetVidaPrivateStateTransaction(vidaId: bigint, privateState: boolean, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_SET_VIDA_PRIVATE_STATE,
             nonce,
@@ -896,7 +880,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getSetVidaToAbsolutePublicTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, nonce: number, chainId: number): Uint8Array {
+    static getSetVidaToAbsolutePublicTransaction(vidaId: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_SET_VIDA_TO_ABSOLUTE_PUBLIC,
             nonce,
@@ -919,7 +903,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getAddVidaSponsoredAddressesTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, sponsoredAddresses: Set<Uint8Array>, nonce: number, chainId: number): Uint8Array {
+    static getAddVidaSponsoredAddressesTransaction(vidaId: bigint, sponsoredAddresses: Set<Uint8Array>, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_ADD_VIDA_SPONSORED_ADDRESSES,
             nonce,
@@ -951,7 +935,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getAddVidaAllowedSendersTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, allowedSenders: Set<Uint8Array>, nonce: number, chainId: number): Uint8Array {
+    static getAddVidaAllowedSendersTransaction(vidaId: bigint, allowedSenders: Set<Uint8Array>, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_ADD_VIDA_ALLOWED_SENDERS,
             nonce,
@@ -983,7 +967,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getRemoveVidaAllowedSendersTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, allowedSenders: Set<Uint8Array>, nonce: number, chainId: number): Uint8Array {
+    static getRemoveVidaAllowedSendersTransaction(vidaId: bigint, allowedSenders: Set<Uint8Array>, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_REMOVE_VIDA_ALLOWED_SENDERS,
             nonce,
@@ -1019,7 +1003,7 @@ export default class FalconTransactionBuilder {
     // #region conduits transactions
 
     // prettier-ignore
-    static getConduitApprovalTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, wrappedTxns: Uint8Array[], nonce: number, chainId: number): Uint8Array {
+    static getConduitApprovalTransaction(vidaId: bigint, wrappedTxns: Uint8Array[], nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_CONDUITS_APPROVAL,
             nonce,
@@ -1060,7 +1044,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getRemoveConduitsTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, conduits: Uint8Array[], nonce: number, chainId: number): Uint8Array {
+    static getRemoveConduitsTransaction(vidaId: bigint, conduits: Uint8Array[], nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_REMOVE_CONDUITS,
             nonce,
@@ -1090,7 +1074,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getConduitModeTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, mode: number, conduitThreshold: number, conduits: Set<Uint8Array>, conduitsWithVotingPower: Map<Uint8Array, bigint>, nonce: number, chainId: number): Uint8Array {
+    static getConduitModeTransaction(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Set<Uint8Array>, conduitsWithVotingPower: Map<Uint8Array, bigint>, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         if (conduits && conduitsWithVotingPower) {
             throw new Error(
                 'Conduits and conduitsWithVotingPower cannot both be sent in the same txn'
@@ -1159,7 +1143,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getSetConduitModeWithVidaBasedTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, mode: number, conduitThreshold: number, conduits: Uint8Array[], stakingPowers: bigint[], nonce: number, chainId: number): Uint8Array { 
+    static getSetConduitModeWithVidaBasedTransaction(vidaId: bigint, mode: number, conduitThreshold: number, conduits: Uint8Array[], stakingPowers: bigint[], nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array { 
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_SET_CONDUIT_MODE_WITH_VIDA_BASED,
             nonce,
@@ -1209,7 +1193,7 @@ export default class FalconTransactionBuilder {
     // #region others
 
     // prettier-ignore
-    static getRemoveSponsoredAddressesTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, sponsoredAddresses: Set<Uint8Array>, nonce: number, chainId: number): Uint8Array {
+    static getRemoveSponsoredAddressesTransaction(vidaId: bigint, sponsoredAddresses: Set<Uint8Array>, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_REMOVE_SPONSORED_ADDRESSES,
@@ -1241,7 +1225,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getSetPWRTransferRightsTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, ownerCanTransferPWR: boolean, nonce: number, chainId: number): Uint8Array {
+    static getSetPWRTransferRightsTransaction(vidaId: bigint, ownerCanTransferPWR: boolean, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_SET_PWR_TRANSFER_RIGHTS,
             nonce,
@@ -1267,7 +1251,7 @@ export default class FalconTransactionBuilder {
     }
 
     // prettier-ignore
-    static getTransferPWRFromVidaTransaction(feePerByte: bigint, sender: Uint8Array, vidaId: bigint, receiver: Uint8Array, amount: bigint, nonce: number, chainId: number): Uint8Array {
+    static getTransferPWRFromVidaTransaction(vidaId: bigint, receiver: Uint8Array, amount: bigint, nonce: number, chainId: number, sender: Uint8Array, feePerByte: bigint): Uint8Array {
         const base = this.getFalconTransactionBase(
             Transaction_ID.FALCON_TRANSFER_PWR_FROM_VIDA,
             nonce,

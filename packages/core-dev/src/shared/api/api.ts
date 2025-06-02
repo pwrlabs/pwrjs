@@ -39,7 +39,7 @@ const api = {
         },
 
         transactions: {
-            transactionByHash: '/transactionByHash?hash=:hash',
+            transactionByHash: '/transactionByHash?transactionHash=:hash',
             transactionsByHashes: '/getTransactionsByHashes',
         },
 

@@ -10,7 +10,7 @@ import CryptoService from '../services/crypto.service';
 
 // utils
 import { TransactionResponse } from './wallet.types';
-import TransactionBuilder from '../protocol/falcon-transaction-builder';
+import TransactionBuilder from '../protocol/transaction-builder';
 import { FalconKeyPair } from '../services/falcon-service';
 import { bytesToHex, hexToBytes } from '../utils';
 import PWRWallet from './pwr-wallet';
@@ -164,13 +164,13 @@ export default abstract class AbstractWallet {
         const _feePerByte = feePerByte ?? (await this.pwrjs.getFeePerByte());
 
         const _chainId = await this.getChainId();
-        const txn = TransactionBuilder.getTransferTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
+        const txn = TransactionBuilder.getTransferPWRTransaction(
             hexToBytes(to),
             amount,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -194,9 +194,9 @@ export default abstract class AbstractWallet {
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getJoinAsValidatorTransaction(
             ip,
-            this._addressBytes,
             _nonce,
             _chainId,
+            this._addressBytes,
             BigInt(_feePerByte),
         );
 
@@ -240,11 +240,11 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getFalconChangeIpTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             newIp,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -263,10 +263,10 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getClaimActiveNodeSpotTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             _nonce,
-            _chainId
+            _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -286,13 +286,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getMoveStakeTxnTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             sharesAmount,
             hexToBytes(fromValidator),
             hexToBytes(toValidator),
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -312,11 +312,11 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getRemoveValidatorTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             hexToBytes(validatorAddress),
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -335,13 +335,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getWithdrawTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             sharesAmount,
             hexToBytes(validator),
             _nonce,
             _chainId,
-        )
+            this._addressBytes,
+            BigInt(_feePerByte),
+        );
 
         return this.signAndSend(txn);
     }
@@ -363,11 +363,11 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getClaimVidaIdTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -387,13 +387,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getPayableVidaDataTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             data,
             value,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -421,12 +421,12 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getAddVidaAllowedSendersTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaID,
             new Set(allowedSenders.map((s) => hexToBytes(s))),
-            nonce,
+            _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -446,12 +446,12 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getAddVidaSponsoredAddressesTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             new Set(sponsoredAddresses.map((s) => hexToBytes(s))),
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -471,12 +471,12 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getRemoveSponsoredAddressesTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             new Set(sponsoredAddresses.map((s) => hexToBytes(s))),
             _nonce,
-            _chainId,    
+            _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -496,12 +496,12 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getRemoveVidaAllowedSendersTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             new Set(allowedSenders.map((s) => hexToBytes(s))),
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -521,12 +521,12 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getSetVidaPrivateStateTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             privateState,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -545,11 +545,11 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getSetVidaToAbsolutePublicTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -569,12 +569,12 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getSetPWRTransferRightsTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             ownerCanTransferPWR,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -594,13 +594,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getTransferPWRFromVidaTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             hexToBytes(receiver),
             amount,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -657,8 +657,6 @@ export default abstract class AbstractWallet {
     
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getSetConduitModeWithVidaBasedTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             mode,
             conduitThreshold,
@@ -666,6 +664,8 @@ export default abstract class AbstractWallet {
             stakingPowers,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -686,12 +686,12 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getConduitApprovalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             wrappedTxns.map((s) => hexToBytes(s)),
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -711,12 +711,12 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getRemoveConduitsTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             vidaId,
             conduits.map((s) => hexToBytes(s)),
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -741,11 +741,11 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getGuardianApprovalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             wrappedTxns.map((s) => hexToBytes(s)),
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -766,10 +766,10 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getRemoveGuardianTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -792,12 +792,12 @@ export default abstract class AbstractWallet {
 
 
         const txn = TransactionBuilder.getSetGuardianTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             expiryDate,
             hexToBytes(guardianAddress),
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -821,14 +821,14 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getChangeEarlyWithdrawPenaltyProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             earlyWithdrawalTime,
             withdrawalPenalty,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -848,13 +848,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getChangeFeePerByteProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             newFeePerByte,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -874,14 +874,14 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getChangeMaxBlockSizeProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             maxBlockSize,
             _nonce,
             _chainId,
-        )
+            this._addressBytes,
+            BigInt(_feePerByte),
+        );
 
         return this.signAndSend(txn);
     }
@@ -900,13 +900,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getChangeMaxTxnSizeProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             maxTxnSize,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -926,14 +926,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getChangeOverallBurnPercentageProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             burnPercentage,
             _nonce,
             _chainId,
-
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -954,13 +953,13 @@ export default abstract class AbstractWallet {
         const _chainId = await this.getChainId();
 
         const txn = TransactionBuilder.getChangeRewardPerYearProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             rewardPerYear,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -981,13 +980,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getChangeValidatorCountLimitProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             validatorCountLimit,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -1007,13 +1006,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getChangeValidatorJoiningFeeProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             joiningFee,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -1033,13 +1032,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getChangeVidaIdClaimingFeeProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             claimingFee,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -1059,13 +1058,13 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getChangeVidaOwnerTxnFeeShareProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             vidaOwnerTxnFeeShare,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -1085,12 +1084,12 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getOtherProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             title,
             description,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);
@@ -1109,12 +1108,12 @@ export default abstract class AbstractWallet {
 
         const _chainId = await this.getChainId();
         const txn = TransactionBuilder.getVoteOnProposalTransaction(
-            BigInt(_feePerByte),
-            this._addressBytes,
             hexToBytes(proposalHash),
             vote,
             _nonce,
             _chainId,
+            this._addressBytes,
+            BigInt(_feePerByte),
         );
 
         return this.signAndSend(txn);

@@ -1,6 +1,6 @@
-import FalconTransactionBuilder from './src/protocol/falcon-transaction-builder';
+import TransactionBuilder from './src/protocol/transaction-builder';
 import { hexToBytes, bytesToHex } from './src/utils';
 
 // added
-export { FalconTransactionBuilder as TransactionBuilder };
+export { TransactionBuilder as TransactionBuilder };
 export { hexToBytes, bytesToHex };
