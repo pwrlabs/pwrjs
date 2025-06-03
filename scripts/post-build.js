@@ -5,7 +5,7 @@ const path = require('path');
 const targetFolderArg = process.argv[2] || 'core'; // Default: 'core'
 
 // Paths base
-const filesToCopy = ['README.md'];
+const filesToCopy = ['README.md', 'package.json'];
 const fromDir = path.resolve(__dirname, '..', targetFolderArg + '-dev');
 const toDir = path.resolve(__dirname, '..', targetFolderArg);
 

@@ -1,11 +1,11 @@
 import { describe, test, expect, afterAll } from 'vitest';
 
 import BigNumber from 'bignumber.js';
-import PWRWallet from '../src/exports/wallets/node';
+import PWRWallet from '../wallets/node';
 import PWRJS from '../src/protocol/pwrjs';
 import FalconService from '../src/services/falcon/falcon-node.service';
 import { hexToBytes, bytesToHex } from '../src/utils';
-import { DeterministicSecureRandom } from '../src/exports/services';
+import { DeterministicSecureRandom } from '../services';
 
 import * as bip39 from 'bip39';
 
@@ -103,7 +103,7 @@ describe('wallet core', async () => {
 
     const pwr = new PWRJS(RPC);
     const falconWallet = await PWRWallet.fromKeys(w.sk, w.pk, pwr);
-    let wallet0;
+    let wallet0: PWRWallet;
 
     const encoder = new TextEncoder();
 

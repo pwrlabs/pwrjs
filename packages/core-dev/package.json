@@ -1,5 +1,5 @@
 {
-    "name": "@pwrjs/core",
+    "name": "@pwrjs/core-dev",
     "version": "0.12.2",
     "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
     "keywords": [
@@ -18,49 +18,60 @@
         "url": "git+https://github.com/pwrlabs/pwrjs.git"
     },
     "license": "ISC",
-    "main": "./lib/exports/main/index.js",
+    "main": "./index.js",
     "files": [
-        "lib"
+        "src",
+        "wallet",
+        "index.js",
+        "index.d.ts",
+        "services.js",
+        "services.d.ts",
+        "types.js",
+        "types.d.ts",
+        "utils.js",
+        "utils.d.ts"
     ],
     "exports": {
         ".": {
-            "import": "./lib/exports/main/index.js",
-            "require": "./lib/exports/main/index.js",
-            "types": "./lib/exports/main/index.d.ts"
+            "import": "./index.js",
+            "require": "./index.js",
+            "types": "./index.d.ts"
         },
         "./services": {
-            "import": "./lib/exports/services/index.js",
-            "require": "./lib/exports/services/index.js",
-            "types": "./lib/exports/services/index.d.ts"
+            "import": "./services.js",
+            "require": "./services.js",
+            "types": "./services.d.ts"
         },
         "./types": {
-            "import": "./lib/exports/types/index.js",
-            "require": "./lib/exports/types/index.js",
-            "types": "./lib/exports/types/index.d.ts"
+            "import": "./types.js",
+            "require": "./types.js",
+            "types": "./types.d.ts"
         },
         "./utils": {
-            "import": "./lib/exports/utils/index.js",
-            "require": "./lib/exports/utils/index.js",
-            "types": "./lib/exports/utils/index.d.ts"
+            "import": "./utils.js",
+            "require": "./utils.js",
+            "types": "./utils.d.ts"
         },
-        "./wallet-node": {
-            "import": "./lib/exports/wallets/node/index.js",
-            "require": "./lib/exports/wallets/node/index.js",
-            "types": "./lib/exports/wallets/node/index.d.ts"
+        "./wallets/node": {
+            "import": "./wallets/node.js",
+            "require": "./wallets/node.js",
+            "types": "./wallets/node.d.ts"
         },
-        "./wallet-browser": {
-            "import": "./lib/exports/wallets/browser/index.js",
-            "require": "./lib/exports/wallets/browser/index.js",
-            "types": "./lib/exports/wallets/browser/index.d.ts"
+        "./wallet/browser": {
+            "import": "./wallets/browser.js",
+            "require": "./wallets/browser.js",
+            "types": "./wallets/browser.d.ts"
         },
-        "./wallet-seedphrase": {
-            "import": "./lib/exports/wallets/seedphrase/index.js",
-            "require": "./lib/exports/wallets/seedphrase/index.js",
-            "types": "./lib/exports/wallets/seedphrase/index.d.ts"
+        "./wallet/seedphrase": {
+            "import": "./wallets/seedphrase.js",
+            "require": "./wallets/seedphrase.js",
+            "types": "./wallets/seedphrase.d.ts"
         }
     },
     "scripts": {
-        "build": "npm run build:ts",
+        "build": "npm run clean && npm run build:ts && npm run build:post",
+        "clean": "node ../../scripts/clean.js packages/core",
+        "build:post": "node ../../scripts/post-build.js packages/core",
         "dev": "npm build:ts --watch",
         "build:ts": "tsc -p tsconfig.json",
         "test": "vitest run"
@@ -84,5 +95,8 @@
     },
     "bugs": {
         "url": "https://github.com/pwrlabs/pwrjs/issues"
+    },
+    "publishConfig": {
+        "access": "restricted"
     }
 }

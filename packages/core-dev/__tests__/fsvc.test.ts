@@ -1,11 +1,11 @@
 // 3rd party
 import { describe, test, expect } from 'vitest';
-import { bytesToHex, hexToBytes } from '../src/exports/utils';
+import { bytesToHex, hexToBytes } from '../utils';
 
 import { falconKeypair } from 'rust-falcon';
 
 import crypto from 'crypto';
-import { HashService } from '../src/exports/services';
+import { HashService } from '../services';
 import FalconService from '../src/services/falcon/falcon-node.service';
 
 import * as bip39 from 'bip39';

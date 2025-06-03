@@ -6,7 +6,7 @@ const targetFolderArg = process.argv[2] || 'core';
 const targetPath = path.resolve(__dirname, '..', targetFolderArg);
 
 // Archivos que NO deben eliminarse
-const keepFiles = new Set(['package.json', '.gitignore']);
+const keepFiles = new Set(['.gitignore']);
 
 function cleanDirectory(dir) {
     if (!fs.existsSync(dir)) {

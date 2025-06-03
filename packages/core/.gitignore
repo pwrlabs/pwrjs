@@ -1,0 +1,10 @@
+/node_modules
+src/
+wallets/
+index.*
+services.*
+types.*
+utils.*
+wallet.*
+package-lock.json
+package.json
