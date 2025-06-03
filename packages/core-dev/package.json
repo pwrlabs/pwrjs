@@ -57,12 +57,12 @@
             "require": "./wallets/node.js",
             "types": "./wallets/node.d.ts"
         },
-        "./wallet/browser": {
+        "./wallets/browser": {
             "import": "./wallets/browser.js",
             "require": "./wallets/browser.js",
             "types": "./wallets/browser.d.ts"
         },
-        "./wallet/seedphrase": {
+        "./wallets/seedphrase": {
             "import": "./wallets/seedphrase.js",
             "require": "./wallets/seedphrase.js",
             "types": "./wallets/seedphrase.d.ts"

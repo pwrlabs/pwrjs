@@ -2,7 +2,7 @@
 // import PWRFaconl512Wallet from '../../core-browser/src/wallet/falcon-wallet';
 // import FalconServiceBrowser from '../../packages/core-browser/src/services/falcon-browser.service';
 // import { FalconService } from '@pwrjs/core-browser/services';
-import PWRWallet from '@pwrjs/core/wallets';
+import PWRWallet from '@pwrjs/core/wallets/seedphrase';
 // import { FalconService } from '@pwrjs/core/services';
 import PWRJS from '@pwrjs/core';
 import { bytesToHex, hexToBytes } from '@pwrjs/core/utils';
