@@ -1,6 +1,6 @@
 {
     "name": "@pwrjs/node",
-    "version": "0.12.1",
+    "version": "0.12.2",
     "description": "PWRJS is a javascript library for interacting with the PWR network",
     "keywords": [
         "web3",
@@ -41,7 +41,7 @@
     },
     "dependencies": {
         "@dashlane/pqc-sign-falcon-512-node": "^1.0.0",
-        "@pwrjs/core": "^0.12.1"
+        "@pwrjs/core": "^0.12.2"
     },
     "devDependencies": {
         "bip39": "^3.1.0",
