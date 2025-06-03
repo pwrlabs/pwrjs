@@ -1,6 +1,6 @@
 {
     "name": "@pwrjs/browser-wallet",
-    "version": "0.12.0",
+    "version": "0.12.1",
     "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
     "author": "pwrlabs <devservices@pwrlabs.io>",
     "homepage": "",
