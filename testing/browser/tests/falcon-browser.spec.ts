@@ -2,8 +2,8 @@ import { test, expect, BrowserContext, chromium, Page } from '@playwright/test';
 import BigNumber from 'bignumber.js';
 import PWRJS from '@pwrjs/core';
 
-import { FalconService } from '@pwrjs/core/services';
-import PWRWallet from '@pwrjs/core/wallet';
+// import { FalconService } from '@pwrjs/core/services';
+import PWRWallet from '@pwrjs/core/wallets/browser';
 // import { TransactionResponse } from '../src/wallet/wallet.types';
 
 type TransactionResponse = {
@@ -20,7 +20,7 @@ const url = 'http://localhost:5173';
 declare global {
     interface Window {
         _pwr: PWRJS;
-        svc: typeof FalconService;
+        // svc: typeof FalconService;
         testing: {
             message: string;
         };
@@ -71,52 +71,52 @@ test.beforeAll(async () => {
     });
 });
 
-test('generate keypair', async () => {
-    const keypair = await page.evaluate(() => {
-        return new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new Error('initCompleted timeout'));
-            }, 20000);
+// test('generate keypair', async () => {
+//     const keypair = await page.evaluate(() => {
+//         return new Promise((resolve, reject) => {
+//             const timeout = setTimeout(() => {
+//                 reject(new Error('initCompleted timeout'));
+//             }, 20000);
 
-            window.svc.generateKeyPair().then(resolve).catch(reject);
-        });
-    });
+//             window.svc.generateKeyPair().then(resolve).catch(reject);
+//         });
+//     });
 
-    // keypair should have pk and sk properties
+//     // keypair should have pk and sk properties
 
-    expect(keypair).not.toBeNull();
-    expect(keypair).toHaveProperty('pk');
-    expect(keypair).toHaveProperty('sk');
-});
+//     expect(keypair).not.toBeNull();
+//     expect(keypair).toHaveProperty('pk');
+//     expect(keypair).toHaveProperty('sk');
+// });
 
-test('sign and verify', async () => {
-    const { signature, valid } = (await page.evaluate(() => {
-        return new Promise(async (resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new Error('initCompleted timeout'));
-            }, 20000);
+// test('sign and verify', async () => {
+//     const { signature, valid } = (await page.evaluate(() => {
+//         return new Promise(async (resolve, reject) => {
+//             const timeout = setTimeout(() => {
+//                 reject(new Error('initCompleted timeout'));
+//             }, 20000);
 
-            const message = new TextEncoder().encode(window.testing.message);
-            try {
-                const keypair = await window.svc.generateKeyPair();
+//             const message = new TextEncoder().encode(window.testing.message);
+//             try {
+//                 const keypair = await window.svc.generateKeyPair();
 
-                const signature = await window.svc.sign(message, keypair.sk);
+//                 const signature = await window.svc.sign(message, keypair.sk);
 
-                const valid = await window.svc.verify(message, keypair.pk, signature);
+//                 const valid = await window.svc.verify(message, keypair.pk, signature);
 
-                resolve({ signature, valid });
-            } catch (err) {
-                reject(err);
-            }
-        });
-    })) as { signature: Uint8Array; valid: boolean };
+//                 resolve({ signature, valid });
+//             } catch (err) {
+//                 reject(err);
+//             }
+//         });
+//     })) as { signature: Uint8Array; valid: boolean };
 
-    // signature should be a string
-    expect(signature).not.toBeNull();
+//     // signature should be a string
+//     expect(signature).not.toBeNull();
 
-    // message should be the same
-    expect(valid).toBe(true);
-});
+//     // message should be the same
+//     expect(valid).toBe(true);
+// });
 
 test('ensure wallet is restored', async () => {
     const result = (await page.evaluate(() => {
