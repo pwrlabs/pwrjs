@@ -1,0 +1,26 @@
+{
+  "name": "core2",
+  "version": "0.12.0",
+  "description": "> TODO: description",
+  "author": "loque18 <madridx2017@gmail.com>",
+  "homepage": "https://github.com/pwrlabs/pwrjs#readme",
+  "license": "ISC",
+  "main": "lib/core2.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pwrlabs/pwrjs.git"
+  },
+  "scripts": {
+    "test": "node ./__tests__/core2.test.js"
+  },
+  "bugs": {
+    "url": "https://github.com/pwrlabs/pwrjs/issues"
+  }
+}

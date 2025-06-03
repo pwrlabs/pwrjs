@@ -1,6 +1,6 @@
 {
-    "name": "@pwrjs/core-dev",
-    "version": "0.11.7",
+    "name": "@pwrjs/core",
+    "version": "0.12.0",
     "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
     "keywords": [
         "web3",
@@ -18,24 +18,65 @@
         "url": "git+https://github.com/pwrlabs/pwrjs.git"
     },
     "license": "ISC",
+    "main": "./lib/exports/main/index.js",
+    "files": [
+        "lib"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/exports/main/index.js",
+            "require": "./lib/exports/main/index.js",
+            "types": "./lib/exports/main/index.d.ts"
+        },
+        "./services": {
+            "import": "./lib/exports/services/index.js",
+            "require": "./lib/exports/services/index.js",
+            "types": "./lib/exports/services/index.d.ts"
+        },
+        "./types": {
+            "import": "./lib/exports/types/index.js",
+            "require": "./lib/exports/types/index.js",
+            "types": "./lib/exports/types/index.d.ts"
+        },
+        "./utils": {
+            "import": "./lib/exports/utils/index.js",
+            "require": "./lib/exports/utils/index.js",
+            "types": "./lib/exports/utils/index.d.ts"
+        },
+        "./wallets/node": {
+            "import": "./lib/exports/wallets/node/index.js",
+            "require": "./lib/exports/wallets/node/index.js",
+            "types": "./lib/exports/wallets/node/index.d.ts"
+        },
+        "./wallets/browser": {
+            "import": "./lib/exports/wallets/browser/index.js",
+            "require": "./lib/exports/wallets/browser/index.js",
+            "types": "./lib/exports/wallets/browser/index.d.ts"
+        },
+        "./wallets/seedphrase": {
+            "import": "./lib/exports/wallets/seedphrase/index.js",
+            "require": "./lib/exports/wallets/seedphrase/index.js",
+            "types": "./lib/exports/wallets/seedphrase/index.d.ts"
+        }
+    },
     "scripts": {
-        "build": "npm run clean && npm run build:ts && npm run build:post",
+        "build": "npm run build:ts",
         "dev": "npm build:ts --watch",
         "build:ts": "tsc -p tsconfig.json",
-        "clean": "node ../../scripts/clean.js packages/core",
-        "build:post": "node ../../scripts/post-build.js packages/core",
         "test": "vitest run"
     },
     "dependencies": {
+        "@dashlane/pqc-sign-falcon-512-browser": "^1.0.0",
+        "@dashlane/pqc-sign-falcon-512-node": "^1.0.0",
         "@noble/hashes": "^1.7.1",
         "axios": "^1.6.7",
         "bignumber.js": "^9.1.2",
+        "bip39": "^3.1.0",
         "rust-falcon": "^0.2.6"
     },
     "devDependencies": {
         "@playwright/test": "^1.51.0",
         "@types/node": "^22.13.9",
-        "bip39": "^3.1.0",
         "ncp": "^2.0.0",
         "ts-jest": "^29.1.1",
         "typescript": "^5.2.2",
