@@ -43,17 +43,17 @@
             "require": "./lib/exports/utils/index.js",
             "types": "./lib/exports/utils/index.d.ts"
         },
-        "./wallets/node": {
+        "./wallet-node": {
             "import": "./lib/exports/wallets/node/index.js",
             "require": "./lib/exports/wallets/node/index.js",
             "types": "./lib/exports/wallets/node/index.d.ts"
         },
-        "./wallets/browser": {
+        "./wallet-browser": {
             "import": "./lib/exports/wallets/browser/index.js",
             "require": "./lib/exports/wallets/browser/index.js",
             "types": "./lib/exports/wallets/browser/index.d.ts"
         },
-        "./wallets/seedphrase": {
+        "./wallet-seedphrase": {
             "import": "./lib/exports/wallets/seedphrase/index.js",
             "require": "./lib/exports/wallets/seedphrase/index.js",
             "types": "./lib/exports/wallets/seedphrase/index.d.ts"
