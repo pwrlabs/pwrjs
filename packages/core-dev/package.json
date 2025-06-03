@@ -21,7 +21,7 @@
     "main": "./index.js",
     "files": [
         "src",
-        "wallet",
+        "wallets",
         "index.js",
         "index.d.ts",
         "services.js",
