@@ -1,4 +1,4 @@
-import { FalconKeyPair } from './falcon-service';
+import { FalconKeyPair } from './falcon/abstract-falcon.service';
 
 export default class BytesService {
     public static keypairToArrayBuffer(keypair: FalconKeyPair): Uint8Array {

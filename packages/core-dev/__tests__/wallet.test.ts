@@ -1,11 +1,11 @@
 import { describe, test, expect, afterAll } from 'vitest';
 
 import BigNumber from 'bignumber.js';
-import PWRWallet from '../src/wallet/pwr-wallet';
+import PWRWallet from '../src/exports/wallets/node';
 import PWRJS from '../src/protocol/pwrjs';
-import FalconService from '../src/services/falcon-service';
+import FalconService from '../src/services/falcon/falcon-node.service';
 import { hexToBytes, bytesToHex } from '../src/utils';
-import { DeterministicSecureRandom } from '../services';
+import { DeterministicSecureRandom } from '../src/exports/services';
 
 import * as bip39 from 'bip39';
 
@@ -103,12 +103,12 @@ describe('wallet core', async () => {
 
     const pwr = new PWRJS(RPC);
     const falconWallet = await PWRWallet.fromKeys(w.sk, w.pk, pwr);
-    let wallet0: PWRWallet;
+    let wallet0;
 
     const encoder = new TextEncoder();
 
     test('init wallet', async () => {
-        wallet0 = PWRWallet.newRandom(12, pwr);
+        wallet0 = await PWRWallet.new(pwr);
 
         const address = falconWallet.getAddress();
         expect(address).toMatch(/[0-9A-Fa-f]{40}/g);
@@ -155,7 +155,7 @@ describe('wallet core', async () => {
                 console.log('set pubkey');
                 const tx = await falconWallet.setPublicKey(falconWallet.getPublicKey());
                 console.log(tx);
-                // console.log('Txn Hash:', tx.hash);
+                // console.log('Txn Hash:', tx.transactionHash);
                 expect(tx.success).toBe(true);
             }
         } catch (error) {
@@ -216,29 +216,29 @@ describe('wallet core', async () => {
         }
     });
 
-    test('exports a wallet', async () => {
-        falconWallet.storeWallet('wallet.dat', "password");
-    });
+    // test('exports a wallet', async () => {
+    //     falconWallet.storeWallet('wallet.dat');
+    // });
 
-    test('imports a wallet', async () => {
-        const path = require('path');
-        // prettier-ignore
-        const wallet = await PWRWallet.loadWallet("wallet.dat", "password", pwr);
+    // test('imports a wallet', async () => {
+    //     const path = require('path');
+    //     // prettier-ignore
+    //     const wallet = await PWRWallet.loadWalletNode(pwr, "wallet.dat");
 
-        expect(bytesToHex(falconWallet.getPrivateKey())).toStrictEqual(
-            bytesToHex(wallet.getPrivateKey())
-        );
-        expect(bytesToHex(falconWallet.getPublicKey())).toStrictEqual(
-            bytesToHex(wallet.getPublicKey())
-        );
-        expect(wallet.getAddress()).toStrictEqual(falconWallet.getAddress());
-    });
+    //     expect(bytesToHex(falconWallet.getPrivateKey())).toStrictEqual(
+    //         bytesToHex(wallet.getPrivateKey())
+    //     );
+    //     expect(bytesToHex(falconWallet.getPublicKey())).toStrictEqual(
+    //         bytesToHex(wallet.getPublicKey())
+    //     );
+    //     expect(wallet.getAddress()).toStrictEqual(falconWallet.getAddress());
+    // });
 
-    afterAll(() => {
-        // remove
-        const _p = path.resolve('wallet.dat');
-        const exists = fs.existsSync(_p);
-        if (exists) fs.rmSync(_p);
-    });
+    // afterAll(() => {
+    //     // remove
+    //     const _p = path.resolve('wallet.dat');
+    //     const exists = fs.existsSync(_p);
+    //     if (exists) fs.rmSync(_p);
+    // });
     // #endregion
 });

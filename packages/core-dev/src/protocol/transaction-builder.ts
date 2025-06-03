@@ -9,7 +9,7 @@ function assetAddressValidity(to: string): void {
     }
 }
 
-export default class FalconTransactionBuilder {
+export default class TransactionBuilder {
     // #region - falcon transactions
 
     // prettier-ignore

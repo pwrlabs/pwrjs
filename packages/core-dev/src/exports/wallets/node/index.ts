@@ -1,4 +1,4 @@
-import PWRWallet from './src/wallet/pwr-wallet';
+import PWRWallet from '../../../wallet/pwr-wallet-n';
 
 const exported = PWRWallet;
 export default exported;

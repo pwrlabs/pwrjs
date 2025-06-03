@@ -1,12 +1,8 @@
 import { falconKeypair, sign, verify } from 'rust-falcon';
-import DeterministicSecureRandom from "./secure-random.service";
+import DeterministicSecureRandom from '../secure-random.service';
+import { AbstractFalconService, FalconKeyPair } from './abstract-falcon.service';
 
-export type FalconKeyPair = {
-    pk: Uint8Array;
-    sk: Uint8Array;
-};
-
-export class FalconService {
+export default class RustFalconService extends AbstractFalconService {
     static generateKeyPair(): FalconKeyPair {
         const randomBytes = crypto.getRandomValues(new Uint8Array(48));
         const { public: pk, secret: sk } = falconKeypair(randomBytes);

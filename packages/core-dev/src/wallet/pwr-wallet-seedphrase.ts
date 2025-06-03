@@ -1,22 +1,37 @@
 import PWRJS from '../protocol/pwrjs';
 import AbstractWallet from './abstract-wallet';
-import { FalconService } from '../services/falcon-service';
+import FalconService from '../services/falcon/rust-falcon.service';
 import * as bip39 from 'bip39';
 
-export default class PWRWallet extends AbstractWallet {
-    constructor(privateKey: Uint8Array, publicKey: Uint8Array, pwr?: PWRJS) {
-        super(privateKey, publicKey, pwr || new PWRJS('https://pwrrpc.pwrlabs.io'));
+export default class SeedphraseWallet extends AbstractWallet {
+    constructor(privateKey: Uint8Array, publicKey: Uint8Array, pwr: PWRJS) {
+        super(privateKey, publicKey, pwr);
     }
 
-    static new(seedPhrase: string, pwr?: PWRJS): PWRWallet {
+    getSeedPhrase(): string | null {
+        return this._seedPhrase;
+    }
+
+    protected setSeedPhrase(seedPhrase: string) {
+        this._seedPhrase = seedPhrase;
+    }
+
+    static new(pwr: PWRJS): Promise<SeedphraseWallet> {
+        throw new Error('Use MnemonicWallet.newRandom instead of MnemonicWallet.new');
+    }
+    static fromKeys(privateKey: Uint8Array, publicKey: Uint8Array, pwr: PWRJS) {
+        return new SeedphraseWallet(privateKey, publicKey, pwr);
+    }
+
+    static fromSeedPhrase(seedPhrase: string, pwr: PWRJS): SeedphraseWallet {
         const seed = bip39.mnemonicToSeedSync(seedPhrase);
         const keys = FalconService.generateKeyPairFromSeed(seed);
-        const wallet = PWRWallet.fromKeys(keys.sk, keys.pk, pwr);
+        const wallet = SeedphraseWallet.fromKeys(keys.sk, keys.pk, pwr);
         wallet.setSeedPhrase(seedPhrase);
         return wallet;
     }
 
-    static newRandom(wordCount: number, pwr?: PWRJS): PWRWallet {
+    static newRandom(wordCount: number, pwr?: PWRJS): SeedphraseWallet {
         let entropyBytes: number;
         switch (wordCount) {
             case 12:
@@ -44,14 +59,10 @@ export default class PWRWallet extends AbstractWallet {
         const mnemonic = bip39.entropyToMnemonic(Buffer.from(entropy).toString('hex'));
         const seed = bip39.mnemonicToSeedSync(mnemonic);
         const keys = FalconService.generateKeyPairFromSeed(seed);
-        
-        const wallet = PWRWallet.fromKeys(keys.sk, keys.pk, pwr);
+
+        const wallet = SeedphraseWallet.fromKeys(keys.sk, keys.pk, pwr);
         wallet.setSeedPhrase(mnemonic);
         return wallet;
-    }
-
-    static fromKeys(privateKey: Uint8Array, publicKey: Uint8Array, pwr?: PWRJS): PWRWallet {
-        return new PWRWallet(privateKey, publicKey, pwr);
     }
 
     async sign(data: Uint8Array): Promise<Uint8Array> {

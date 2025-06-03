@@ -4,16 +4,12 @@ import PWRJS from '../protocol/pwrjs';
 // services
 import HttpService from '../services/http.service';
 import HashService from '../services/hash.service';
-import StorageService from '../services/storage.service';
-import BytesService from '../services/bytes.service';
-import CryptoService from '../services/crypto.service';
 
 // utils
 import { TransactionResponse } from './wallet.types';
-import TransactionBuilder from '../protocol/falcon-transaction-builder';
-import { FalconKeyPair } from '../services/falcon-service';
+import TransactionBuilder from '../protocol/transaction-builder';
+import { FalconKeyPair } from '../services/falcon/abstract-falcon.service';
 import { bytesToHex, hexToBytes } from '../utils';
-import PWRWallet from './pwr-wallet';
 
 export default abstract class AbstractWallet {
     public _addressHex: string;
@@ -46,7 +42,7 @@ export default abstract class AbstractWallet {
         this.pwrjs = pwr;
     }
 
-    static new(seedPhrase: string, pwr: PWRJS): AbstractWallet {
+    static new(pwr: PWRJS): Promise<AbstractWallet> {
         throw new Error('Not implemented. Please implement in subclass.');
     }
 
@@ -76,14 +72,6 @@ export default abstract class AbstractWallet {
 
     getPrivateKey(): Uint8Array {
         return this._privateKey;
-    }
-
-    getSeedPhrase(): string | null {
-        return this._seedPhrase;
-    }
-
-    protected setSeedPhrase(seedPhrase: string) {
-        this._seedPhrase = seedPhrase;
     }
 
     // #endregion
@@ -1128,70 +1116,16 @@ export default abstract class AbstractWallet {
 
     // #region wallet exporting
 
-    async storeWallet(filePath: string, password: string): Promise<boolean> {
-        try {
-            if (typeof window === 'undefined') {
-                let buffer = Buffer.alloc(0);
-
-                const seedPhrase: Uint8Array = new TextEncoder().encode(this._seedPhrase);
-
-                const encryptedSeedPhrase = CryptoService.encryptNode(seedPhrase, password);
-
-                const { writeFile } = require('fs/promises') as typeof import('fs/promises');
-
-                await writeFile(filePath, encryptedSeedPhrase);
-                return true;
-            } else {
-                throw new Error('This method cannot be called on the client-side (browser)');
-            }
-        } catch (error) {
-            throw new Error(`Failed to store wallet: ${error.message}`);
-        }
+    async storeWallet(path: string, password?: string) {
+        throw new Error(
+            'This method is not implemented in the base class. Please implement it in the derived class.'
+        );
     }
 
-    static async loadWallet(filePath: string, password: string, pwr?: PWRJS): Promise<AbstractWallet> {
-        try {
-            if (typeof window !== 'undefined')
-                throw new Error(
-                    'This method is meant for node environment, please use loadWalletBrowser instead'
-                );
-
-            const { readFile } = require('fs/promises') as typeof import('fs/promises');
-
-            const encryptedData = await readFile(filePath);
-
-            const decryptedSeedPhrase = CryptoService.decryptNode(encryptedData, password);
-            const seedPhrase: string = new TextDecoder().decode(decryptedSeedPhrase);
-
-            return PWRWallet.new(seedPhrase, pwr);
-        } catch (error) {
-            throw new Error(`Failed to load wallet: ${error.message}`);
-        }
-    }
-
-    static async loadWalletBrowser(pwr: PWRJS, password: string, file: File) {
-        if (typeof window === 'undefined') {
-            throw new Error(
-                'This method is meant for browser environment, please use loadWallet instead'
-            );
-        }
-
-        try {
-            const bytes = await StorageService.loadBrowser(file);
-
-            const decrypted: Uint8Array = await CryptoService.decryptPrivateKeyBrowser(
-                bytes,
-                password
-            );
-
-            const { pk, sk } = BytesService.arrayBufferToKeypair(decrypted);
-
-            // return new AbstractWallet(sk, pk, pwr);
-            return AbstractWallet.fromKeys(sk, pk, pwr);
-        } catch (e) {
-            console.error(e);
-            throw new Error('Failed to load wallet');
-        }
+    static async loadWallet(path: string, password: string, pwr?: PWRJS): Promise<AbstractWallet> {
+        throw new Error(
+            'This method is not implemented in the base class. Please implement it in the derived class.'
+        );
     }
 
     // #endregion

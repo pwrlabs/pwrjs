@@ -1,4 +1,4 @@
-import PWRJS from './src/protocol/pwrjs';
+import PWRJS from '../../protocol/pwrjs';
 
 const exported = PWRJS;
 
