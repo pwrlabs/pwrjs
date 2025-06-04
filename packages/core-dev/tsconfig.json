@@ -6,10 +6,11 @@
     },
     "include": [
         "./src/**/*",
-        "./wallets/**/*",
         "./index.ts",
         "./services.ts",
         "./utils.ts",
-        "./types.ts"
+        "./types.ts",
+        "./extension.ts",
+        "./wallet.ts"
     ]
 }

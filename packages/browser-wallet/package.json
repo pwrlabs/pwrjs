@@ -1,7 +1,7 @@
 {
     "name": "@pwrjs/browser-wallet",
     "version": "0.12.6",
-    "description": "PWRJS is a javasrcipt library for interacting with the PWR network.",
+    "description": "Provider to interact with the PWR Wallet extension interface.",
     "author": "pwrlabs <devservices@pwrlabs.io>",
     "homepage": "",
     "license": "ISC",
@@ -12,9 +12,6 @@
     "files": [
         "lib"
     ],
-    "publishConfig": {
-        "access": "public"
-    },
     "scripts": {
         "build": "pnpm build:ts",
         "dev": "pnpm build:ts --watch",
@@ -28,5 +25,8 @@
         "ts-jest": "^29.1.1",
         "typescript": "^5.7.2",
         "vite": "^6.3.5"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

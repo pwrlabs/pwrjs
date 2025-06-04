@@ -6,7 +6,7 @@ import { falconKeypair } from 'rust-falcon';
 
 import crypto from 'crypto';
 import { HashService } from '../services';
-import FalconService from '../src/services/falcon/falcon-node.service';
+import FalconService from '../src/services/falcon/rust-falcon.service';
 
 import * as bip39 from 'bip39';
 
