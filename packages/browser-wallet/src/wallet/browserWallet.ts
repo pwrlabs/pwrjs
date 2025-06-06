@@ -109,7 +109,7 @@ export default class BrowserWallet {
         try {
             const sender = await getConnection();
 
-            const res = await window.pwr.delegate({ from: sender, to: validator, amount: amount });
+            const res = await window.pwr.delegate({ from: sender, validator: validator, amount: amount });
             return res;
         } catch (err) {
             console.error(err);
@@ -124,7 +124,7 @@ export default class BrowserWallet {
         try {
             const sender = await getConnection();
 
-            const res = await window.pwr.withdraw({ validator: validator, shares: sharesAmount, from: sender });
+            const res = await window.pwr.withdraw({ validator: validator, sharesAmount: sharesAmount, from: sender });
             return res;
         } catch (err) {
             console.error(err);
@@ -136,7 +136,7 @@ export default class BrowserWallet {
         try {
             const sender = await getConnection();
 
-            const res = await window.pwr.moveStake({ from: sender, sharesAmount: shareAmount, fromValidator: fromValidator, toValidator: toValidator });
+            const res = await window.pwr.moveStake({ from: sender, shareAmount: shareAmount, fromValidator: fromValidator, toValidator: toValidator });
             return res;
         } catch (err) {
             console.error(err);
@@ -155,7 +155,7 @@ export default class BrowserWallet {
                 title: title, 
                 description: description, 
                 withdrawalPenalty: withdrawalPenalty, 
-                earlyWithdrawTime: withdrawlPenaltyTime 
+                earlyWithdrawalTime: withdrawlPenaltyTime 
             });
             return res;
         } catch (err) {
@@ -253,7 +253,7 @@ export default class BrowserWallet {
         try {
             const sender = await getConnection();
 
-            const res = await window.pwr.vmIdClaimingFee({ 
+            const res = await window.pwr.vidaIdClaimingFee({ 
                 from: sender, title: title, description: description, claimingFee: claimingFee
             });
             return res;
