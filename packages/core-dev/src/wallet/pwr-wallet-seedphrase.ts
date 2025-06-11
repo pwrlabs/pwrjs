@@ -19,14 +19,15 @@ export default class SeedphraseWallet extends AbstractWallet {
     static new(pwr: PWRJS): Promise<SeedphraseWallet> {
         throw new Error('Use MnemonicWallet.newRandom instead of MnemonicWallet.new');
     }
-    static fromKeys(privateKey: Uint8Array, publicKey: Uint8Array, pwr: PWRJS) {
-        return new SeedphraseWallet(privateKey, publicKey, pwr);
+
+    static fromKeys(privateKey: Uint8Array, publicKey: Uint8Array, pwr?: PWRJS) {
+        return new SeedphraseWallet(privateKey, publicKey, pwr || new PWRJS('https://pwrrpc.pwrlabs.io'));
     }
 
-    static fromSeedPhrase(seedPhrase: string, pwr: PWRJS): SeedphraseWallet {
+    static fromSeedPhrase(seedPhrase: string, pwr?: PWRJS): SeedphraseWallet {
         const seed = bip39.mnemonicToSeedSync(seedPhrase);
         const keys = FalconService.generateKeyPairFromSeed(seed);
-        const wallet = SeedphraseWallet.fromKeys(keys.sk, keys.pk, pwr);
+        const wallet = SeedphraseWallet.fromKeys(keys.sk, keys.pk, pwr || new PWRJS('https://pwrrpc.pwrlabs.io'));
         wallet.setSeedPhrase(seedPhrase);
         return wallet;
     }
@@ -60,7 +61,7 @@ export default class SeedphraseWallet extends AbstractWallet {
         const seed = bip39.mnemonicToSeedSync(mnemonic);
         const keys = FalconService.generateKeyPairFromSeed(seed);
 
-        const wallet = SeedphraseWallet.fromKeys(keys.sk, keys.pk, pwr);
+        const wallet = SeedphraseWallet.fromKeys(keys.sk, keys.pk, pwr || new PWRJS('https://pwrrpc.pwrlabs.io'));
         wallet.setSeedPhrase(mnemonic);
         return wallet;
     }
