@@ -81,7 +81,7 @@ const wallet = Wallet.newRandom(12);
 
 ```ts
 const seedPhrase = "your seed phrase here";
-const wallet = Wallet.new(seedPhrase);
+const wallet = Wallet.fromSeedPhrase(seedPhrase);
 ```
 
 **Get wallet address:**
