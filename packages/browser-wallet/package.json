@@ -1,6 +1,6 @@
 {
     "name": "@pwrjs/browser-wallet",
-    "version": "0.12.7",
+    "version": "0.1.1",
     "description": "Provider to interact with the PWR Wallet extension interface.",
     "author": "pwrlabs <devservices@pwrlabs.io>",
     "homepage": "",
