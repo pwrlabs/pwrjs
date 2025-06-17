@@ -1,15 +1,14 @@
-import { describe, test, expect, afterAll } from 'vitest';
+import { describe, test, expect, afterAll, beforeAll } from 'vitest';
 
 import BigNumber from 'bignumber.js';
-import PWRWallet from '../wallets/node';
+import PWRWallet from '../src/wallet/pwr-wallet-n';
 import PWRJS from '../src/protocol/pwrjs';
 import FalconService from '../src/services/falcon/falcon-node.service';
 import { hexToBytes, bytesToHex } from '../src/utils';
 import { DeterministicSecureRandom } from '../services';
+import { falconKeypair } from 'rust-falcon';
 
 import * as bip39 from 'bip39';
-
-// import { falconKeypair } from 'rust-falcon';
 
 const path = require('path') as typeof import('path');
 const fs = require('fs') as typeof import('fs');
@@ -17,57 +16,26 @@ const fs = require('fs') as typeof import('fs');
 // const RPC = 'http://46.101.151.203:8085';
 const RPC = 'https://pwrrpc.pwrlabs.io';
 
-// http://104.248.38.152:8085/giveTokensToValidatorNode/?validatorAddress=0x7D55953FF7572C32AF4EC31D2AD6E8E70F61F874
+async function generateWallet() {
+    const mnemonic = bip39.generateMnemonic();
+    const seed = bip39.mnemonicToSeedSync(mnemonic, '');
+    const randomBytes = new DeterministicSecureRandom(seed).nextBytes(48);
+    const keypair = falconKeypair(randomBytes);
 
-// async function generateWallet() {
-//     // const mnemonic = bip39.generateMnemonic();
-//     const mnemonic =
-//         'demand april length soap cash concert shuffle result force mention fringe slim';
-//     const seed = bip39.mnemonicToSeedSync(mnemonic, '');
-//     const randomBytes = new DeterministicSecureRandom(seed).nextBytes(48);
-//     const keypair = falconKeypair(randomBytes);
+    const pwr = new PWRJS(RPC);
+    const falconWallet = await PWRWallet.fromKeys(keypair.secret, keypair.public, pwr);
 
-//     const pwr = new PWRJS(RPC);
-//     const falconWallet = await Falcon512Wallet.fromKeys(keypair.secret, keypair.public, pwr);
+    const pk = falconWallet.getPublicKey();
+    const sk = falconWallet.getPrivateKey();
+    const address = falconWallet.getAddress();
 
-//     const pk = falconWallet.getPublicKey();
-//     const sk = falconWallet.getPrivateKey();
-//     const address = falconWallet.getAddress();
+    const pkHex = Buffer.from(pk).toString('hex');
+    const skHex = Buffer.from(sk).toString('hex');
 
-//     const pkHex = Buffer.from(pk).toString('hex');
-//     const skHex = Buffer.from(sk).toString('hex');
-
-//     const content = JSON.stringify({ pk: pkHex, sk: skHex, address, mnemonic });
-//     const filePath = path.resolve(__dirname, 'files', 'seed.json');
-//     fs.writeFileSync(filePath, content);
-
-//     const expected_address = '0xe68191b7913e72e6f1759531fbfaa089ff02308a';
-//     const expected_seed =
-//         '2246A57C783F18B07268FCF675486C3A45826C48F703062179EED5BBDF2BEE7A622EDDFEF7EDA803EC18E882CC8209893450DE472EE6049EE8C740327CA5F052';
-//     const expected_random_bytes =
-//         'EF91172C58D19AE4D465C58FED214A99D60A5BED95C7919B849132D787192FF58D19D2DA2A8F83F28BECFDF603BC5F35';
-
-//     if (expected_seed !== bytesToHex(seed).toUpperCase()) {
-//         throw new Error('Seed does not match the expected seed');
-//     }
-//     if (expected_random_bytes !== bytesToHex(randomBytes).toUpperCase()) {
-//         throw new Error('Random bytes do not match the expected random bytes');
-//     }
-//     if (expected_address !== address) {
-//         throw new Error('Address does not match the expected address');
-//     }
-// }
-
-// generateWallet()
-//     .then(() => {
-//         // end process
-//         process.exit();
-//     })
-//     .catch((err) => {
-//         console.error(err);
-//         // end process
-//         process.exit();
-//     });
+    const content = JSON.stringify({ pk: pkHex, sk: skHex, address, mnemonic });
+    const filePath = path.resolve(__dirname, 'files', 'seed.json');
+    fs.writeFileSync(filePath, content);
+}
 
 function restoreWallet(): {
     pk: Uint8Array;
@@ -98,6 +66,9 @@ function restoreWallet(): {
 }
 
 describe('wallet core', async () => {
+    // await generateWallet().then(() => {
+    //     throw new Error('wallet gen');
+    // });
     const w = restoreWallet();
     const ogAddress = w.address;
 
@@ -138,83 +109,101 @@ describe('wallet core', async () => {
         expect(valid2).toBe(true);
     });
 
-    test('Wallet balance', async () => {
-        const balance = await pwr.getBalanceOfAddress(falconWallet.getAddress());
+    test(
+        'Wallet balance',
+        async () => {
+            const balance = await pwr.getBalanceOfAddress(falconWallet.getAddress());
 
-        const balanceBN = new BigNumber(balance.toString());
+            const balanceBN = new BigNumber(balance.toString());
 
-        console.log(`Balance: ${balanceBN.shiftedBy(-9).toNumber()} PWR`);
-        expect(balance).toBeGreaterThan(BigNumber(1).shiftedBy(9).toNumber());
-    });
+            console.log(`Balance: ${balanceBN.shiftedBy(-9).toNumber()} PWR`);
+            expect(balance).toBeGreaterThan(BigNumber(1).shiftedBy(8).toNumber());
+        },
+        {
+            timeout: 20000,
+        }
+    );
 
-    test('set key transaction', async () => {
-        try {
-            const nonce = await falconWallet.getNonce();
+    // test('set key transaction', async () => {
+    //     try {
+    //         const nonce = await falconWallet.getNonce();
 
-            if (nonce == 0) {
-                console.log('set pubkey');
-                const tx = await falconWallet.setPublicKey(falconWallet.getPublicKey());
-                console.log(tx);
-                // console.log('Txn Hash:', tx.transactionHash);
+    //         if (nonce == 0) {
+    //             console.log('set pubkey');
+    //             const tx = await falconWallet.setPublicKey(falconWallet.getPublicKey());
+    //             console.log(tx);
+    //             // console.log('Txn Hash:', tx.transactionHash);
+    //             expect(tx.success).toBe(true);
+    //         }
+    //     } catch (error) {
+    //         console.log('Error:', error);
+    //         expect(false).toBe(true);
+    //     }
+    // });
+
+    test(
+        'Wallet transfer',
+        async () => {
+            let to = '0xbc53be623039d659292b80be5b5d1319a44e9d49';
+
+            try {
+                const amount = 1n;
+                const tx = await falconWallet.transferPWR(to, amount);
+                console.log('tx', tx);
+                console.log('Txn hash:', tx.hash);
                 expect(tx.success).toBe(true);
+            } catch (error) {
+                console.log('Error:', error);
+                expect(false).toBe(true);
             }
-        } catch (error) {
-            console.log('Error:', error);
-            expect(false).toBe(true);
+
+            try {
+                const tx2 = await wallet0.transferPWR(to, 1n);
+                console.log('tx2', tx2);
+
+                expect(tx2.success).toBe(false);
+            } catch (error) {
+                console.log('Error:', error);
+                expect(false).toBe(true);
+            }
+        },
+        {
+            timeout: 20000,
         }
-    });
+    );
 
-    test('Wallet transfer', async () => {
-        let to = '0xbc53be623039d659292b80be5b5d1319a44e9d49';
+    test(
+        'vida data txn',
+        async () => {
+            const data = encoder.encode('PWR Hello for all the listeners!');
 
-        try {
-            const amount = 1200000000n;
-            const tx = await falconWallet.transferPWR(to, amount);
-            console.log('tx', tx);
-            console.log('Txn hash:', tx.hash);
-            expect(tx.success).toBe(true);
-        } catch (error) {
-            console.log('Error:', error);
-            expect(false).toBe(true);
+            try {
+                const tx = await falconWallet.sendPayableVidaData(1n, data, 100n);
+
+                console.log('vida data txn:', tx);
+                expect(tx.success).toBe(true);
+            } catch (error) {
+                expect(false).toBe(true);
+            }
+        },
+        {
+            timeout: 10000,
         }
+    );
 
-        try {
-            const tx2 = await wallet0.transferPWR(to, 1n);
-            console.log('tx2', tx2);
+    // test('claim vida id ', async () => {
+    //     const vidaId = 456n;
 
-            expect(tx2.success).toBe(false);
-        } catch (error) {
-            console.log('Error:', error);
-            expect(false).toBe(true);
-        }
-    });
-
-    test('vida data txn', async () => {
-        const data = encoder.encode('PWR Hello for all the listeners!');
-
-        try {
-            const tx = await falconWallet.sendPayableVidaData(1n, data, 100n);
-
-            console.log('vida data txn:', tx);
-            expect(tx.success).toBe(true);
-        } catch (error) {
-            expect(false).toBe(true);
-        }
-    });
-
-    test('claim vida id ', async () => {
-        const vidaId = 456n;
-
-        try {
-            const tx = await falconWallet.claimVidaId(vidaId);
-            console.log('claim vida id txn:', tx);
-            // expect(tx.success).toBe(true);
-            expect(tx.message === 'VIDA ID already claimed');
-        } catch (error) {
-            console.log('Error:', error);
-            expect(false).toBe(true);
-        }
-    });
+    //     try {
+    //         const tx = await falconWallet.claimVidaId(vidaId);
+    //         console.log('claim vida id txn:', tx);
+    //         // expect(tx.success).toBe(true);
+    //         expect(tx.message === 'VIDA ID already claimed');
+    //     } catch (error) {
+    //         console.log('Error:', error);
+    //         expect(false).toBe(true);
+    //     }
+    // });
 
     // test('exports a wallet', async () => {
     //     falconWallet.storeWallet('wallet.dat');

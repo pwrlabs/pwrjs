@@ -11,7 +11,6 @@ import { TransactionResponse } from './wallet.types';
 import TransactionBuilder from '../protocol/transaction-builder';
 import { FalconKeyPair } from '../services/falcon/abstract-falcon.service';
 import { bytesToHex, hexToBytes } from '../utils';
-import Wallet from './pwr-wallet-seedphrase';
 
 export default abstract class AbstractWallet {
     public _addressHex: string;
@@ -1119,43 +1118,46 @@ export default abstract class AbstractWallet {
     // #region wallet exporting
 
     async storeWallet(filePath: string, password: string): Promise<boolean> {
-        try {
-            if (typeof window === 'undefined') {
-                let buffer = Buffer.alloc(0);
-
-                const seedPhrase: Uint8Array = new TextEncoder().encode(this._seedPhrase);
-
-                const encryptedSeedPhrase = CryptoService.encryptNode(seedPhrase, password);
-
-                const { writeFile } = require('fs/promises') as typeof import('fs/promises');
-
-                await writeFile(filePath, encryptedSeedPhrase);
-                return true;
-            } else {
-                throw new Error('This method cannot be called on the client-side (browser)');
-            }
-        } catch (error) {
-            throw new Error(`Failed to store wallet: ${error.message}`);
-        }
+        // try {
+        //     if (typeof window === 'undefined') {
+        //         let buffer = Buffer.alloc(0);
+        //         const seedPhrase: Uint8Array = new TextEncoder().encode(this._seedPhrase);
+        //         const encryptedSeedPhrase = CryptoService.encryptNode(seedPhrase, password);
+        //         const { writeFile } = require('fs/promises') as typeof import('fs/promises');
+        //         await writeFile(filePath, encryptedSeedPhrase);
+        //         return true;
+        //     } else {
+        //         throw new Error('This method cannot be called on the client-side (browser)');
+        //     }
+        // } catch (error) {
+        //     throw new Error(`Failed to store wallet: ${error.message}`);
+        // }
+        throw new Error(
+            'This method is not implemented yet. Please use loadWalletBrowser instead.'
+        );
     }
 
-    static async loadWallet(filePath: string, password: string, pwr?: PWRJS): Promise<AbstractWallet> {
-        try {
-            if (typeof window !== 'undefined')
-                throw new Error(
-                    'This method is meant for node environment, please use loadWalletBrowser instead'
-                );
-
-            const { readFile } = require('fs/promises') as typeof import('fs/promises');
-
-            const encryptedData = await readFile(filePath);
-
-            const decryptedSeedPhrase = CryptoService.decryptNode(encryptedData, password);
-            const seedPhrase: string = new TextDecoder().decode(decryptedSeedPhrase);
-            return Wallet.fromSeedPhrase(seedPhrase, pwr);
-        } catch (error) {
-            throw new Error(`Failed to load wallet: ${error.message}`);
-        }
+    static async loadWallet(
+        filePath: string,
+        password: string,
+        pwr?: PWRJS
+    ): Promise<AbstractWallet> {
+        // try {
+        //     if (typeof window !== 'undefined')
+        //         throw new Error(
+        //             'This method is meant for node environment, please use loadWalletBrowser instead'
+        //         );
+        //     const { readFile } = require('fs/promises') as typeof import('fs/promises');
+        //     const encryptedData = await readFile(filePath);
+        //     const decryptedSeedPhrase = CryptoService.decryptNode(encryptedData, password);
+        //     const seedPhrase: string = new TextDecoder().decode(decryptedSeedPhrase);
+        //     return Wallet.fromSeedPhrase(seedPhrase, pwr);
+        // } catch (error) {
+        //     throw new Error(`Failed to load wallet: ${error.message}`);
+        // }
+        throw new Error(
+            'This method is not implemented yet. Please use loadWalletBrowser instead.'
+        );
     }
 
     // #endregion
@@ -1167,7 +1169,33 @@ export default abstract class AbstractWallet {
         const nonce = await this.getNonce();
 
         if (nonce == 0) {
-            let tx = this.setPublicKey(this._publicKey);
+            const tx = await this.setPublicKey(this._publicKey);
+
+            if (!tx.success) {
+                return tx;
+            }
+
+            const startTime = Date.now();
+            const timeout = 15000;
+
+            while (true) {
+                const pubkey = await this.pwrjs.getPublicKeyOfAddress(this.getAddress());
+
+                if (pubkey !== null && pubkey !== undefined) {
+                    break;
+                }
+
+                if (Date.now() - startTime > timeout) {
+                    return {
+                        success: false,
+                        message: 'Failed to set public key (timeout)',
+                        hash: tx.hash,
+                    };
+                }
+
+                await new Promise((_) => setTimeout(_, 1000));
+            }
+
             return tx;
         } else {
             return null;

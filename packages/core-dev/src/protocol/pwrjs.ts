@@ -131,6 +131,10 @@ export default class PWRJS {
                 api.rpc.publicKeyOfAddress.replace(':address', address)
             );
 
+            if (!res.falconPublicKey) {
+                return null;
+            }
+
             const pk = res.falconPublicKey.startsWith('0x')
                 ? res.falconPublicKey.substring(2)
                 : res.falconPublicKey;
@@ -507,7 +511,7 @@ export default class PWRJS {
         const res = await this.httpSvc.get<HttpTypes.VidaDataTransactionsResponse>(url);
 
         let txsArray: VidaDataTransaction[] = [];
-        (res.transactions).forEach((txn) => {
+        res.transactions.forEach((txn) => {
             const txnData = typeof txn === 'string' ? JSON.parse(txn) : txn;
             txsArray.push(txnData);
         });
