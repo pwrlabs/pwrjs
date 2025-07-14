@@ -613,8 +613,6 @@ export default class MerkleTreeService {
             this.nodesCache.clear();
             this.keyDataCache.clear();
             this.hasUnsavedChanges = false;
-
-            console.log(`Flushed changes to disk for tree: ${this.treeName}`);
         } catch (error) {
             console.error('Error flushing to disk:', error);
             throw error;
@@ -638,7 +636,6 @@ export default class MerkleTreeService {
                 } else {
                     MerkleTreeService.openTrees.delete(this.treeName);
                     this.closed = true;
-                    console.log(`Closed tree: ${this.treeName}`);
                     resolve();
                 }
             });
@@ -676,8 +673,6 @@ export default class MerkleTreeService {
             this.numLeaves = 0;
             this.depth = 0;
             this.hasUnsavedChanges = false;
-
-            console.log(`Cleared tree: ${this.treeName}`);
         } catch (error) {
             console.error('Error clearing tree:', error);
             throw error;
@@ -763,7 +758,6 @@ export default class MerkleTreeService {
             this.numLeaves = 0;
             this.depth = 0;
             this.hangingNodes.clear();
-            console.log(`Initialized empty tree: ${this.treeName}`);
         }
     }
 
