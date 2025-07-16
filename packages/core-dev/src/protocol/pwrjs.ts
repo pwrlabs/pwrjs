@@ -11,7 +11,7 @@ import HttpService from '../services/http.service';
 import { Transaction_ID } from '../static/enums/transaction.enum';
 
 import { VidaDataTransaction } from '../record/vidaDataTransaction';
-import { ProcessVidaTransactions, VidaTransactionSubscription } from './vida';
+import { ProcessVidaTransactions, VidaTransactionSubscription, BlockSaver } from './vida';
 import { bytesToHex, hexToBytes } from '../utils';
 
 // shared
@@ -732,11 +732,22 @@ export default class PWRJS {
 
     // #endregion
 
-    // #region iva
+    // #region vida
+
+    /**
+     * Subscribe to VIDA transactions with full parameter control.
+     * @param vidaId - The VIDA ID to subscribe to
+     * @param startingBlock - The block number to start from
+     * @param handler - The transaction handler function
+     * @param pollInterval - The polling interval in milliseconds (default: 100)
+     * @param blockSaver - Optional function to save the latest checked block
+     * @returns VidaTransactionSubscription instance
+     */
     subscribeToVidaTransactions(
         vidaId: bigint,
         startingBlock: bigint,
         handler: ProcessVidaTransactions,
+        blockSaver?: BlockSaver,
         pollInterval: number = 100
     ): VidaTransactionSubscription {
         const subscription = new VidaTransactionSubscription(
@@ -744,11 +755,13 @@ export default class PWRJS {
             vidaId,
             startingBlock,
             handler,
-            pollInterval
+            pollInterval,
+            blockSaver
         );
         subscription.start(); // Start the subscription asynchronously
         return subscription;
     }
+
     // #endregion
 
     public async broadcastTxn(txnBytes: Uint8Array): Promise<any[]> {
