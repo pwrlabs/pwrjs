@@ -11,7 +11,7 @@ export class VidaTransactionSubscription {
     private latestCheckedBlock: bigint;
     private handler: ProcessVidaTransactions;
     private pollInterval: number;
-    private blockSaver: BlockSaver;
+    private blockSaver?: BlockSaver;
 
     // Internal state flags - atomic-like behavior
     private _wantsToPause: boolean = false;
@@ -25,7 +25,7 @@ export class VidaTransactionSubscription {
         startingBlock: bigint,
         handler: ProcessVidaTransactions,
         pollInterval: number = 100,
-        blockSaver: BlockSaver
+        blockSaver?: BlockSaver
     ) {
         this.pwrjs = pwrjs;
         this.vidaId = vidaId;

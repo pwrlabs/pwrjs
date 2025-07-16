@@ -746,8 +746,8 @@ export default class PWRJS {
     subscribeToVidaTransactions(
         vidaId: bigint,
         startingBlock: bigint,
-        blockSaver: BlockSaver,
         handler: ProcessVidaTransactions,
+        blockSaver?: BlockSaver,
         pollInterval: number = 100
     ): VidaTransactionSubscription {
         const subscription = new VidaTransactionSubscription(
