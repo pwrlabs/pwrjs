@@ -5,6 +5,8 @@ import HttpService from './src/services/http.service';
 import StorageService from './src/services/storage.service';
 import CryptoService from './src/services/crypto.service';
 import MerkleTreeService from './src/services/merkle-tree.service';
+import {PowerKv} from './src/services/pwrnosqldb/PowerKv.service';
+import PowerKvCached from './src/services/pwrnosqldb/PowerKvCached.service';
 // import { FalconService, FalconKeyPair } from './src/services/falcon-service';
 
 export {
@@ -15,4 +17,6 @@ export {
     StorageService,
     CryptoService,
     MerkleTreeService as MerkleTree,
+    PowerKv,
+    PowerKvCached,
 };
