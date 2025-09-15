@@ -1,3 +1,5 @@
+import CryptoService from '../crypto.service';
+
 export type PowerKvKey = string | Uint8Array | number;
 export type PowerKvValue = string | Uint8Array | number;
 
@@ -26,7 +28,7 @@ export class PowerKvError extends Error {
 export class PowerKv {
     private readonly projectId: string;
     private readonly secret: string;
-    private readonly serverUrl: string = 'https://pwrnosqlvida.pwrlabs.io/';
+    private readonly serverUrl: string = 'https://powerkvbe.pwrlabs.io';
 
     constructor(projectId: string, secret: string) {
         if (!projectId || projectId.trim() === '') {
@@ -92,6 +94,57 @@ export class PowerKv {
         throw new PowerKvError('Data must be a string, Uint8Array, or number');
     }
 
+    private hash256(input: Uint8Array): Uint8Array {
+        // Using Web Crypto API for SHA3-256 (Keccak256)
+        // Note: In browser/Node.js environment, we'll use the crypto service
+        const crypto = require('crypto');
+        return new Uint8Array(crypto.createHash('sha3-256').update(input).digest());
+    }
+
+    private packData(key: Uint8Array, data: Uint8Array): Uint8Array {
+        // Allocate buffer: 4 bytes (key length) + key + 4 bytes (data length) + data
+        const totalLength = 4 + key.length + 4 + data.length;
+        const buffer = new Uint8Array(totalLength);
+        const view = new DataView(buffer.buffer);
+        
+        let offset = 0;
+        // Write key length (4 bytes, big-endian)
+        view.setUint32(offset, key.length, false);
+        offset += 4;
+        // Write key bytes
+        buffer.set(key, offset);
+        offset += key.length;
+        // Write data length (4 bytes, big-endian)
+        view.setUint32(offset, data.length, false);
+        offset += 4;
+        // Write data bytes
+        buffer.set(data, offset);
+        
+        return buffer;
+    }
+
+    private unpackData(packedBuffer: Uint8Array): { key: Uint8Array; data: Uint8Array } {
+        const view = new DataView(packedBuffer.buffer, packedBuffer.byteOffset, packedBuffer.byteLength);
+        let offset = 0;
+        
+        // Read key length (4 bytes, big-endian)
+        const keyLength = view.getUint32(offset, false);
+        offset += 4;
+        
+        // Read key bytes
+        const key = packedBuffer.slice(offset, offset + keyLength);
+        offset += keyLength;
+        
+        // Read data length (4 bytes, big-endian)
+        const dataLength = view.getUint32(offset, false);
+        offset += 4;
+        
+        // Read data bytes
+        const data = packedBuffer.slice(offset, offset + dataLength);
+        
+        return { key, data };
+    }
+
     public async put(key: Uint8Array, data: Uint8Array): Promise<boolean>;
     public async put(key: PowerKvKey, value: PowerKvValue): Promise<boolean>;
     public async put(key: PowerKvKey | Uint8Array, data: PowerKvValue | Uint8Array): Promise<boolean> {
@@ -115,12 +168,21 @@ export class PowerKv {
             dataBytes = this.toBytes(data as PowerKvValue);
         }
 
+        // Hash the key with Keccak256
+        const keyHash = this.hash256(keyBytes);
+        
+        // Pack the original key and data
+        const packedData = this.packData(keyBytes, dataBytes);
+        
+        // Encrypt the packed data
+        const encryptedData = await CryptoService.encryptNode(packedData, this.secret);
+
         const url = this.serverUrl + '/storeData';
         const payload: StoreDataRequest = {
             projectId: this.projectId,
             secret: this.secret,
-            key: this.toHexString(keyBytes),
-            value: this.toHexString(dataBytes)
+            key: this.toHexString(keyHash),
+            value: this.toHexString(encryptedData)
         };
 
         try {
@@ -142,14 +204,7 @@ export class PowerKv {
             if (response.status === 200) {
                 return true;
             } else {
-                let message: string;
-                try {
-                    const errorObj: ErrorResponse = JSON.parse(responseText);
-                    message = errorObj.message || `HTTP ${response.status}`;
-                } catch (parseErr) {
-                    message = `HTTP ${response.status} — ${responseText}`;
-                }
-                throw new PowerKvError(`storeData failed: ${message}`);
+                throw new PowerKvError(`storeData failed: ${response.status} - ${responseText}`);
             }
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
@@ -181,7 +236,9 @@ export class PowerKv {
             keyBytes = this.toBytes(key);
         }
 
-        const keyHex = this.toHexString(keyBytes);
+        // Hash the key with Keccak256
+        const keyHash = this.hash256(keyBytes);
+        const keyHex = this.toHexString(keyHash);
         
         const url = `${this.serverUrl}/getValue?projectId=${encodeURIComponent(this.projectId)}&key=${keyHex}`;
 
@@ -200,7 +257,23 @@ export class PowerKv {
             if (response.status === 200) {
                 try {
                     const responseObj: GetValueResponse = JSON.parse(responseText);
-                    return this.fromHexString(responseObj.value);
+                    const valueHex = responseObj.value;
+                    
+                    // Handle both with/without 0x prefix
+                    let cleanHex = valueHex;
+                    if (cleanHex.startsWith('0x') || cleanHex.startsWith('0X')) {
+                        cleanHex = cleanHex.substring(2);
+                    }
+                    
+                    const encryptedValue = this.fromHexString(cleanHex);
+                    
+                    // Decrypt the data
+                    const decryptedData = await CryptoService.decryptNode(encryptedValue, this.secret);
+                    
+                    // Unpack the data to get original key and data
+                    const { key: originalKey, data: actualData } = this.unpackData(decryptedData);
+                    
+                    return actualData;
                 } catch (parseErr) {
                     throw new PowerKvError(`Unexpected response shape from /getValue: ${responseText}`);
                 }
